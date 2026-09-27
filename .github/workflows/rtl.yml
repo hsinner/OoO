@@ -1,0 +1,17 @@
+name: RTL checks
+on: [push, pull_request]
+permissions:
+  contents: read
+jobs:
+  verilator:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+      - run: sudo apt-get update && sudo apt-get install -y verilator g++ make
+      - run: verilator --version && make check
+      - run: python3 scripts/build_docs.py && python3 scripts/check_repo.py
+      - run: python3 scripts/build_superscalar_docs.py --check
+      - run: verilator --lint-only -Wall --top-module pipe_reg examples/superscalar/pipe_reg.sv
+      - run: git diff --exit-code -- docs/tutorial.html
