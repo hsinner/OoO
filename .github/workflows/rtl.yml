@@ -15,4 +15,5 @@ jobs:
       - run: python3 scripts/build_superscalar_docs.py --check
       - run: verilator --lint-only -Wall --top-module pipe_reg examples/superscalar/pipe_reg.sv
       - run: bash scripts/check_hazards.sh
+      - run: bash scripts/check_skeleton.sh
       - run: git diff --exit-code -- docs/tutorial.html

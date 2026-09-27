@@ -455,7 +455,10 @@ all reduce achieved IPC.
 ## 17. Module layout and how to start
 
 The following is the target layout. The hazard package and two hazard modules
-exist; complete CPU stages and their integration remain future work:
+are implemented. The remaining stage/helper interfaces now exist as deliberately
+empty shells. Use the [skeleton specification](skeleton.md) for complete port
+contracts, ownership rules, TODOs and acceptance tests. CPU behavior and its
+integration remain your implementation work:
 
 ```text
 rtl/superscalar/
@@ -474,6 +477,7 @@ rtl/superscalar/
   writeback.sv         completed packet holding
   commit.sv            architectural effects and trap/redirect events
   memory_adapter.sv    chosen external protocol and error semantics
+  recovery.sv          EEI trap/report/resume around the control-hazard unit
   core.sv              eight-stage wiring and recovery
 ```
 
@@ -488,8 +492,9 @@ suffixes, then add scoreboard hazards and commit refresh. Finally test special
 operations mixed with ALU prefixes. Keep a working regression after every step.
 Do not create dozens of empty modules and count them as hardware progress.
 
-The [roadmap](roadmap.md) gives the milestone gates. The storage example and
-standalone hazard units exist; the complete superscalar processor does not yet.
+The [roadmap](roadmap.md) gives the milestone gates. The storage example,
+standalone hazard units and unfinished module shells exist; the complete
+superscalar processor does not yet.
 
 ## 18. Verification and acceptance tests
 

@@ -6,6 +6,7 @@ not a completed implementation milestone below.
 | Stage | Deliverable | Acceptance gate |
 | --- | --- | --- |
 | S0 (this change) | Architecture tutorial and storage example | Review stage contracts and platform assumptions |
+| Scaffold (available) | Fifteen empty module shells and shared interface types | Interface elaboration only; implement TODOs in skeleton.md |
 | S1 | Single-lane pipeline with all eight stages | Arithmetic retirement comparison, stalls and reset |
 | S2 | Complete decode and serialized branches/jumps | Encoding, link values and target/alignment tests |
 | S3 | Serialized data memory, fence and trap interface | Widths, byte masks, faults, delayed responses, precise stores |

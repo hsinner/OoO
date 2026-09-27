@@ -2,6 +2,15 @@
 
 ## Current project: eight-stage in-order superscalar
 
+**Your implementation scaffold is ready:** start with
+[the skeleton specification and completion checklist](docs/superscalar/skeleton.md)
+and [core.sv](rtl/superscalar/core.sv). Fifteen new module shells have typed ports
+and specific TODOs. Their outputs are deliberately undriven; they do not simulate
+a working processor. The existing hazard units remain implemented and tested.
+
+Use `wsl -d Ubuntu -- bash scripts/check_skeleton.sh` for interface checks only.
+The skeleton and historical OoO manifests must not be combined in one build.
+
 **Instruction fetch → Decode → Register → Dispatch → Execute → Memory → Writeback → Commit**
 
 Start with the [current design tutorial](docs/superscalar/tutorial.md), which
