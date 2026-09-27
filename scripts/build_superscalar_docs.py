@@ -77,7 +77,7 @@ def build():
             output.append("<p>" + inline(" ".join(paragraph)) + "</p>")
             continue
         cursor += 1
-    assert len(toc) == 20, "Review chapter count after editing headings"
+    assert len(toc) == 23, "Review chapter count after editing headings"
     style = '''
 *{box-sizing:border-box}body{margin:0;color:#172e3c;background:#f2f5f6;font:17px/1.75 system-ui,sans-serif}
 nav{position:fixed;inset:0 auto 0 0;width:285px;background:#142d3c;color:#fff;padding:25px;overflow:auto}
@@ -105,7 +105,7 @@ if __name__ == "__main__":
     document = build()
     if args.check:
         assert TARGET.read_text(encoding="utf-8") == document, "HTML stale; run builder"
-        print("PASS: superscalar HTML matches Markdown; 20 chapters and local links checked")
+        print("PASS: superscalar HTML matches Markdown; 23 chapters and local links checked")
     else:
         TARGET.write_text(document, encoding="utf-8", newline="\n")
         print("Built docs/superscalar/tutorial.html")

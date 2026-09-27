@@ -13,6 +13,11 @@ not a completed implementation milestone below.
 | S5 | RV32I execution-environment validation | Independent ISA model, instruction coverage and architectural suites |
 | S6 | Selected forwarding and performance improvements | Producer priority, load-use hazards and measured IPC/timing |
 
+Standalone forwarding and control-hazard modules now exist with directed tests.
+They are prerequisites for S4/S6 and control-flow integration, not completion
+of those milestones. EX/MEM/WB/C forwarding is part of the target design now;
+S6 validates integrated paths and performance. See tutorial sections 21–23.
+
 No S1–S6 completion, ISA compliance or hardware performance is claimed yet.
 Each stage must include working RTL, tests, interface documentation and tutorial
 updates. Caches, prediction, privilege, interrupts, extensions, RV64 and physical

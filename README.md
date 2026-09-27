@@ -9,7 +9,11 @@ renders on GitHub, or download the [standalone HTML edition](docs/superscalar/tu
 It specifies the stage contracts, hazards, packet splitting, precise commit,
 memory protocol and implementation sequence for a four-wide RV32I target.
 
-This is a design specification, not an implemented superscalar CPU yet. The
+This is a design specification with standalone hazard RTL, not a complete CPU yet.
+[Forwarding](rtl/superscalar/forwarding_unit.sv) and
+[control hazards](rtl/superscalar/control_hazard_unit.sv) now have implemented
+modules and directed simulation. Their integration contracts and the pipeline
+assessment are in tutorial sections 21–23. The
 [pipeline register example](examples/superscalar/pipe_reg.sv) demonstrates the
 assignment-only `always_ff` convention. Start with one lane through all eight
 stages, then widen the verified protocol to four lanes. See the
@@ -19,14 +23,16 @@ stages, then widen the verified protocol to four lanes. See the
 python scripts/build_superscalar_docs.py
 python scripts/build_superscalar_docs.py --check
 wsl -d Ubuntu -- verilator --lint-only -Wall --top-module pipe_reg examples/superscalar/pipe_reg.sv
+wsl -d Ubuntu -- bash scripts/check_hazards.sh
 ```
 
-New design documents live in `docs/superscalar/`; small RTL examples live in
+New modules live in `rtl/superscalar/`, with tests in `tests/superscalar/`.
+Design documents live in `docs/superscalar/`; small RTL examples live in
 `examples/superscalar/`. The HTML builder uses Python's standard library.
 
 ## Historical experiment: out-of-order backend
 
-The files under `rtl/` and `tests/` below are the earlier OoO experiment. They
+The files directly under root `rtl/` and `tests/` below are the earlier OoO experiment. They
 are retained for reference and are not the implementation of the current design.
 
 Start with [the complete HTML tutorial](docs/tutorial.html) (download/open locally;

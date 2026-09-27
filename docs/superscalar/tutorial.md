@@ -31,7 +31,7 @@ Use the following initial policies. They are our design choices, not ISA rules.
 | Width | Four lanes; implement one lane first using all eight stages |
 | Execution | Four integer ALUs; one shared branch/address datapath |
 | Register file | Committed 32×32 storage, up to eight reads and four writes |
-| Hazards | Busy-bit scoreboard; no EX/MEM/WB forwarding initially |
+| Hazards | Busy-bit scoreboard plus EX/MEM/WB/C-to-DP forwarding |
 | Register writers | At most one dispatched writer per nonzero architectural register |
 | Memory | One load/store unit; one outstanding data transaction |
 | Special operations | Loads, stores, control flow, fences and trap-producing operations serialize |
@@ -84,7 +84,8 @@ a later stage commit does not make an early register-file write safe.
 Here WB stores completed results and metadata in an ordered holding register.
 C makes architectural register updates, emits retirement events, and authorizes
 stores. EX and MEM compute results but do not modify the architectural register
-file. Consumers initially wait until the producer commits.
+file. Consumers may use available older results through forwarding before
+commit; forwarding does not authorize early architectural updates.
 
 There is no general reorder buffer or out-of-order issue queue. Ordered elastic
 pipeline registers retain packets; a stalled older packet prevents younger
@@ -192,13 +193,14 @@ compare accepted commit destinations and refresh matching values. Apply the
 commit bypass to incoming read values on the transfer edge too, covering a
 same-edge register write/read collision. Only accepted nonfaulting commit
 writes refresh operands; x0 always resolves to zero. Refresh is internal DP
-state maintenance, not a transfer to EX. DP exposes EX valid only once selected
-operands are ready and cannot change through an older pending writer.
+state maintenance, not a transfer to EX. Forwarding overrides these snapshots
+when an older producer matches. Freeze the selected prefix and operand values
+once the bundle is offered to EX, including while EX stalls.
 
-Initially allow a one-cycle delay after readiness changes. If commit at edge E
-updates the source and clears busy state, DP sees both new values during the
-next cycle and dispatches at E+1. Do not bypass newly cleared readiness in the
-same cycle without also supplying the corresponding new operand value.
+Forwarding may make a busy source ready without clearing its busy bit. The bit
+still tracks destination ownership and prevents a younger writer until commit.
+Commit refresh remains required when a producer leaves C while a consumer waits.
+Always select valid data together with any forwarded readiness indication.
 
 ## 8. Dispatch: accept an oldest prefix
 
@@ -212,7 +214,7 @@ destinations_selected_this_cycle = empty
 for each lane, oldest first:
     if invalid: stop
     if serialized: apply singleton/drain rule, then stop
-    if a used nonzero source is busy: stop
+    if a used source is not ready after forwarding resolution: stop
     if its written nonzero destination is busy: stop
     if a source matches an earlier selected destination: stop  # RAW
     if destination matches an earlier selected destination: stop  # WAW
@@ -245,8 +247,10 @@ lane 3: and x9, x10, x11
 ```
 
 With no earlier hazards, lanes 0 and 1 dispatch. Lane 2 needs lane 0's result,
-so lane 3 also waits despite being independent. When x5 commits and the retained
-operand refreshes, old lanes 2 and 3 can dispatch together as the new prefix.
+so lane 3 also waits despite being independent. Once lane 0 has dispatched and
+its result becomes available, forwarding can satisfy x5. Old lanes 2 and 3 can
+dispatch as the next prefix when EX has room. This is cross-cycle forwarding,
+not a same-cycle cascade between newly selected lanes.
 
 ```text
 lane 0: addi x5, x0, 1
@@ -255,7 +259,7 @@ lane 2: add  x6, x5, x7
 ```
 
 The first writer dispatches alone. The second waits for its commit, then the
-consumer waits for the second writer. A single busy bit works because multiple
+consumer waits for the second writer's available result. A single busy bit works because multiple
 dispatched writers to the same nonzero register are forbidden. Removing that
 rule requires counts or explicit producer ownership, not just another bypass.
 
@@ -317,8 +321,8 @@ architectural registers nor clears scoreboard bits. While C waits, WB holds
 its packet and backpressure propagates toward EX.
 
 Calling it result writeback means writing completed values into this holding
-register. Document that interpretation in the RTL. Later forwarding may use
-WB values, but the first implementation waits for commit.
+register. Document that interpretation in the RTL. The forwarding unit may use
+WB values while architectural state remains unchanged until commit.
 
 Transfer whole packets from WB into a C packet register. C then owns partial
 retirement and retains any suffix until finished. WB cannot overwrite C's
@@ -439,8 +443,9 @@ occupancy is below. Actual fetch interface latency may introduce gaps.
 
 Each packet may contain four independent operations. Once filled, the target is
 four retirement events per cycle if fetch, ports and every ready signal support
-that rate. If B reads A's destination, B waits in DP until commit refreshes its
-value and clears busy state. Following packets queue behind it.
+that rate. If B reads A's destination, B waits in DP until a valid older result
+is available through forwarding and EX can accept it. Following packets queue
+behind it if the operand remains unready. Same-packet dependencies still split.
 
 This table is a design target, not measured performance. Measure IPC as accepted
 retirement events divided by cycles over a defined program interval. Memory
@@ -449,10 +454,14 @@ all reduce achieved IPC.
 
 ## 17. Module layout and how to start
 
-The following is a proposed future layout, not a list of implemented modules:
+The following is the target layout. The hazard package and two hazard modules
+exist; complete CPU stages and their integration remain future work:
 
 ```text
 rtl/superscalar/
+  hazard_pkg.sv        implemented source/producer types
+  forwarding_unit.sv  implemented eight-source operand resolver
+  control_hazard_unit.sv implemented serialization/redirect control
   rv32_pkg.sv          operations, packets and exception types
   rv32_decode.sv       single decoder, replicated four times
   regfile.sv           committed storage and commit write ports
@@ -479,8 +488,8 @@ suffixes, then add scoreboard hazards and commit refresh. Finally test special
 operations mixed with ALU prefixes. Keep a working regression after every step.
 Do not create dozens of empty modules and count them as hardware progress.
 
-The [roadmap](roadmap.md) gives the milestone gates. At this revision only the
-tutorial and storage example exist for the new architecture.
+The [roadmap](roadmap.md) gives the milestone gates. The storage example and
+standalone hazard units exist; the complete superscalar processor does not yet.
 
 ## 18. Verification and acceptance tests
 
@@ -513,13 +522,13 @@ and every accepted instruction retires once or is discarded by a valid recovery.
 Liveness assumes the external memory eventually responds and downstream
 eventually accepts; permanent external backpressure legitimately stalls a core.
 
-The included storage example is lint-checked only at this tutorial stage. No
-complete superscalar RTL, simulation, ISA compliance or timing result is claimed.
+The storage example is lint-checked; the two hazard units also have directed
+simulation. No complete superscalar CPU, ISA compliance or timing result is claimed.
 The historical OoO regression cannot validate the new architecture.
 
 ## 19. Optimize only after the protocol works
 
-Later forwarding can use EX/MEM/WB values. Select the youngest older matching
+The forwarding unit uses EX/MEM/WB/C values. Select the youngest older matching
 producer; if it is not ready, do not forward an older matching value instead.
 The initial one-writer restriction simplifies this logic while it remains in
 force. Load-use dependencies still need a response before any valid forwarding.
@@ -554,8 +563,136 @@ reference as proof of this particular microarchitecture.
 python scripts/build_superscalar_docs.py
 python scripts/build_superscalar_docs.py --check
 wsl -d Ubuntu -- verilator --lint-only -Wall --top-module pipe_reg examples/superscalar/pipe_reg.sv
+wsl -d Ubuntu -- bash scripts/check_hazards.sh
 ```
 
 The next implementation step is a single-lane version of all eight stages with
 architectural writes at commit. Widen that proven protocol to four lanes rather
 than duplicating an unverified whole processor four times.
+
+## 21. Forwarding unit and wiring contract
+
+Implemented RTL: [forwarding_unit.sv](../../rtl/superscalar/forwarding_unit.sv).
+Eight source ports serve two architectural operands per DP lane. Sixteen
+producer ports describe the four lanes in EX, MEM, WB and C. This combinational
+module resolves operand values/readiness, not packet selection or scoreboard state.
+
+Each source has an index, used flag, busy bit and commit-refreshed fallback.
+Each producer has valid, writes_rd, rd, killed, fault, ready and value fields.
+Include branch comparisons and store data among actual sources. Select immediate
+and PC inputs after architectural source resolution.
+
+All producer instructions must be older than every DP candidate. Present them
+in this exact youngest-to-oldest order:
+
+```text
+ports  0..3  = EX  lanes 3, 2, 1, 0
+ports  4..7  = MEM lanes 3, 2, 1, 0
+ports  8..11 = WB  lanes 3, 2, 1, 0
+ports 12..15 = C   lanes 3, 2, 1, 0
+```
+
+This implicit age ordering is valid only while packets do not overtake. Ignore
+invalid lanes; do not advertise stale duplicate ownership across boundaries.
+Within the current one-writer policy there should be only one live match, but
+youngest-first blocking makes the unit's priority explicit and independently testable.
+
+Unused sources and x0 resolve to ready zero. Otherwise, select the first live
+nonkilled matching writer. If ready and nonfaulting, forward its value. If
+unready or faulted, stall that source: never continue searching for an older
+matching value. Keep faulted writers visible until recovery; dropping them can
+expose stale data. With no match, use fallback only if the source is not busy.
+Output data must not be consumed when its corresponding ready bit is low.
+
+Mark a load result ready only when actual response data is available, never
+when merely its address is known. The unit supports load-result forwarding,
+but the present serialized LSU policy still prevents younger dispatch before
+load commit. Relaxing that policy requires separate memory/recovery work.
+
+DP uses resolved source readiness while preserving destination busy and
+same-packet RAW/WAW checks. Forwarding does not release destination ownership
+or permit skipping a blocked older lane. Newly selected DP lanes are not
+producers for other lanes in the same cycle; dependencies still split packets.
+
+EX-to-DP is a path from the current operation's ALU output to the next operation's
+EX input register. Do not make producer validity depend on DP selection, or
+couple data availability into a combinational ready loop. If timing is too long,
+withhold EX forwarding readiness until the registered result reaches MEM; the
+consumer stalls correctly. This is a measured timing choice, not a correctness
+reason to choose an older source value.
+
+Once DP offers a selected bundle to EX, freeze both prefix length and values
+while EX stalls. Use an output holding register or latched selection/operands.
+Live forwarding mux outputs must not alter an already-offered packet. Continue
+commit refresh for retained, unselected suffix instructions.
+
+## 22. Control-hazard unit and recovery contract
+
+Implemented RTL: [control_hazard_unit.sv](../../rtl/superscalar/control_hazard_unit.sv).
+This is a conservative singleton controller, with no predictor. It gates serial
+dispatch, blocks younger work, prioritizes commit-approved recovery events and
+holds one redirect until IF accepts ownership. It does not evaluate branches.
+
+| Interface | Contract |
+| --- | --- |
+| serial_valid / serial_ready | Singleton dispatch handshake; ready requires empty older backend work |
+| backend_empty | Includes EX/MEM/WB/C and outstanding architectural data transactions |
+| serial_done | Successful non-control singleton commit pulse, not branch completion |
+| branch_valid / branch_ready | Commit-approved next PC, for taken and fall-through control flow |
+| trap_valid / trap_ready | Ordered trap with EEI-provided handler/restart PC |
+| redirect_valid / redirect_ready | Pending destination held stable until IF owns it |
+| block_younger | Suppress ordinary dispatch, including on singleton admission cycle |
+| stop_fetch | Stop new sequential requests; allow response draining and redirect acceptance |
+| flush_frontend | Acceptance-cycle pulse clearing younger IF/D/R/DP contents |
+| flush_backend | Trap acceptance pulse after all older effects are settled |
+
+On serial admission, set busy and prevent younger dispatch. Memory/fence
+singletons release busy on successful serial_done. A branch/trap instead queues
+its PC and emits one flush. Pending redirects retain their destination and block
+younger activity until accepted. IF must not gate redirect_ready with stop_fetch;
+that would deadlock. IF may accept responsibility before a stale response has
+drained, but its own state must finish that drain before using the new PC.
+
+When trap and branch requests arrive together at an empty redirect slot, trap
+wins and branch_ready is low. Commit must cancel the losing younger branch.
+These are ordered, qualified commit events, not raw EX requests. An already
+exposed redirect cannot change under backpressure: additional requests wait.
+The serialized architecture must prevent an older unresolved trap from first
+appearing after a younger branch has been permitted to commit.
+
+trap_pc is the handler/restart destination, not the faulting instruction PC in
+the trap record. While the EEI has not supplied a destination, maintain the
+existing singleton/commit trap block. Do not invent a vector. Recovery wiring
+clears the appropriate pipeline valid and scoreboard state when the trap is
+accepted. Never discard an authorized store or older surviving effect.
+
+Instruction classification, branch target calculation, scoreboard cleanup,
+fetch cancellation and external transaction draining are integration duties.
+The controller does not implement them by itself. Its synchronous reset follows
+the coordinated core/endpoint reset contract. Conditions and next-state logic
+are in always_comb; always_ff contains only the state assignment.
+
+## 23. Pipeline assessment and current evidence
+
+The pipeline makes sense as a correctness-first four-wide in-order design.
+Whether eight stages are efficient depends on implementation timing and workloads.
+
+| Decision | Assessment |
+| --- | --- |
+| Register before dispatch | Valid with source refresh and dispatch-time forwarding |
+| Decode, register and dispatch separated | Clear responsibilities, but additional latency/storage |
+| Execute then memory | Appropriate for address generation; ALU packets still maintain order |
+| Writeback then commit | Valid when WB holds results and C alone changes architectural state |
+| Eight register reads/four writes | Supports independent four-wide work; significant port/mux cost |
+| Serialized memory/control flow | Simple precise behavior; major throughput and branch penalties |
+| In-order dispatch with forwarding | Reduces RAW stalls; cannot bypass truly blocked older work |
+
+Keep one clock and valid/ready enables; eight stages do not imply eight clocks.
+After integrating a scalar version, measure forwarding mux delay, register-file
+ports, ready-chain length and commit fanout. Merging R/DP or WB/C may eventually
+reduce overhead, but keep the requested stage structure until measurements
+justify a change.
+
+Standalone lint and directed hazard simulation have passed. This is not an
+end-to-end CPU result. [Validation details](validation.md) distinguish tests run
+from the remaining integration work.
