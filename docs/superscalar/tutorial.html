@@ -1,17 +1,194 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Four-wide RV32I design tutorial</title><style>
-*{box-sizing:border-box}body{margin:0;color:#172e3c;background:#f2f5f6;font:17px/1.75 system-ui,sans-serif}
-nav{position:fixed;inset:0 auto 0 0;width:285px;background:#142d3c;color:#fff;padding:25px;overflow:auto}
-nav strong{font-size:23px;display:block;margin-bottom:22px}nav a{display:block;color:#d6e9ee;text-decoration:none;font-size:14px;padding:7px 0}
-nav a:hover,nav a:focus{text-decoration:underline;color:white}main{margin-left:285px;max-width:1350px;padding:45px clamp(22px,5vw,80px);background:white;min-height:100vh}
-h1{font-size:44px;line-height:1.2}h2{font-size:28px;line-height:1.3;margin-top:55px;padding-top:22px;border-top:2px solid #d4e5e8;scroll-margin-top:20px}
-p{max-width:85ch}a{color:#006c73}pre{background:#122a39;color:#e1f4f5;border-radius:7px;padding:22px;overflow:auto;font:14px/1.6 Consolas,monospace}
-code{font-family:Consolas,monospace;font-size:.93em}p code{background:#edf3f4;padding:2px 4px}.table{overflow-x:auto}table{border-collapse:collapse;width:100%;font-size:15px}th,td{text-align:left;vertical-align:top;padding:10px 12px;border-bottom:1px solid #dce6e9}th{background:#eaf3f4}
-.label{color:#006c73;text-transform:uppercase;letter-spacing:2px;font-size:13px;font-weight:bold}
-@media(max-width:850px){nav{position:relative;width:auto;max-height:290px}main{margin:0;padding:24px}h1{font-size:34px}}
-@media print{nav{display:none}main{margin:0;padding:0}body{font-size:11pt}h2{break-before:page}pre{white-space:pre-wrap;color:black;background:#f0f3f5}}
-</style></head><body><nav aria-label="Chapters"><strong>RV32I / Four-wide</strong><a href="#1-define-the-machine-before-writing-rtl">1. Define the machine before writing RTL</a><a href="#2-rv32i-and-the-execution-environment">2. RV32I and the execution environment</a><a href="#3-the-important-distinction-writeback-versus-commit">3. The important distinction: writeback versus commit</a><a href="#4-packets-and-per-instruction-metadata">4. Packets and per-instruction metadata</a><a href="#5-instruction-fetch">5. Instruction fetch</a><a href="#6-decode">6. Decode</a><a href="#7-register-access-and-stale-operands">7. Register access and stale operands</a><a href="#8-dispatch-accept-an-oldest-prefix">8. Dispatch: accept an oldest prefix</a><a href="#9-raw-waw-and-war-examples">9. RAW, WAW and WAR examples</a><a href="#10-execute">10. Execute</a><a href="#11-memory-and-the-adapter-contract">11. Memory and the adapter contract</a><a href="#12-writeback-holding">12. Writeback holding</a><a href="#13-commit-faults-and-store-authorization">13. Commit, faults and store authorization</a><a href="#14-control-flow-fences-and-recovery">14. Control flow, fences and recovery</a><a href="#15-systemverilog-pipeline-control">15. SystemVerilog pipeline control</a><a href="#16-example-pipeline-timing">16. Example pipeline timing</a><a href="#17-module-layout-and-how-to-start">17. Module layout and how to start</a><a href="#18-verification-and-acceptance-tests">18. Verification and acceptance tests</a><a href="#19-optimize-only-after-the-protocol-works">19. Optimize only after the protocol works</a><a href="#20-references-and-reproducible-next-steps">20. References and reproducible next steps</a><a href="#21-forwarding-unit-and-wiring-contract">21. Forwarding unit and wiring contract</a><a href="#22-control-hazard-unit-and-recovery-contract">22. Control-hazard unit and recovery contract</a><a href="#23-pipeline-assessment-and-current-evidence">23. Pipeline assessment and current evidence</a></nav><main><p class="label">In-order superscalar · Eight stages</p><h1 id="building-a-four-wide-eight-stage-rv32i-processor">Building a four-wide, eight-stage RV32I processor</h1>
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Four-wide RV32I — beginner handbook and architecture reference</title><style>
+*{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;color:#172e3c;background:#eef3f4;font:17px/1.8 system-ui,sans-serif}
+nav{position:fixed;inset:0 auto 0 0;width:290px;background:#142d3c;color:white;padding:24px;overflow:auto}
+nav strong{font-size:23px;display:block}nav a{display:block;color:#d6e9ee;text-decoration:none;font-size:13px;padding:5px 0;line-height:1.5}
+nav a:hover,nav a:focus{text-decoration:underline;color:white}.group-title{font-size:15px;font-weight:bold;color:#8cddd5;margin-top:24px}
+label{display:block;font-size:13px;margin-top:20px}input{width:100%;padding:10px;border:1px solid #95b5be;border-radius:5px;font:inherit;font-size:14px;margin-top:6px}
+#search-status{font-size:12px;color:#b9d0d9;margin:8px 0}main{margin-left:290px;max-width:1450px;padding:42px clamp(22px,5vw,80px);background:white;min-height:100vh;min-width:0}
+h1{font-size:clamp(32px,4vw,52px);line-height:1.15;max-width:22ch}h2{font-size:34px;line-height:1.3}h3{font-size:26px;line-height:1.35;margin-top:50px;border-top:1px solid #cee1e5;padding-top:25px}h4{font-size:21px;margin-top:30px}
+[id]{scroll-margin-top:24px}.part{margin-top:70px}.part-title{border-bottom:3px solid #168c85;padding-bottom:20px}p,li{max-width:85ch}a{color:#006c73}a:focus-visible,summary:focus-visible{outline:3px solid #c77a00;outline-offset:3px}
+pre{background:#122a39;color:#e1f4f5;border-radius:8px;padding:22px;overflow:auto;font:14px/1.65 Consolas,monospace}code{font-family:Consolas,monospace;font-size:.93em}p code,li code,td code{background:#edf3f4;padding:2px 4px}
+.table{overflow-x:auto;margin:22px 0}table{border-collapse:collapse;width:100%;font-size:15px}th,td{text-align:left;vertical-align:top;padding:12px;border-bottom:1px solid #dce6e9}th{background:#eaf3f4}
+.label{color:#006c73;text-transform:uppercase;letter-spacing:2px;font-size:12px;font-weight:bold}.note{background:#edf7f5;border-left:4px solid #168c85;padding:20px 24px;margin:24px 0}.note p{margin:5px 0}
+.pipeline{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:25px 0}.pipeline a{background:#142d3c;color:white;border-radius:7px;padding:14px;text-decoration:none;font-size:14px;line-height:1.4}.pipeline b{display:block;color:#8cddd5;font-size:22px;margin-bottom:5px}
+.routes{display:flex;flex-wrap:wrap;gap:10px}.routes a{background:#eaf3f4;border:1px solid #c7dfe1;border-radius:5px;padding:9px 14px;font-size:14px}
+details{border:1px solid #c7dfe1;border-radius:6px;padding:12px 18px;margin:20px 0}summary{cursor:pointer;font-weight:bold;overflow-wrap:anywhere}.status{font-size:13px;color:#506c79}.skip{position:absolute;left:-10000px}.skip:focus{position:fixed;left:10px;top:10px;background:white;padding:10px;z-index:2}[hidden]{display:none!important}
+@media(max-width:850px){nav{position:relative;width:auto;max-height:320px}main{margin:0;padding:24px}.pipeline{grid-template-columns:repeat(2,1fr)}h2{font-size:28px}}
+@media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+@media print{nav,.routes,.skip{display:none}main{margin:0;padding:0}body{font-size:11pt}.part{break-before:page}pre{white-space:pre-wrap;overflow-wrap:anywhere;color:black;background:#f0f3f5}.table{overflow:visible}}
+</style></head><body><a class="skip" href="#content">Skip to tutorial</a><nav aria-label="Chapters"><strong>RV32I / Four-wide</strong><label for="chapter-search">Find a chapter</label><input id="chapter-search" type="search" placeholder="Try forwarding or commit"><p id="search-status" role="status">Filter titles here; use Ctrl+F to search the full text.</p><div class="nav-group"><a class="group-title" href="#beginner">Start here: first principles</a><a href="#beginner-a1-what-a-processor-actually-does">A1. What a processor actually does</a><a href="#beginner-a2-the-three-kinds-of-storage-you-must-distinguish">A2. The three kinds of storage you must distinguish</a><a href="#beginner-a3-bits-signed-values-addresses-and-byte-order">A3. Bits, signed values, addresses and byte order</a><a href="#beginner-a4-what-a-clock-edge-means">A4. What a clock edge means</a><a href="#beginner-a5-pipeline-depth-and-superscalar-width-are-different">A5. Pipeline depth and superscalar width are different</a><a href="#beginner-a6-the-whole-machine-in-one-annotated-picture">A6. The whole machine in one annotated picture</a><a href="#beginner-a7-the-eight-stages-explained-without-shortcuts">A7. The eight stages, explained without shortcuts</a><a href="#beginner-a8-follow-one-real-instruction-through-every-stage">A8. Follow one real instruction through every stage</a><a href="#beginner-a9-valid-and-ready-an-agreement-at-a-clock-edge">A9. Valid and ready: an agreement at a clock edge</a><a href="#beginner-a10-packets-lanes-and-splitting-an-instruction-group">A10. Packets, lanes and splitting an instruction group</a><a href="#beginner-a11-dependencies-and-the-scoreboard-with-concrete-values">A11. Dependencies and the scoreboard, with concrete values</a><a href="#beginner-a12-forwarding-is-choosing-a-value-not-changing-the-register-file">A12. Forwarding is choosing a value, not changing the register file</a><a href="#beginner-a13-a-four-instruction-worked-scheduling-example">A13. A four-instruction worked scheduling example</a><a href="#beginner-a14-loads-follow-the-address-response-and-result-separately">A14. Loads: follow the address, response and result separately</a><a href="#beginner-a15-stores-why-computing-the-address-is-not-permission-to-write">A15. Stores: why computing the address is not permission to write</a><a href="#beginner-a16-branches-and-the-difference-between-a-fault-pc-and-a-restart-pc">A16. Branches and the difference between a fault PC and a restart PC</a><a href="#beginner-a17-precise-commit-and-a-fault-in-the-middle-of-a-group">A17. Precise commit and a fault in the middle of a group</a><a href="#beginner-a18-read-the-systemverilog-types-as-a-vocabulary">A18. Read the SystemVerilog types as a vocabulary</a><a href="#beginner-a19-how-to-implement-one-module-without-getting-lost">A19. How to implement one module without getting lost</a><a href="#beginner-a20-what-is-intentionally-not-part-of-this-first-processor">A20. What is intentionally not part of this first processor</a></div><div class="nav-group"><a class="group-title" href="#tutorial">Architecture reference</a><a href="#tutorial-1-define-the-machine-before-writing-rtl">1. Define the machine before writing RTL</a><a href="#tutorial-2-rv32i-and-the-execution-environment">2. RV32I and the execution environment</a><a href="#tutorial-3-the-important-distinction-writeback-versus-commit">3. The important distinction: writeback versus commit</a><a href="#tutorial-4-packets-and-per-instruction-metadata">4. Packets and per-instruction metadata</a><a href="#tutorial-5-instruction-fetch">5. Instruction fetch</a><a href="#tutorial-6-decode">6. Decode</a><a href="#tutorial-7-register-access-and-stale-operands">7. Register access and stale operands</a><a href="#tutorial-8-dispatch-accept-an-oldest-prefix">8. Dispatch: accept an oldest prefix</a><a href="#tutorial-9-raw-waw-and-war-examples">9. RAW, WAW and WAR examples</a><a href="#tutorial-10-execute">10. Execute</a><a href="#tutorial-11-memory-and-the-adapter-contract">11. Memory and the adapter contract</a><a href="#tutorial-12-writeback-holding">12. Writeback holding</a><a href="#tutorial-13-commit-faults-and-store-authorization">13. Commit, faults and store authorization</a><a href="#tutorial-14-control-flow-fences-and-recovery">14. Control flow, fences and recovery</a><a href="#tutorial-15-systemverilog-pipeline-control">15. SystemVerilog pipeline control</a><a href="#tutorial-16-example-pipeline-timing">16. Example pipeline timing</a><a href="#tutorial-17-module-layout-and-how-to-start">17. Module layout and how to start</a><a href="#tutorial-18-verification-and-acceptance-tests">18. Verification and acceptance tests</a><a href="#tutorial-19-optimize-only-after-the-protocol-works">19. Optimize only after the protocol works</a><a href="#tutorial-20-references-and-reproducible-next-steps">20. References and reproducible next steps</a><a href="#tutorial-21-forwarding-unit-and-wiring-contract">21. Forwarding unit and wiring contract</a><a href="#tutorial-22-control-hazard-unit-and-recovery-contract">22. Control-hazard unit and recovery contract</a><a href="#tutorial-23-pipeline-assessment-and-current-evidence">23. Pipeline assessment and current evidence</a></div><div class="nav-group"><a class="group-title" href="#skeleton">Implementation workbook</a><a href="#skeleton-1-what-exists-and-what-you-must-implement">1. What exists and what you must implement</a><a href="#skeleton-2-compile-sets-and-honest-status">2. Compile sets and honest status</a><a href="#skeleton-3-stage-ownership-and-record-validity">3. Stage ownership and record validity</a><a href="#skeleton-4-clock-boundaries-do-not-accidentally-build-sixteen-stages">4. Clock boundaries: do not accidentally build sixteen stages</a><a href="#skeleton-5-top-level-wiring-map">5. Top-level wiring map</a><a href="#skeleton-6-the-singleton-handshake-trap">6. The singleton handshake trap</a><a href="#skeleton-7-abstract-memory-contracts">7. Abstract memory contracts</a><a href="#skeleton-8-trap-report-and-resume-are-different-events">8. Trap report and resume are different events</a><a href="#skeleton-9-completion-tests-by-block">9. Completion tests by block</a><a href="#skeleton-10-suggested-implementation-sequence">10. Suggested implementation sequence</a></div><div class="nav-group"><a class="group-title" href="#modules">Every module explained</a><a href="#modules-m1-shared-types-rv32-pkg-and-hazard-pkg">M1. Shared types: rv32_pkg and hazard_pkg</a><a href="#modules-m2-rv32-decode-translate-one-word">M2. rv32_decode: translate one word</a><a href="#modules-m3-alu-a-calculation-without-ownership">M3. alu: a calculation without ownership</a><a href="#modules-m4-fetch-own-a-request-until-it-is-finished">M4. fetch: own a request until it is finished</a><a href="#modules-m5-decode-stage-four-decoders-plus-one-stage-boundary">M5. decode_stage: four decoders plus one stage boundary</a><a href="#modules-m6-regfile-committed-state-with-many-ports">M6. regfile: committed state with many ports</a><a href="#modules-m7-scoreboard-ownership-not-result-storage">M7. scoreboard: ownership, not result storage</a><a href="#modules-m8-register-stage-stable-indices-live-values">M8. register_stage: stable indices, live values</a><a href="#modules-m9-forwarding-unit-resolve-eight-questions">M9. forwarding_unit: resolve eight questions</a><a href="#modules-m10-dispatch-choose-the-oldest-legal-prefix">M10. dispatch: choose the oldest legal prefix</a><a href="#modules-m11-execute-establish-result-meaning">M11. execute: establish result meaning</a><a href="#modules-m12-memory-stage-complete-loads-and-retain-stores">M12. memory_stage: complete loads and retain stores</a><a href="#modules-m13-writeback-a-completion-buffer">M13. writeback: a completion buffer</a><a href="#modules-m14-commit-one-place-authorizes-permanent-effects">M14. commit: one place authorizes permanent effects</a><a href="#modules-m15-memory-adapter-remember-who-must-receive-the-answer">M15. memory_adapter: remember who must receive the answer</a><a href="#modules-m16-control-hazard-unit-one-serialized-operation-and-one-redirect">M16. control_hazard_unit: one serialized operation and one redirect</a><a href="#modules-m17-recovery-report-wait-then-restart">M17. recovery: report, wait, then restart</a><a href="#modules-m18-core-integration-is-a-correctness-task">M18. core: integration is a correctness task</a><a href="#modules-m19-pipe-reg-learn-the-storage-pattern">M19. pipe_reg: learn the storage pattern</a><a href="#modules-m20-read-a-cycle-table-correctly">M20. Read a cycle table correctly</a><a href="#modules-m21-critical-paths-and-physical-cost">M21. Critical paths and physical cost</a><a href="#modules-m22-a-short-vocabulary-to-keep-nearby">M22. A short vocabulary to keep nearby</a></div><div class="nav-group"><a class="group-title" href="#sources">Actual RTL source</a><a href="#source-hazard_pkg">hazard_pkg.sv</a><a href="#source-rv32_pkg">rv32_pkg.sv</a><a href="#source-forwarding_unit">forwarding_unit.sv</a><a href="#source-control_hazard_unit">control_hazard_unit.sv</a><a href="#source-rv32_decode">rv32_decode.sv</a><a href="#source-alu">alu.sv</a><a href="#source-fetch">fetch.sv</a><a href="#source-decode_stage">decode_stage.sv</a><a href="#source-regfile">regfile.sv</a><a href="#source-scoreboard">scoreboard.sv</a><a href="#source-register_stage">register_stage.sv</a><a href="#source-dispatch">dispatch.sv</a><a href="#source-execute">execute.sv</a><a href="#source-memory_stage">memory_stage.sv</a><a href="#source-writeback">writeback.sv</a><a href="#source-commit">commit.sv</a><a href="#source-memory_adapter">memory_adapter.sv</a><a href="#source-recovery">recovery.sv</a><a href="#source-core">core.sv</a><a href="#source-pipe_reg">pipe_reg.sv</a></div></nav><main id="content"><header><p class="label">An offline learning handbook · RV32I · Four-wide · In-order</p><h1>Build your processor, one clear contract at a time.</h1><p>Learn what each stage owns, how instructions move, and why hazards need explicit rules. Begin with the guided examples, then use the reference and module walkthroughs while implementing.</p><div class="note"><p><strong>This is a design and implementation guide, not a completed CPU.</strong></p><p>The forwarding and control-hazard blocks are implemented. The fifteen processor shells remain yours to build. Cycle tables are illustrations, not measured execution results.</p></div><div class="pipeline" aria-label="Eight stages in order"><a href="#beginner-a7-the-eight-stages-explained-without-shortcuts"><b>1. IF</b>Fetch words</a><a href="#beginner-a7-the-eight-stages-explained-without-shortcuts"><b>2. D</b>Decode meaning</a><a href="#beginner-a7-the-eight-stages-explained-without-shortcuts"><b>3. R</b>Read registers</a><a href="#beginner-a7-the-eight-stages-explained-without-shortcuts"><b>4. DP</b>Check and dispatch</a><a href="#beginner-a7-the-eight-stages-explained-without-shortcuts"><b>5. EX</b>Compute results</a><a href="#beginner-a7-the-eight-stages-explained-without-shortcuts"><b>6. MEM</b>Process memory</a><a href="#beginner-a7-the-eight-stages-explained-without-shortcuts"><b>7. WB</b>Hold completion</a><a href="#beginner-a7-the-eight-stages-explained-without-shortcuts"><b>8. C</b>Commit effects</a></div><div class="routes"><a href="#beginner">1 · Learn the basics</a><a href="#tutorial">2 · Read the design</a><a href="#skeleton">3 · Plan implementation</a><a href="#modules">4 · Explore each file</a></div></header><section id="beginner" class="part" aria-label="Start here: first principles">
+<p class="label">Start here: first principles</p>
+<h2 class="part-title" id="beginner-your-first-complete-mental-model-of-this-processor">Your first complete mental model of this processor</h2>
+<p>Read this guided introduction before the detailed design reference. You do not need to know what a scoreboard, retirement packet or handshake is yet. We will define each one, show why it exists, and connect it to the actual files.</p>
+<p><strong>Project status:</strong> the forwarding and control-hazard units have working RTL and standalone tests. The rest of the new processor is a set of typed, deliberately unfinished skeletons. This guide describes the machine you are going to build; its worked cycle examples are design illustrations, not recorded CPU simulations. The documentation expansion does not fill in the unfinished hardware for you.</p>
+<h3 id="beginner-a1-what-a-processor-actually-does">A1. What a processor actually does</h3>
+<p>A program is a sequence of instructions stored as bits in memory. Each instruction asks the processor to do a small operation: add two values, read memory, write memory, or choose a different next instruction. The processor repeatedly reads instructions, works out their meaning, obtains their inputs and applies their effects in the order required by the program.</p>
+<p>Imagine this short program, with decimal constants:</p>
+<pre><code>addi x5, x0, 7      # x5 gets 0 + 7
+addi x6, x0, 9      # x6 gets 0 + 9
+add  x7, x5, x6     # x7 gets 7 + 9 = 16</code></pre>
+<p>x5 is a register name, not the number five used as arithmetic data. A register is a small storage location inside the processor. x0 is special: reading it always returns zero, and writing it changes nothing. Memory is a much larger addressed storage space reached through a separate interface.</p>
+<p>The <strong>program counter</strong>, or PC, identifies an instruction&#x27;s address. An ordinary base RV32I instruction occupies four bytes, so straight-line addresses might be 0x100, 0x104 and 0x108. These are illustrative addresses, not a selected reset address for this project. A branch or jump can choose another next PC.</p>
+<p>The ISA is the software contract. The pipeline is our chosen way of implementing that contract. RV32I does not require four lanes or eight stages. Those are microarchitectural decisions we must make correct and then measure.</p>
+<h3 id="beginner-a2-the-three-kinds-of-storage-you-must-distinguish">A2. The three kinds of storage you must distinguish</h3>
+<div class="table" tabindex="0" role="region" aria-label="Scrollable reference table"><table><thead><tr><th scope="col">Storage</th><th scope="col">Example</th><th scope="col">What it represents</th></tr></thead><tbody><tr><td>Architectural register file</td><td>x5 contains 7 after commit</td><td>Program-visible register state</td></tr><tr><td>Pipeline registers</td><td>An unfinished ADD and its inputs are waiting in EX</td><td>Work in progress, not yet architectural state</td></tr><tr><td>External memory</td><td>Bytes addressed by a load/store</td><td>Program data/instructions with separately ordered effects</td></tr></tbody></table></div>
+<p>“Register stage” refers to reading architectural registers. “Pipeline register” refers to a hardware storage boundary between cycles. They are not the same thing. A register file holds many named values; a pipeline register holds a packet of instruction information moving through this particular implementation.</p>
+<p>If EX computes 16 for x7, the pipeline may know the result before x7 in the architectural register file contains 16. Forwarding can let another instruction use that result early. Commit is the point where the register file is updated. Keep these moments separate whenever reading a waveform.</p>
+<h3 id="beginner-a3-bits-signed-values-addresses-and-byte-order">A3. Bits, signed values, addresses and byte order</h3>
+<p>RV32 data values are 32-bit patterns. Hexadecimal is a compact way to write them: each hex digit represents four bits. 0x00000010 is decimal 16. The pattern 0xffffffff is unsigned 4294967295 or signed −1 depending on the operation. The storage bits do not change when you choose a signed interpretation.</p>
+<p>Addition keeps its low 32 result bits. For example, 0xffffffff + 1 produces 0x00000000. SLT compares signed values; SLTU compares unsigned values. A logical right shift inserts zeros, while an arithmetic right shift repeats the sign bit. These choices must be explicit in SystemVerilog; do not assume every logic vector automatically carries a signed interpretation.</p>
+<p>Our proposed memory interface is little endian: the least significant byte occupies the lowest addressed byte. If a memory word is 0xa1b2c3d4 at address 0x200, its bytes are:</p>
+<div class="table" tabindex="0" role="region" aria-label="Scrollable reference table"><table><thead><tr><th scope="col">Byte address</th><th scope="col">Stored byte</th></tr></thead><tbody><tr><td>0x200</td><td>0xd4</td></tr><tr><td>0x201</td><td>0xc3</td></tr><tr><td>0x202</td><td>0xb2</td></tr><tr><td>0x203</td><td>0xa1</td></tr></tbody></table></div>
+<p>LB at 0x200 produces 0xffffffd4 after sign extension. LBU produces 0x000000d4. Neither load is asking for the numeric address 0x200 as its result. Address generation and returning the data at that address are separate operations.</p>
+<h3 id="beginner-a4-what-a-clock-edge-means">A4. What a clock edge means</h3>
+<p>Combinational logic computes from current inputs during a cycle. At a rising clock edge, sequential storage captures its selected next state. All pipeline registers conceptually capture together; the source-code order of different modules does not determine which instruction moves first.</p>
+<p>If R holds instruction A before an edge and D holds B, that edge may move A into DP and B into R. A has not instantly passed through DP and EX as well. Those later movements require later edges unless explicitly designed as a combinational path.</p>
+<p>Our naming convention is <code>_q</code> for current registered state and <code>_d</code> for the next-state value. <code>_i</code> is an input port and <code>_o</code> is an output port. Start an always_comb block with defaults, compute next state using blocking assignments, then use only nonblocking state assignments inside always_ff. Synchronous reset takes effect at a clock edge, not immediately when its signal changes.</p>
+<p>An unimplemented module with an undriven output does not mean that output is architecturally zero. A simulator might show unknown data or a particular default depending on its model. The skeleton intentionally supplies no behavior.</p>
+<h3 id="beginner-a5-pipeline-depth-and-superscalar-width-are-different">A5. Pipeline depth and superscalar width are different</h3>
+<p>Pipeline <strong>depth</strong> is how many stages an instruction traverses. Our requested depth is eight. Pipeline <strong>width</strong> is how many independent instructions a stage can process together. Our final target width is four.</p>
+<p>A useful picture is four parallel lanes through each of eight processing steps. The lanes are positions within an age-ordered packet, not four separate CPUs. They share one architectural register file, one program&#x27;s order and one commit policy. They also share some limited resources, including the single data port.</p>
+<p>Four independent ADDs can occupy four EX lanes at once. Four dependent ADDs cannot necessarily do so: each may need the preceding result. Four loads do not run together in this initial design, because data operations serialize.</p>
+<p>Latency asks how long one instruction takes. Throughput asks how many finish per cycle after the pipeline fills. A deep pipeline can have good throughput without low latency. Four-wide is a peak opportunity, not a promise of IPC=4 on arbitrary programs. IPC means retired instructions divided by clock cycles over a stated interval.</p>
+<h3 id="beginner-a6-the-whole-machine-in-one-annotated-picture">A6. The whole machine in one annotated picture</h3>
+<pre><code>Instruction memory
+      |
+      v
+ IF -&gt; D -&gt; R -&gt; DP -&gt; EX -&gt; MEM -&gt; WB -&gt; C
+           ^     ^      |      |      |    |
+           |     +------+- result forwarding --+
+           |                                  |
+           +-- committed register file &lt;-------+ commit writes
+                 |
+                 +---- current values read in R
+
+DP allocation --&gt; scoreboard &lt;-- C release
+MEM load request --&gt; memory adapter &lt;-- C authorized store
+C branch/trap --&gt; recovery --&gt; IF redirect and younger-work cancellation</code></pre>
+<p>The forward arrows show instruction progression. The backward arrows carry data or control information; they do not mean instructions execute backward. A producer in EX can send a value to a waiting consumer in DP. Commit can release a busy register name. Recovery can tell fetch which PC to use next.</p>
+<p>The units outside the straight pipeline are just as important as the stages. The scoreboard remembers who is still writing. The forwarding unit resolves operand values. The memory adapter owns external requests. Recovery owns trap reporting and restart. <code>core.sv</code> eventually connects all of them; its current ports do not instantiate or implement any of them yet.</p>
+<h3 id="beginner-a7-the-eight-stages-explained-without-shortcuts">A7. The eight stages, explained without shortcuts</h3>
+<h4 id="beginner-if-get-instruction-bits-not-data-operands">IF: get instruction bits, not data operands</h4>
+<p>IF chooses an address, sends an instruction request and waits for a response. It attaches a PC to each instruction word and buffers a packet when decode is not ready. It cannot assume memory answers immediately. It cannot discard ownership of a request just because a branch later changes the desired PC.</p>
+<p>The proposed instruction response carries four words from an aligned 16-byte block. If the desired PC is 0x10c, only that block&#x27;s last word is relevant. IF emits one instruction, then obtains the next block. Correctness matters more than filling every packet with four words.</p>
+<h4 id="beginner-d-translate-bits-into-named-actions">D: translate bits into named actions</h4>
+<p>D determines the operation, source names, destination, immediate and whether the instruction needs serialized treatment. It does not read the register values or calculate the arithmetic result. A decoder is combinational; the decode stage also needs packet storage and handshake control.</p>
+<p><code>rv32_decode.sv</code> is the per-instruction decoder; <code>decode_stage.sv</code> uses four instances and preserves packet order. Do not confuse these two files and accidentally add an extra pipeline stage between them.</p>
+<h4 id="beginner-r-obtain-the-current-committed-register-values">R: obtain the current committed register values</h4>
+<p>R holds stable register indices and reads the register file. Four instructions with two sources each need up to eight reads. A port means an independently addressable access, not merely another variable name in RTL.</p>
+<p>The register file may change while R waits because older instructions commit. Therefore R supplies live operand values on a separate sideband sampled by DP at transfer. The held instruction/control packet remains stable. DP subsequently maintains its own snapshots and resolves them against forwarding.</p>
+<h4 id="beginner-dp-decide-what-may-safely-start-execution">DP: decide what may safely start execution</h4>
+<p>DP checks sources, destination ownership and resource availability in program order. It selects an oldest consecutive prefix, never arbitrary ready lanes. If lane 1 cannot run, lanes 2 and 3 wait behind it. It retains and compacts the unselected suffix without changing the instructions&#x27; original PCs.</p>
+<p>DP allocates busy destination names only when an instruction actually transfers to EX. A tentative choice or an offer held under backpressure is not allocation. For serialized instructions, DP also waits for older backend work to drain.</p>
+<h4 id="beginner-ex-compute-but-do-not-commit">EX: compute, but do not commit</h4>
+<p>EX performs arithmetic or computes an address/branch result. It can supply a ready arithmetic value to forwarding. A load&#x27;s computed address is not ready load data. Branch comparisons and jump targets are calculations here; the current conservative design applies control-flow changes at commit.</p>
+<p>Use the currently resident EX operation for forwarding, not the candidate arriving from DP. Feeding the new DP instruction&#x27;s own prospective result back into its input selection would create the wrong dependency path or a loop.</p>
+<h4 id="beginner-mem-obtain-load-data-or-prepare-a-store-descriptor">MEM: obtain load data or prepare a store descriptor</h4>
+<p>MEM sends a load once, waits for its response and formats the returned bytes. It passes ALU instructions through in order without issuing memory traffic. For stores it packages the address, data and mask but does not send the write. Commit must authorize that externally visible operation later.</p>
+<p>A load-waiting stage may be occupied even when it has no output packet ready. Consequently backend_empty cannot be calculated from output-valid bits alone.</p>
+<h4 id="beginner-wb-preserve-the-completed-result-while-commit-waits">WB: preserve the completed result while commit waits</h4>
+<p>WB is a holding stage for results, destination metadata and faults. In this project it is not the place that writes x1–x31. It can provide a forwarded value, but it cannot clear destination ownership or retire an instruction.</p>
+<p>When C stalls, WB holds its packet and earlier stages experience backpressure. This is normal behavior, not a reason to overwrite the oldest unfinished work.</p>
+<h4 id="beginner-c-make-accepted-effects-architectural">C: make accepted effects architectural</h4>
+<p>C applies register writes, emits retirement records and handles ordered traps. It retires only the oldest permitted prefix. It sends an authorized store once and waits for the result before declaring that store complete. It coordinates branch retirement/link updates with acceptance of the redirect event.</p>
+<p>This separation lets us distinguish “the ALU knows the answer” from “the program has permanently completed this instruction.” Precise errors depend on it.</p>
+<h3 id="beginner-a8-follow-one-real-instruction-through-every-stage">A8. Follow one real instruction through every stage</h3>
+<p>Take <code>addi x5,x0,7</code>, whose instruction word is 0x00700293. Its fields are opcode 0x13, destination 5, source 1 index 0, funct3 zero and signed immediate 7. The instruction&#x27;s register indices are not its operand values.</p>
+<div class="table" tabindex="0" role="region" aria-label="Scrollable reference table"><table><thead><tr><th scope="col">Stage</th><th scope="col">Example state or action</th></tr></thead><tbody><tr><td>IF</td><td>Receives 0x00700293 and attaches its illustrative PC 0x100</td></tr><tr><td>D</td><td>Produces OP_ADDI, rs1=x0, rd=x5, uses_rs1=1, uses_rs2=0, immediate=7</td></tr><tr><td>R</td><td>Supplies zero for source x0; no real rs2 value is needed</td></tr><tr><td>DP</td><td>Checks x5 ownership, resolves x0 ready, dispatches and allocates busy[5]</td></tr><tr><td>EX</td><td>Selects zero and immediate seven; computes result seven</td></tr><tr><td>MEM</td><td>Makes no data-memory request and preserves the result</td></tr><tr><td>WB</td><td>Holds result=7 and destination x5 for commit</td></tr><tr><td>C</td><td>Writes x5=7 once, clears busy[5], emits a retirement event for PC 0x100</td></tr></tbody></table></div>
+<p>If rd were x0, the instruction could still retire, but it would not allocate or write a nonzero register. For memory instructions, rd=x0 must not remove memory accesses or faults. Destination suppression is not instruction deletion.</p>
+<p>The reference chapters give the complete instruction-group checklist. This example demonstrates the metadata journey, not an implementation of the decoder.</p>
+<h4 id="beginner-how-decode-finds-the-fields">How decode finds the fields</h4>
+<p>Number instruction bits from 31 down to 0. A slice such as instruction[19:15] means the five bits at positions 19 through 15, inclusive. The opcode is [6:0], rd is [11:7], funct3 is [14:12], rs1 is [19:15], rs2 is [24:20], and funct7 is [31:25] when the particular format uses those fields. A field&#x27;s physical bits can instead belong to an immediate in another format.</p>
+<div class="table" tabindex="0" role="region" aria-label="Scrollable reference table"><table><thead><tr><th scope="col">Format</th><th scope="col">Typical use</th><th scope="col">Where the immediate comes from</th></tr></thead><tbody><tr><td>R</td><td>ADD and other register operations</td><td>No immediate; two source registers</td></tr><tr><td>I</td><td>ADDI, loads, JALR</td><td>instruction[31:20], sign-extended from 12 bits</td></tr><tr><td>S</td><td>Stores</td><td>instruction[31:25] followed by instruction[11:7], sign-extended</td></tr><tr><td>B</td><td>Conditional branches</td><td>[31], [7], [30:25], [11:8], then a zero bit; sign-extended</td></tr><tr><td>U</td><td>LUI and AUIPC</td><td>instruction[31:12] followed by twelve zero bits</td></tr><tr><td>J</td><td>JAL</td><td>[31], [19:12], [20], [30:21], then a zero bit; sign-extended</td></tr></tbody></table></div>
+<p>“Followed by” means concatenation from high to low bits, not arithmetic addition. Sign extension repeats the original sign bit into the newly added upper positions. Shift-immediate operations use a shift amount and additional function checks; do not treat every I-format instruction as ADDI.</p>
+<p>Use the <a href="https://docs.riscv.org/reference/isa/v20260120/unpriv/rv32.html">official RV32I formats and semantics</a> when completing the decoder. The table is a reading aid, not the full legality table. For this project, write a decode row containing the required opcode and function fields, source-use flags, destination behavior, immediate format and serial classification. Then test the resulting record, not just its operation name. A correctly named ADD with a wrong source flag can still break dispatch.</p>
+<h3 id="beginner-a9-valid-and-ready-an-agreement-at-a-clock-edge">A9. Valid and ready: an agreement at a clock edge</h3>
+<p><code>valid</code> says the producer is offering meaningful work. <code>ready</code> says the receiver can accept it. The transfer is <code>valid &amp;&amp; ready</code> at the rising edge. Neither signal alone means ownership moved.</p>
+<div class="table" tabindex="0" role="region" aria-label="Scrollable reference table"><table><thead><tr><th scope="col">valid</th><th scope="col">ready</th><th scope="col">Meaning at the edge</th></tr></thead><tbody><tr><td>0</td><td>0</td><td>No transfer; neither side is offering an accepted item</td></tr><tr><td>0</td><td>1</td><td>Receiver has space, but producer has no item</td></tr><tr><td>1</td><td>0</td><td>Producer must retain its offered packet</td></tr><tr><td>1</td><td>1</td><td>One transfer; receiver now owns that item</td></tr></tbody></table></div>
+<p>Suppose EX offers packet A while MEM is waiting on an older load. EX keeps A valid with the same payload through every stalled edge. When MEM finally raises ready, exactly one edge transfers A. EX must not treat each stalled cycle as a new issue. Likewise, a memory request may be accepted before its response exists.</p>
+<p>For a one-entry buffer, <code>ready = !occupied || downstream_ready</code> permits consuming the old packet and replacing it with a new packet on one edge. Without this consume-and-replace case, every packet may be followed by an avoidable bubble. This equation alone does not implement flush priority or external request ownership.</p>
+<p>A <strong>bubble</strong> is an empty slot, not an instruction encoding of zero. A <strong>stall</strong> retains work. A <strong>flush</strong> cancels specific work. Reset initializes the design under a coordinated system contract. Using these words interchangeably causes real bugs: a stall must not clear a valid instruction, and a flush must not erase an already-authorized external store.</p>
+<h4 id="beginner-decide-simultaneous-events-before-writing-next-state-logic">Decide simultaneous events before writing next-state logic</h4>
+<p>Multiple events can be true during one cycle. For a simple pipeline buffer, reset/authorized kill must take precedence over ordinary movement. When there is no cancellation, downstream acceptance and upstream acceptance may replace the old item together. With neither event, retain the old ownership.</p>
+<p>This is a reasoning method, not a universal priority list for every module. Commit cannot erase an authorized store because a younger instruction wants a flush. The adapter cannot forget a request that the memory endpoint accepted. Write a separate event table for each state owner before implementing its always_comb block. Use the actual pipe_reg example for the small buffer case.</p>
+<h3 id="beginner-a10-packets-lanes-and-splitting-an-instruction-group">A10. Packets, lanes and splitting an instruction group</h3>
+<p>Assume lane 0 is oldest and the valid mask is written with lane 0 at the right. 1111 means four instructions, 0011 means lanes 0 and 1, and 0000 means empty. 0101 has a hole and is not a legal compact input packet for this design.</p>
+<pre><code>Before dispatch:
+lane 0 = A, PC 0x100
+lane 1 = B, PC 0x104
+lane 2 = C, PC 0x108
+lane 3 = D, PC 0x10c
+
+Accept A and B only.
+
+Retained suffix after compaction:
+lane 0 = C, PC 0x108
+lane 1 = D, PC 0x10c
+lane 2 and lane 3 invalid</code></pre>
+<p>Compaction changes storage positions, not instruction identities or PCs. C does not acquire A&#x27;s address when moved into lane 0. Use the retained instruction&#x27;s own metadata for branch targets, faults and retirement checks.</p>
+<p>While a selected prefix is offered to EX and EX is stalled, freeze that selection. Do not expand it from two instructions to three midway through the offer just because another operand becomes ready. After acceptance, update ownership and compact the remaining suffix exactly once.</p>
+<h3 id="beginner-a11-dependencies-and-the-scoreboard-with-concrete-values">A11. Dependencies and the scoreboard, with concrete values</h3>
+<p>The scoreboard is a 32-bit ownership table. busy[5]=1 means a dispatched instruction still owns a future write to x5. It does not mean the numeric value of x5 is one, and it does not mean the result is definitely unavailable. Forwarding may already have that result even while the name remains busy.</p>
+<p>Consider A=<code>addi x5,x0,7</code> and B=<code>add x7,x5,x6</code>, with x6 already equal to 9. B has a true read-after-write dependency: it needs A&#x27;s seven, not the old x5. Dispatching B with stale x5 would calculate the wrong result. B may proceed when A&#x27;s result is ready for forwarding, subject to the in-order/resource rules.</p>
+<p>Now let C=<code>addi x5,x0,20</code>. C is another writer to x5. Our simple policy prevents C from dispatching while A owns busy[5], even if A&#x27;s result is already forwarded. Otherwise one bit could not distinguish which writer later cleared ownership. This is a conservative WAW rule, not a universal requirement for every CPU.</p>
+<p>For WAR, imagine A reads x5 and a younger B writes x5. Once A&#x27;s operands are captured safely, B&#x27;s later architectural write cannot change that captured input. In-order dispatch prevents B passing a blocked older reader. No renaming table is needed for this initial policy.</p>
+<p>Set a busy bit only at actual dispatch; clear it only at accepted commit or valid recovery that removes all its remaining owners. Never clear it just because a result was forwarded. x0&#x27;s busy bit must stay clear.</p>
+<h3 id="beginner-a12-forwarding-is-choosing-a-value-not-changing-the-register-file">A12. Forwarding is choosing a value, not changing the register file</h3>
+<p>Forwarding is a multiplexer decision. It substitutes an available older result for the stale committed-register snapshot a consumer would otherwise read. It does not retire the producer, update the architectural register file or let the consumer ignore program order.</p>
+<p>Each of eight source ports compares its register index with up to sixteen producer descriptions. The comparison must use valid, writes_rd and killed flags as well as the name. A store has no integer destination result to forward.</p>
+<div class="table" tabindex="0" role="region" aria-label="Scrollable reference table"><table><thead><tr><th scope="col">Situation for source x5</th><th scope="col">Correct choice</th></tr></thead><tbody><tr><td>No live writer and busy[5]=0</td><td>Use the refreshed register-file value</td></tr><tr><td>Matching writer has a ready nonfaulting value 7</td><td>Forward seven</td></tr><tr><td>Youngest matching writer is still waiting for data</td><td>Stall, even if an older value exists</td></tr><tr><td>Matching writer faulted</td><td>Stall until recovery; do not use an older value</td></tr><tr><td>Candidate writer was killed</td><td>Exclude it from live producer matching</td></tr><tr><td>Source is x0 or unused</td><td>Resolve ready zero</td></tr></tbody></table></div>
+<p>The youngest matching writer is the most recent one before the consumer in program order. Numeric data value and register number say nothing about age. In this strictly ordered pipeline, stage/lane placement defines age: current EX is younger than MEM, then WB, then C. Within each packet a higher valid lane is younger. If you later permit overtaking, that age shortcut must change.</p>
+<p>An EX-to-DP path can let B follow A in the next cycle. It cannot make two newly selected dependent instructions complete a chain inside one ordinary cycle unless you intentionally build that combinational chain. We do not do that.</p>
+<h3 id="beginner-a13-a-four-instruction-worked-scheduling-example">A13. A four-instruction worked scheduling example</h3>
+<p>Assume all starting source values are committed and these instructions arrive as one packet:</p>
+<pre><code>A: addi x5, x0, 7
+B: addi x6, x0, 9
+C: add  x7, x5, x6
+D: xor  x8, x9, x10</code></pre>
+<p>A and B may dispatch together. C needs both of their results, so the oldest- prefix rule stops there; D cannot pass C even though D is independent. DP keeps C and D as its suffix. Once A/B are resident in EX with ready values, forwarding can supply C&#x27;s seven and nine. If EX can consume and replace its current packet, C and D may enter EX on the next edge.</p>
+<p>This illustrative overlap assumes a direct EX forwarding path meets timing and no downstream stage stalls. If that path is disabled, C waits until those results become visible at a later supported forwarding point. The arithmetic remains the same; only the schedule changes.</p>
+<p>At retirement, the accepted effects remain A then B then C then D. Some may retire on the same edge, but the trace preserves lane order. Four-lane hardware does not allow D to commit before unfinished C. Under a fault, only permitted older effects may become visible.</p>
+<h3 id="beginner-a14-loads-follow-the-address-response-and-result-separately">A14. Loads: follow the address, response and result separately</h3>
+<p>Suppose x1 contains 0x200 and we execute <code>lbu x5,1(x1)</code>. The bytes are those from A3. The expected result is 0x000000c3.</p>
+<div class="table" tabindex="0" role="region" aria-label="Scrollable reference table"><table><thead><tr><th scope="col">Step</th><th scope="col">What happens</th></tr></thead><tbody><tr><td>R/DP</td><td>Read x1, drain older backend work, and admit the load alone</td></tr><tr><td>EX</td><td>Calculate original byte address 0x201; no load data exists yet</td></tr><tr><td>MEM request</td><td>Offer aligned address 0x200 with read semantics under the adapter contract</td></tr><tr><td>Request acceptance</td><td>Record that it was sent; do not resend during the wait</td></tr><tr><td>Response</td><td>Receive word 0xa1b2c3d4 or an access-error indication</td></tr><tr><td>MEM formatting</td><td>Shift/extract byte offset 1 and zero-extend 0xc3</td></tr><tr><td>WB/C</td><td>Hold, then commit x5=0x000000c3 and retire the load</td></tr></tbody></table></div>
+<p>Request acceptance and response completion can be separated by many cycles. The adapter remembers which instruction-side owner receives the response. Its idle signal stays false while it holds a response the core has not consumed.</p>
+<p>For <code>lh x5,1(x1)</code>, address 0x201 is misaligned for our selected halfword policy. The design reports a fault before issuing that request. This project&#x27;s trap policy is a platform choice; do not mistake it for a hidden automatic split across two memory words.</p>
+<p>Loads remain serialized here even though the forwarding module can represent load results. A capable submodule does not automatically relax the overall dispatch policy. Enabling overlapping loads would require more ownership, ordering and recovery work than changing one stall bit.</p>
+<h3 id="beginner-a15-stores-why-computing-the-address-is-not-permission-to-write">A15. Stores: why computing the address is not permission to write</h3>
+<p>For <code>sb x5,1(x1)</code> with x5=0x000000aa and x1=0x200, EX computes address 0x201. The aligned bus write address is 0x200, write data is 0x0000aa00 and the four byte strobes are 0010. A strobe bit says which byte is actually modified; the other data bytes are irrelevant to this write.</p>
+<p>MEM creates that descriptor. WB holds it. C checks that the store is the next allowed architectural effect, then sends it through the adapter. On acceptance it remembers store_sent=1. Waiting three more cycles for acknowledgement must not create three additional writes, especially when the target is a device.</p>
+<p>An older exception must prevent a younger store from being authorized. After a store is authorized, external effects cannot be undone by flushing pipeline registers. Our adapter contract requires failed stores to have no partial visible effect. A real bus that cannot guarantee that needs a different error contract; the skeleton does not solve this by pretending errors never occur.</p>
+<p>FENCE orders relevant accesses. In this simple design it waits for earlier data operations to complete and blocks later ones. This is sufficient only when the memory endpoint&#x27;s acknowledgement really satisfies the required ordering; an acknowledgement into a posted queue may require an additional drain mechanism.</p>
+<h3 id="beginner-a16-branches-and-the-difference-between-a-fault-pc-and-a-restart-pc">A16. Branches and the difference between a fault PC and a restart PC</h3>
+<p>A branch asks a condition and chooses a target or fall-through. For an illustrative branch at 0x100 with offset 12, a taken target is 0x10c and fall-through is 0x104. Use that branch&#x27;s own PC, not the packet&#x27;s first PC or the current fetch PC.</p>
+<p>The initial policy drains older work, dispatches the branch alone, and blocks younger dispatch. EX calculates its outcome; C accepts the control-flow event. Recovery tells IF to restart and discards younger prefetched words, even for fall-through in this conservative version. There is no branch predictor to train.</p>
+<p>JAL/JALR also produce a link value, so the link write and accepted branch event must agree. A losing or faulting jump must not leave a committed link write. JALR clears bit zero of its computed target, but base-only instruction alignment still requires checking the remaining alignment condition.</p>
+<p>An exception has a faulting PC that identifies the failed instruction. Its restart/handler PC is where the environment later tells execution to continue. Those are different fields. For example, a fault at 0x120 does not imply the handler is located at 0x120. The unfinished recovery module must retain the trap report and wait for the environment&#x27;s explicit response.</p>
+<p>The control unit stops new sequential fetch, but must still allow a redirect to be accepted and stale responses to drain. If IF says “I cannot accept a redirect because fetch is stopped,” and control says “fetch stays stopped until you accept the redirect,” neither side can progress. That is a deadlock, not an ordinary stall.</p>
+<h3 id="beginner-a17-precise-commit-and-a-fault-in-the-middle-of-a-group">A17. Precise commit and a fault in the middle of a group</h3>
+<p>Precise architectural state means the machine can explain the program as an ordered sequence up to the fault: permitted older instructions completed, the faulting instruction did not complete normally, and younger effects are absent.</p>
+<p>Imagine a future commit packet containing A, B, faulting C, and D. Commit may retire A/B if their effects are complete. It must not report C as a normal retirement or commit D. The current serial-special policy often makes a fault a singleton, but the general prefix rule is still the right specification.</p>
+<p><code>commit_writes_t</code> describes accepted register writes. <code>retire_bundle_t</code> is a passive trace of accepted instructions; it has no ready signal in our skeleton. <code>trap_t</code> describes the fault event separately. The trace consumer must observe every cycle. It cannot silently backpressure an interface that has no ready port.</p>
+<p>Because architectural registers change only at C, their state can survive a flush of unfinished work. Resetting the entire register file on every branch would erase legitimate program results. Reset, branch recovery and trap handling must therefore have different destinations and ownership rules.</p>
+<h3 id="beginner-a18-read-the-systemverilog-types-as-a-vocabulary">A18. Read the SystemVerilog types as a vocabulary</h3>
+<div class="table" tabindex="0" role="region" aria-label="Scrollable reference table"><table><thead><tr><th scope="col">Name</th><th scope="col">Beginner interpretation</th></tr></thead><tbody><tr><td>word_t</td><td>One 32-bit data/address/instruction-sized vector; meaning depends on its field</td></tr><tr><td>reg_idx_t</td><td>Five bits selecting x0 through x31, not the selected value</td></tr><tr><td>op_t</td><td>Internal name for a decoded instruction; not its binary instruction opcode</td></tr><tr><td>decoded_t</td><td>Instruction meaning: names, source-use flags, immediate, class/fault information</td></tr><tr><td>lane_t</td><td>Everything we currently carry about one in-flight instruction</td></tr><tr><td>packet_t</td><td>Four ordered lane records</td></tr><tr><td>fault_t</td><td>Valid flag, symbolic internal cause and relevant address/bits</td></tr><tr><td>source_t</td><td>One architectural operand query for forwarding</td></tr><tr><td>producer_t</td><td>One older instruction&#x27;s destination and result availability</td></tr><tr><td>mem_request_t</td><td>Aligned data transaction descriptor; no request ownership without handshake</td></tr><tr><td>mem_response_t</td><td>Returned word/error; interpreted by the retained transaction owner</td></tr></tbody></table></div>
+<p>Packed means the fields form a contiguous bit vector that can be stored or assigned as a group. It does not mean every field is meaningful at every stage. IF does not know the final arithmetic result. EX does not know pending load data. Consult the ownership table before reading a field.</p>
+<p>Fault enums are symbolic internal names, not architectural privileged numeric cause codes. This base-only teaching interface does not secretly implement machine-mode CSRs. Port declarations are contracts you must implement, not proof that the contracts already hold.</p>
+<h3 id="beginner-a19-how-to-implement-one-module-without-getting-lost">A19. How to implement one module without getting lost</h3>
+<p>Start with the module&#x27;s question: for example, “which operation do these bits describe?” for decode, or “who still owns a pending destination?” for the scoreboard. Write the inputs it may trust, the outputs it owns, and the state it needs. Do not begin by copying every signal from a larger processor design.</p>
+<p>Then write down the edge events: input transfer, output transfer, response acceptance, commit, reset and permitted flush. Ask which can happen together. A buffer that can consume and replace needs a different next-state case from a buffer that can only do one action. A request that was accepted must remain owned even when its request-valid signal falls.</p>
+<p>Choose one directed test whose wrong behavior would be unmistakable. For a scoreboard, dispatch a writer, forward its value and confirm its busy bit stays set until commit. For DP, accept two lanes and confirm the retained suffix keeps its own PCs. For a store, delay response and confirm only one request is accepted.</p>
+<p>Only then implement next-state logic and the assignment-only always_ff block. Run strict lint and behavioral tests for that module. Structural skeleton checks suppress expected undriven warnings; do not use those relaxed checks as proof that completed RTL is good.</p>
+<h3 id="beginner-a20-what-is-intentionally-not-part-of-this-first-processor">A20. What is intentionally not part of this first processor</h3>
+<p>No caches, translation, interrupts, privileged CSR system, operating-system platform, branch prediction, multiple outstanding data accesses or out-of-order scheduler is supplied by the skeleton. The memory and trap ports are boundaries where a selected environment will eventually connect those services if needed.</p>
+<p>These omissions do not make four-wide integer execution impossible. They make the implementation easier to reason about while you learn. They also limit performance and system software support. The eventual full RV32I claim still requires instruction semantics, the execution environment, and verification; writing every module name is not that evidence.</p>
+<p>The rest of this HTML contains the detailed architecture reference, the full implementation workbook, and the current module interfaces/source listings. Use the chapter search to find a concept, then jump to its module. Keep the worked examples separate from measured results: this processor is still yours to complete.</p>
+</section>
+<section id="tutorial" class="part" aria-label="Architecture reference">
+<p class="label">Architecture reference</p>
+<h2 class="part-title" id="tutorial-building-a-four-wide-eight-stage-rv32i-processor">Building a four-wide, eight-stage RV32I processor</h2>
 <p>Design revision: 2026-09-27. This is the active design tutorial. The target is a four-wide <strong>in-order superscalar</strong> processor. The previous OoO backend remains historical work; it does not implement this architecture.</p>
-<h2 id="1-define-the-machine-before-writing-rtl">1. Define the machine before writing RTL</h2>
+<h3 id="tutorial-1-define-the-machine-before-writing-rtl">1. Define the machine before writing RTL</h3>
 <p>The pipeline has exactly these eight logical stages:</p>
 <pre><code>IF → D → R → DP → EX → MEM → WB → C
 
@@ -21,30 +198,30 @@ EX   Execute              MEM  Memory processing
 WB   Writeback holding    C    Architectural commit</code></pre>
 <p>Four-wide means up to four suitable instructions can advance, execute and retire per cycle. It does not mean every cycle performs four instructions. A packet contains individually ordered instructions; it is not one atomic architectural operation. Eight stages describe logical work and register boundaries, not a guarantee of eight-cycle completion under stalls.</p>
 <p>Use the following initial policies. They are our design choices, not ISA rules.</p>
-<div class="table"><table><thead><tr><th scope="col">Property</th><th scope="col">Starting design</th></tr></thead><tbody><tr><td>Ordering</td><td>In-order dispatch, pipeline progression, memory effects and commit</td></tr><tr><td>Width</td><td>Four lanes; implement one lane first using all eight stages</td></tr><tr><td>Execution</td><td>Four integer ALUs; one shared branch/address datapath</td></tr><tr><td>Register file</td><td>Committed 32×32 storage, up to eight reads and four writes</td></tr><tr><td>Hazards</td><td>Busy-bit scoreboard plus EX/MEM/WB/C-to-DP forwarding</td></tr><tr><td>Register writers</td><td>At most one dispatched writer per nonzero architectural register</td></tr><tr><td>Memory</td><td>One load/store unit; one outstanding data transaction</td></tr><tr><td>Special operations</td><td>Loads, stores, control flow, fences and trap-producing operations serialize</td></tr><tr><td>Speculation</td><td>No predicted branches, no out-of-order scheduler, no register renaming</td></tr><tr><td>Architectural updates</td><td>Register changes and store authorization occur at commit</td></tr></tbody></table></div>
+<div class="table" tabindex="0" role="region" aria-label="Scrollable reference table"><table><thead><tr><th scope="col">Property</th><th scope="col">Starting design</th></tr></thead><tbody><tr><td>Ordering</td><td>In-order dispatch, pipeline progression, memory effects and commit</td></tr><tr><td>Width</td><td>Four lanes; implement one lane first using all eight stages</td></tr><tr><td>Execution</td><td>Four integer ALUs; one shared branch/address datapath</td></tr><tr><td>Register file</td><td>Committed 32×32 storage, up to eight reads and four writes</td></tr><tr><td>Hazards</td><td>Busy-bit scoreboard plus EX/MEM/WB/C-to-DP forwarding</td></tr><tr><td>Register writers</td><td>At most one dispatched writer per nonzero architectural register</td></tr><tr><td>Memory</td><td>One load/store unit; one outstanding data transaction</td></tr><tr><td>Special operations</td><td>Loads, stores, control flow, fences and trap-producing operations serialize</td></tr><tr><td>Speculation</td><td>No predicted branches, no out-of-order scheduler, no register renaming</td></tr><tr><td>Architectural updates</td><td>Register changes and store authorization occur at commit</td></tr></tbody></table></div>
 <p>Serialization means an operation waits for older backend work to drain, issues alone, and blocks younger dispatch until it commits or traps. This simplifies the first implementation substantially. Independent ALU packets still execute four-wide; memory-heavy code will be much slower until later optimizations.</p>
-<h2 id="2-rv32i-and-the-execution-environment">2. RV32I and the execution environment</h2>
+<h3 id="tutorial-2-rv32i-and-the-execution-environment">2. RV32I and the execution environment</h3>
 <p>The ISA target includes all 40 base instructions:</p>
-<div class="table"><table><thead><tr><th scope="col">Group</th><th scope="col">Instructions</th></tr></thead><tbody><tr><td>Upper immediate</td><td>LUI, AUIPC</td></tr><tr><td>Register arithmetic</td><td>ADD, SUB, SLL, SLT, SLTU, XOR, SRL, SRA, OR, AND</td></tr><tr><td>Immediate arithmetic</td><td>ADDI, SLTI, SLTIU, XORI, ORI, ANDI, SLLI, SRLI, SRAI</td></tr><tr><td>Conditional branches</td><td>BEQ, BNE, BLT, BGE, BLTU, BGEU</td></tr><tr><td>Jumps</td><td>JAL, JALR</td></tr><tr><td>Loads</td><td>LB, LH, LW, LBU, LHU</td></tr><tr><td>Stores</td><td>SB, SH, SW</td></tr><tr><td>Ordering/environment</td><td>FENCE, ECALL, EBREAK</td></tr></tbody></table></div>
+<div class="table" tabindex="0" role="region" aria-label="Scrollable reference table"><table><thead><tr><th scope="col">Group</th><th scope="col">Instructions</th></tr></thead><tbody><tr><td>Upper immediate</td><td>LUI, AUIPC</td></tr><tr><td>Register arithmetic</td><td>ADD, SUB, SLL, SLT, SLTU, XOR, SRL, SRA, OR, AND</td></tr><tr><td>Immediate arithmetic</td><td>ADDI, SLTI, SLTIU, XORI, ORI, ANDI, SLLI, SRLI, SRAI</td></tr><tr><td>Conditional branches</td><td>BEQ, BNE, BLT, BGE, BLTU, BGEU</td></tr><tr><td>Jumps</td><td>JAL, JALR</td></tr><tr><td>Loads</td><td>LB, LH, LW, LBU, LHU</td></tr><tr><td>Stores</td><td>SB, SH, SW</td></tr><tr><td>Ordering/environment</td><td>FENCE, ECALL, EBREAK</td></tr></tbody></table></div>
 <p>CSR operations and FENCE.I are separate extensions. Multiplication, compressed instructions, atomics, floating point and vectors are also outside this initial scope. Consult the <a href="https://docs.riscv.org/reference/isa/v20260120/unpriv/rv32.html">versioned RV32I specification</a> for encodings and semantics. A four-wide microarchitecture does not change them.</p>
 <p>Choose a little-endian execution environment for the first implementation. Trap misaligned halfword/word data accesses before issuing their transactions. Treat unsupported/reserved encodings as illegal-instruction events by project policy. Do not invent a production reset PC, memory map, bus or FPGA target: make those integration choices explicit before implementing their adapters.</p>
 <p>Initially expose an external trap interface with PC, instruction, cause and relevant fault address. A simulator monitor may terminate execution or supply a restart PC after pipeline state is cleared. ECALL and EBREAK generate distinct events. This boundary is an execution-environment design, not machine-mode CSR, interrupt, MRET or OS support. Full CPU validation must include this contract.</p>
-<h2 id="3-the-important-distinction-writeback-versus-commit">3. The important distinction: writeback versus commit</h2>
+<h3 id="tutorial-3-the-important-distinction-writeback-versus-commit">3. The important distinction: writeback versus commit</h3>
 <p>If a younger ADD writes x5 before an older load reports a fault, the machine cannot present precise architectural state without an undo mechanism. Naming a later stage commit does not make an early register-file write safe.</p>
 <p>Here WB stores completed results and metadata in an ordered holding register. C makes architectural register updates, emits retirement events, and authorizes stores. EX and MEM compute results but do not modify the architectural register file. Consumers may use available older results through forwarding before commit; forwarding does not authorize early architectural updates.</p>
 <p>There is no general reorder buffer or out-of-order issue queue. Ordered elastic pipeline registers retain packets; a stalled older packet prevents younger packets from passing it. A four-entry WB packet register is enough to hold its results until C can accept them. Any future variable-latency unit that allows completion to bypass older work requires revisiting this ordering mechanism.</p>
-<h2 id="4-packets-and-per-instruction-metadata">4. Packets and per-instruction metadata</h2>
+<h3 id="tutorial-4-packets-and-per-instruction-metadata">4. Packets and per-instruction metadata</h3>
 <p>Carry metadata for every instruction, not just a shared packet PC.</p>
-<div class="table"><table><thead><tr><th scope="col">Field</th><th scope="col">Purpose</th></tr></thead><tbody><tr><td>valid, pc, instruction</td><td>Identity, ordering and fault attribution</td></tr><tr><td>rs1, rs2, rd and use/write flags</td><td>Accurate hazard checks and register effects</td></tr><tr><td>operation, immediate, class</td><td>Decode result and resource requirements</td></tr><tr><td>src1_value, src2_value</td><td>R supplies read values; DP captures and refreshes internal snapshots</td></tr><tr><td>result, address, store_data, byte_mask</td><td>Execution and memory effects</td></tr><tr><td>redirect_valid, redirect_pc</td><td>EX computes; C authorizes control-flow change</td></tr><tr><td>exception_valid, cause, fault_address</td><td>Fault record retained until ordered handling</td></tr><tr><td>optional trace sequence</td><td>Verification identity, not a rename tag</td></tr></tbody></table></div>
+<div class="table" tabindex="0" role="region" aria-label="Scrollable reference table"><table><thead><tr><th scope="col">Field</th><th scope="col">Purpose</th></tr></thead><tbody><tr><td>valid, pc, instruction</td><td>Identity, ordering and fault attribution</td></tr><tr><td>rs1, rs2, rd and use/write flags</td><td>Accurate hazard checks and register effects</td></tr><tr><td>operation, immediate, class</td><td>Decode result and resource requirements</td></tr><tr><td>src1_value, src2_value</td><td>R supplies read values; DP captures and refreshes internal snapshots</td></tr><tr><td>result, address, store_data, byte_mask</td><td>Execution and memory effects</td></tr><tr><td>redirect_valid, redirect_pc</td><td>EX computes; C authorizes control-flow change</td></tr><tr><td>exception_valid, cause, fault_address</td><td>Fault record retained until ordered handling</td></tr><tr><td>optional trace sequence</td><td>Verification identity, not a rename tag</td></tr></tbody></table></div>
 <p>Lane 0 is oldest. Compact valid lanes toward it. With lane 0 as the low bit, legal masks are 0000, 0001, 0011, 0111 and 1111. A valid mask with holes needs compaction before admission; physical slot numbers must not distort program age.</p>
 <p>If only two lanes dispatch, retain the other two with their original PCs and compact them to lanes 0 and 1. Never redispatch consumed lanes. The first DP buffer can refuse a new input packet while a suffix remains, accepting a bubble rather than adding complex same-cycle suffix refill and merge behavior.</p>
-<h2 id="5-instruction-fetch">5. Instruction fetch</h2>
+<h3 id="tutorial-5-instruction-fetch">5. Instruction fetch</h3>
 <p>IF owns the fetch PC, request state, response buffer and access-error metadata. Four 32-bit instructions need 16 useful bytes per cycle for sustained width. A narrower instruction interface still works but becomes a throughput limit.</p>
 <p>A four-byte-aligned PC is not necessarily 16-byte aligned. At address 0x...0C, one aligned 16-byte block contains only one instruction at or after the PC. Emit that instruction, then fetch the next block. A later instruction buffer can combine adjacent responses. Do not silently round the PC down and execute the three earlier words.</p>
 <p>Start with one outstanding fetch request. Hold request valid/address until accepted; then wait for a response. Buffer that response when D stalls. Never assume a fixed memory latency or increment request state without a handshake.</p>
 <p>A redirect can arrive while an old request is outstanding. Mark that request discard-on-return, drain its response, then request the pending redirect PC. With one request this is easier than generation tags. A future multi-request frontend needs identities and cancellation generations that cannot alias live responses. Reset must coordinate with the endpoint or drain old transactions.</p>
 <p>Restrict instruction fetch to executable side-effect-free memory. Associate fetch errors with the affected PC. If the external response gives only a block error rather than per-word status, document how the adapter attributes it; do not attach one arbitrary error PC to all four lanes.</p>
-<h2 id="6-decode">6. Decode</h2>
+<h3 id="tutorial-6-decode">6. Decode</h3>
 <p>Instantiate a single-instruction decoder four times. Extract opcode, function fields, register names, source-use flags, immediate, instruction class and legal encoding status. Validate the complete encoding so an unsupported instruction does not accidentally execute as an ADD.</p>
 <p>Not every apparent register field is a source. LUI reads no register, AUIPC uses its own PC, immediate arithmetic does not read rs2, and a store really does read rs2. Reads of x0 return zero. A destination of x0 suppresses a register write but does not suppress a load&#x27;s access or its faults.</p>
 <p>These bit-concatenation sketches help test immediate extraction independently:</p>
@@ -54,13 +231,13 @@ imm_b = {{19{insn[31]}}, insn[31], insn[7], insn[30:25], insn[11:8], 1&#x27;b0};
 imm_u = {insn[31:12], 12&#x27;b0};
 imm_j = {{11{insn[31]}}, insn[31], insn[19:12], insn[20], insn[30:21], 1&#x27;b0};</code></pre>
 <p>Record decode faults rather than raising them immediately. Older valid lanes must still be allowed to commit. Classify faulting instructions as serialized operations at DP for the initial design.</p>
-<h2 id="7-register-access-and-stale-operands">7. Register access and stale operands</h2>
+<h3 id="tutorial-7-register-access-and-stale-operands">7. Register access and stale operands</h3>
 <p>R reads the committed register file. Four two-source instructions require eight logical reads; four-wide commit requires up to four writes. A small flip-flop array is an understandable first implementation. An FPGA block RAM does not magically acquire this number of ports from a convenient RTL array declaration.</p>
 <p>A read value is a snapshot. An older instruction can commit while a packet waits, leaving a stored operand stale even after its busy bit clears. This is an important consequence of placing register access before dispatch.</p>
 <p>Keep the R register-index/control packet stable while stalled, but read the register file continuously using those indices. Treat these live read values as an operand-acquisition sideband, not part of the held handshake payload. DP samples them only on an accepted R-to-DP transfer. A commit while R waits naturally changes the values eventually sampled. This internal sideband is not an AXI-style stable-data transaction.</p>
 <p>DP then owns operand snapshots. For each used source in its held packet, compare accepted commit destinations and refresh matching values. Apply the commit bypass to incoming read values on the transfer edge too, covering a same-edge register write/read collision. Only accepted nonfaulting commit writes refresh operands; x0 always resolves to zero. Refresh is internal DP state maintenance, not a transfer to EX. Forwarding overrides these snapshots when an older producer matches. Freeze the selected prefix and operand values once the bundle is offered to EX, including while EX stalls.</p>
 <p>Forwarding may make a busy source ready without clearing its busy bit. The bit still tracks destination ownership and prevents a younger writer until commit. Commit refresh remains required when a producer leaves C while a consumer waits. Always select valid data together with any forwarded readiness indication.</p>
-<h2 id="8-dispatch-accept-an-oldest-prefix">8. Dispatch: accept an oldest prefix</h2>
+<h3 id="tutorial-8-dispatch-accept-an-oldest-prefix">8. Dispatch: accept an oldest prefix</h3>
 <p>DP checks instructions from oldest to youngest and stops at the first blocked lane. It never searches past a stalled instruction for independent younger work. That is the defining in-order scheduling policy here.</p>
 <pre><code>selected = 0
 destinations_selected_this_cycle = empty
@@ -75,7 +252,7 @@ for each lane, oldest first:
     select the lane and remember its nonzero written destination</code></pre>
 <p>Resource reservation is atomic with actual dispatch. Set busy bits only when instructions transfer to EX, not when decoded or tentatively selected. Clear busy bits on accepted commit writes. If a later optimized design clears and allocates the same bit in one cycle, allocation must win. The initial design simply waits a cycle before reusing the destination.</p>
 <p>An ALU prefix before a serialized operation may dispatch first. Retain the serialized instruction and its suffix until EX, MEM, WB and C are empty of older work. Dispatch it alone to lane 0 and inhibit all younger dispatch until its commit/trap completes. This applies to data accesses, branches, jumps, fences and environment/faulting instructions.</p>
-<h2 id="9-raw-waw-and-war-examples">9. RAW, WAW and WAR examples</h2>
+<h3 id="tutorial-9-raw-waw-and-war-examples">9. RAW, WAW and WAR examples</h3>
 <p>RAW is a read that needs an older write&#x27;s result. WAW is two writers to the same name. WAR is a younger write that follows an older read of that name.</p>
 <pre><code>lane 0: add x5,  x1, x2
 lane 1: sub x6,  x3, x4
@@ -87,32 +264,32 @@ lane 1: addi x5, x0, 2
 lane 2: add  x6, x5, x7</code></pre>
 <p>The first writer dispatches alone. The second waits for its commit, then the consumer waits for the second writer&#x27;s available result. A single busy bit works because multiple dispatched writers to the same nonzero register are forbidden. Removing that rule requires counts or explicit producer ownership, not just another bypass.</p>
 <p>WAR needs no extra stall when the older instruction&#x27;s operands are already captured: <code>add x6,x5,x1</code> and <code>addi x5,x0,7</code> may dispatch together when otherwise ready. The older read is safe before the younger write commits. If the older reader is blocked, prefix selection prevents the younger writer from passing.</p>
-<h2 id="10-execute">10. Execute</h2>
+<h3 id="tutorial-10-execute">10. Execute</h3>
 <p>EX contains four parallel integer ALU datapaths. Each valid lane computes one operation. Arithmetic results are 32 bits. Signed comparisons and arithmetic right shifts require explicit signed interpretation; shifts use the proper amount bits. Keep the decoder and ALU independently testable.</p>
 <p>A shared target/address datapath serves serialized instructions routed to lane 0. EX computes effective address, store data, branch condition, target and link result. It records locally detectable exceptions without committing them. An ALU packet passes through MEM with no memory request; it does not skip the ordered pipeline or pass an older packet.</p>
 <p>When MEM cannot accept, hold the EX packet stable. An occupied stage may consume and replace its packet on one edge only when the valid/ready protocol permits. Completion of combinational arithmetic alone is not a transfer event.</p>
-<h2 id="11-memory-and-the-adapter-contract">11. Memory and the adapter contract</h2>
+<h3 id="tutorial-11-memory-and-the-adapter-contract">11. Memory and the adapter contract</h3>
 <p>MEM issues load requests and waits for responses. Data operations are serialized, so no older data access is outstanding and no younger instruction has issued. This is a conservative starting point for both ordinary memory and device reads.</p>
 <p>Define a request channel with valid/ready, address, write flag, write data and byte strobes, plus a response channel with valid/ready, read data and error. One outstanding transaction needs no multi-entry response ID, but the adapter must still track request acceptance separately from response completion.</p>
 <p>For an aligned 32-bit little-endian word bus, retain the original low address bits locally. A byte store shifts its data by eight times the byte offset and sets one strobe; a halfword sets two adjacent strobes; a word sets four. Loads extract the addressed bytes and sign- or zero-extend. Trap misaligned halfword and word accesses before sending a request. If the selected bus instead takes byte addresses, document that convention explicitly at its boundary.</p>
 <p>Do not resend an accepted request simply because the response is delayed. Buffer the response if downstream stalls. Attach access errors to the original instruction PC and effective address. Loading into x0 still performs the access and reports errors even though its register result is discarded.</p>
 <p>MEM does not send stores. It validates and packages their address/data/mask, then passes the descriptor through WB to C. C sends the authorized store through the shared adapter. This backward control connection is intentional: logical instruction stages do not forbid control signals between nonadjacent blocks.</p>
-<h2 id="12-writeback-holding">12. Writeback holding</h2>
+<h3 id="tutorial-12-writeback-holding">12. Writeback holding</h3>
 <p>WB captures result packets, destination flags, PCs, exception records and store/control descriptors. It exposes valid/ready to C. It neither writes architectural registers nor clears scoreboard bits. While C waits, WB holds its packet and backpressure propagates toward EX.</p>
 <p>Calling it result writeback means writing completed values into this holding register. Document that interpretation in the RTL. The forwarding unit may use WB values while architectural state remains unchanged until commit.</p>
 <p>Transfer whole packets from WB into a C packet register. C then owns partial retirement and retains any suffix until finished. WB cannot overwrite C&#x27;s remaining lanes. This avoids adding partial-transfer semantics to every earlier stage boundary.</p>
-<h2 id="13-commit-faults-and-store-authorization">13. Commit, faults and store authorization</h2>
+<h3 id="tutorial-13-commit-faults-and-store-authorization">13. Commit, faults and store authorization</h3>
 <p>C accepts up to four oldest completed ordinary instructions. Each accepted nonzero register destination updates the committed file and clears its busy bit. Emit one retirement event per instruction; the trace must agree with state updates exactly, not one cycle before or after a stalled commit.</p>
 <p>For an exception in lane k, only lanes before k may retire. Wait for those older effects to complete, report the trap separately, and discard lane k and younger work. The serialized-special policy normally makes faulting operations singletons, but keeping the per-lane rule explicit prevents incorrect packet- wide retirement. Recovery also clears any busy state owned by discarded work.</p>
 <p>A store singleton first checks local exceptions, then authorizes one adapter request. Set a <code>store_sent</code> flag on request acceptance. Keep the instruction pending until response; on success retire it, and on failure report its fault. Never issue a second request because C or the trace consumer is stalled.</p>
 <p>Precise store errors require a platform contract: a failed store must not have already produced partially visible effects. A bus with late imprecise write errors needs a separately documented policy; clearing valid cannot undo an external write. Once a store is authorized and outstanding, do not flush it or reset only the core while losing track of the transaction.</p>
 <p>The simplest retirement trace is passive and always observed. If it uses ready/valid, make trace acceptance part of the commit transaction so a held instruction cannot modify state repeatedly.</p>
-<h2 id="14-control-flow-fences-and-recovery">14. Control flow, fences and recovery</h2>
+<h3 id="tutorial-14-control-flow-fences-and-recovery">14. Control flow, fences and recovery</h3>
 <p>Drain older backend work before issuing a branch/jump singleton. EX computes its resolved next PC; C applies it after successful completion. Discard younger prefetched instructions and restart fetch at that PC, including fall-through for a not-taken branch. This deliberately accepts control-flow bubbles to make the first recovery protocol easy to verify.</p>
 <p>Use each instruction&#x27;s own PC for relative addressing and link values. Check target alignment for the selected base-only instruction alignment. JALR&#x27;s low- bit masking rule does not mean two-byte-aligned fetch is legal without an appropriate extension. Test target arithmetic separately from pipeline control.</p>
 <p>FENCE drains previous data activity and prevents younger access until ordering is satisfied. With a strongly ordered adapter whose acknowledgements meet the execution environment&#x27;s completion semantics, serialization can supply the ordering. A posted-write path may need a further drain acknowledgement. One outstanding request alone does not prove visibility at the final observer.</p>
 <p>Write a priority table before coding recovery: an older trap overrides a younger redirect; successful redirect cancels only younger work; coordinated reset overrides internal transfers. Outstanding memory responses need their own drain or cancellation protocol. Clearing pipeline valid bits is not the whole flush.</p>
-<h2 id="15-systemverilog-pipeline-control">15. SystemVerilog pipeline control</h2>
+<h3 id="tutorial-15-systemverilog-pipeline-control">15. SystemVerilog pipeline control</h3>
 <p>Every packet boundary has valid, ready and payload. Transfer occurs on a rising edge with both handshake signals high. A producer must keep its payload stable while stalled. A one-entry elastic register may accept when empty or when its current entry is being consumed. Chained ready logic can become a physical timing path; adding buffering later must preserve the protocol. The live register-read sideband described in section 7 is sampled at the R-to-DP transfer; it is not part of the stable control packet.</p>
 <p>Use synchronous active-high reset and the requested next-state convention:</p>
 <pre><code>always_comb begin
@@ -132,15 +309,15 @@ always_ff @(posedge clk_i) begin
   valid_q &lt;= valid_d;
   payload_q &lt;= payload_d;
 end</code></pre>
-<p>This sketch omits output equations. The complete <a href="../../examples/superscalar/pipe_reg.sv">pipeline register example</a> is a storage primitive, not an implemented CPU stage. Its kill input clears the whole register; the core must generate appropriate kills without erasing older surviving instructions or an authorized outstanding store.</p>
+<p>This sketch omits output equations. The complete <a href="#source-pipe_reg">pipeline register example</a> is a storage primitive, not an implemented CPU stage. Its kill input clears the whole register; the core must generate appropriate kills without erasing older surviving instructions or an authorized outstanding store.</p>
 <p>Blocking assignments belong in combinational next-state logic. Nonblocking assignments belong in the sequential state transfer. Assign defaults on every path to avoid latches. Keep reset decisions, conditions, arithmetic and cases out of <code>always_ff</code>. Packed structs help readability but do not establish SRAM inference or a viable multiport register file on a particular physical target.</p>
-<h2 id="16-example-pipeline-timing">16. Example pipeline timing</h2>
+<h3 id="tutorial-16-example-pipeline-timing">16. Example pipeline timing</h3>
 <p>For independent ALU packets A and B with no stalls, the intended logical stage occupancy is below. Actual fetch interface latency may introduce gaps.</p>
-<div class="table"><table><thead><tr><th scope="col">Cycle</th><th scope="col">A</th><th scope="col">B</th></tr></thead><tbody><tr><td>1</td><td>IF</td><td>—</td></tr><tr><td>2</td><td>D</td><td>IF</td></tr><tr><td>3</td><td>R</td><td>D</td></tr><tr><td>4</td><td>DP</td><td>R</td></tr><tr><td>5</td><td>EX</td><td>DP</td></tr><tr><td>6</td><td>MEM</td><td>EX</td></tr><tr><td>7</td><td>WB</td><td>MEM</td></tr><tr><td>8</td><td>C</td><td>WB</td></tr><tr><td>9</td><td>retired</td><td>C</td></tr></tbody></table></div>
+<div class="table" tabindex="0" role="region" aria-label="Scrollable reference table"><table><thead><tr><th scope="col">Cycle</th><th scope="col">A</th><th scope="col">B</th></tr></thead><tbody><tr><td>1</td><td>IF</td><td>—</td></tr><tr><td>2</td><td>D</td><td>IF</td></tr><tr><td>3</td><td>R</td><td>D</td></tr><tr><td>4</td><td>DP</td><td>R</td></tr><tr><td>5</td><td>EX</td><td>DP</td></tr><tr><td>6</td><td>MEM</td><td>EX</td></tr><tr><td>7</td><td>WB</td><td>MEM</td></tr><tr><td>8</td><td>C</td><td>WB</td></tr><tr><td>9</td><td>retired</td><td>C</td></tr></tbody></table></div>
 <p>Each packet may contain four independent operations. Once filled, the target is four retirement events per cycle if fetch, ports and every ready signal support that rate. If B reads A&#x27;s destination, B waits in DP until a valid older result is available through forwarding and EX can accept it. Following packets queue behind it if the operand remains unready. Same-packet dependencies still split.</p>
 <p>This table is a design target, not measured performance. Measure IPC as accepted retirement events divided by cycles over a defined program interval. Memory serialization, branches, dependencies and insufficient instruction bandwidth all reduce achieved IPC.</p>
-<h2 id="17-module-layout-and-how-to-start">17. Module layout and how to start</h2>
-<p>The following is the target layout. The hazard package and two hazard modules are implemented. The remaining stage/helper interfaces now exist as deliberately empty shells. Use the <a href="skeleton.md">skeleton specification</a> for complete port contracts, ownership rules, TODOs and acceptance tests. CPU behavior and its integration remain your implementation work:</p>
+<h3 id="tutorial-17-module-layout-and-how-to-start">17. Module layout and how to start</h3>
+<p>The following is the target layout. The hazard package and two hazard modules are implemented. The remaining stage/helper interfaces now exist as deliberately empty shells. Use the <a href="#skeleton">skeleton specification</a> for complete port contracts, ownership rules, TODOs and acceptance tests. CPU behavior and its integration remain your implementation work:</p>
 <pre><code>rtl/superscalar/
   hazard_pkg.sv        implemented source/producer types
   forwarding_unit.sv  implemented eight-source operand resolver
@@ -162,17 +339,17 @@ end</code></pre>
 <p>First specify packet fields, then implement the decoder and ALU with directed tests. Reuse arithmetic knowledge from the earlier work, not its renaming and oldest-ready scheduler. Connect all eight stages with one enabled lane and an independent retirement checker. Add serialized branches and memory before widening; this exposes stage-control bugs without four-lane interactions.</p>
 <p>Next enable four independent ALU lanes. Implement prefix dispatch and retained suffixes, then add scoreboard hazards and commit refresh. Finally test special operations mixed with ALU prefixes. Keep a working regression after every step. Do not create dozens of empty modules and count them as hardware progress.</p>
 <p>The <a href="roadmap.md">roadmap</a> gives the milestone gates. The storage example, standalone hazard units and unfinished module shells exist; the complete superscalar processor does not yet.</p>
-<h2 id="18-verification-and-acceptance-tests">18. Verification and acceptance tests</h2>
+<h3 id="tutorial-18-verification-and-acceptance-tests">18. Verification and acceptance tests</h3>
 <p>Compare retirement order, PCs, destination writes, memory effects and traps against an independent architectural model. EX results alone are insufficient: the architectural machine exists at commit. Full RV32I claims also need the selected execution environment and appropriate architectural test coverage.</p>
-<div class="table"><table><thead><tr><th scope="col">Area</th><th scope="col">Directed test</th></tr></thead><tbody><tr><td>Width</td><td>Four independent instructions dispatch and retire per cycle after filling</td></tr><tr><td>Prefixes</td><td>Admit 0, 1, 2, 3, 4 lanes and preserve every suffix exactly</td></tr><tr><td>RAW</td><td>All earlier/later lane pairs, both source positions, across packets</td></tr><tr><td>WAW</td><td>Same name within a packet and across pipeline stages</td></tr><tr><td>WAR</td><td>Older captured reader with younger writer; blocked-reader case</td></tr><tr><td>x0</td><td>No register changes; loads to x0 still access and fault</td></tr><tr><td>Stale sources</td><td>Commit during R/DP stalls and during R-to-DP transfer</td></tr><tr><td>Handshakes</td><td>Stall every boundary; no lost, duplicated or changing payload</td></tr><tr><td>Memory</td><td>All widths, masks, signed loads, delayed responses and errors</td></tr><tr><td>Store precision</td><td>One authorized request; older fault prevents younger store</td></tr><tr><td>Fetch</td><td>Every word offset in a block; stale response after redirect</td></tr><tr><td>Control</td><td>Taken/not-taken, links, target masking and alignment</td></tr><tr><td>Exceptions</td><td>Retire older valid prefix only; no younger architectural effect</td></tr><tr><td>Fence</td><td>Earlier effects ordered before later accesses through the actual adapter</td></tr><tr><td>Reset</td><td>Coordinated endpoint/core reset and outstanding-response handling</td></tr></tbody></table></div>
+<div class="table" tabindex="0" role="region" aria-label="Scrollable reference table"><table><thead><tr><th scope="col">Area</th><th scope="col">Directed test</th></tr></thead><tbody><tr><td>Width</td><td>Four independent instructions dispatch and retire per cycle after filling</td></tr><tr><td>Prefixes</td><td>Admit 0, 1, 2, 3, 4 lanes and preserve every suffix exactly</td></tr><tr><td>RAW</td><td>All earlier/later lane pairs, both source positions, across packets</td></tr><tr><td>WAW</td><td>Same name within a packet and across pipeline stages</td></tr><tr><td>WAR</td><td>Older captured reader with younger writer; blocked-reader case</td></tr><tr><td>x0</td><td>No register changes; loads to x0 still access and fault</td></tr><tr><td>Stale sources</td><td>Commit during R/DP stalls and during R-to-DP transfer</td></tr><tr><td>Handshakes</td><td>Stall every boundary; no lost, duplicated or changing payload</td></tr><tr><td>Memory</td><td>All widths, masks, signed loads, delayed responses and errors</td></tr><tr><td>Store precision</td><td>One authorized request; older fault prevents younger store</td></tr><tr><td>Fetch</td><td>Every word offset in a block; stale response after redirect</td></tr><tr><td>Control</td><td>Taken/not-taken, links, target masking and alignment</td></tr><tr><td>Exceptions</td><td>Retire older valid prefix only; no younger architectural effect</td></tr><tr><td>Fence</td><td>Earlier effects ordered before later accesses through the actual adapter</td></tr><tr><td>Reset</td><td>Coordinated endpoint/core reset and outstanding-response handling</td></tr></tbody></table></div>
 <p>Assert valid-prefix masks, no dispatch past blocked older work, and exactly one live writer for every busy bit. Assert every store request is authorized and every accepted instruction retires once or is discarded by a valid recovery. Liveness assumes the external memory eventually responds and downstream eventually accepts; permanent external backpressure legitimately stalls a core.</p>
 <p>The storage example is lint-checked; the two hazard units also have directed simulation. No complete superscalar CPU, ISA compliance or timing result is claimed. The historical OoO regression cannot validate the new architecture.</p>
-<h2 id="19-optimize-only-after-the-protocol-works">19. Optimize only after the protocol works</h2>
+<h3 id="tutorial-19-optimize-only-after-the-protocol-works">19. Optimize only after the protocol works</h3>
 <p>The forwarding unit uses EX/MEM/WB/C values. Select the youngest older matching producer; if it is not ready, do not forward an older matching value instead. The initial one-writer restriction simplifies this logic while it remains in force. Load-use dependencies still need a response before any valid forwarding.</p>
 <p>Same-packet dependent ALUs require a combinational lane-to-lane path or splitting the packet across cycles. A chain through four ALUs may destroy clock timing. Keep split-and-wait until measurements justify extra bypass logic.</p>
 <p>Memory overlap needs queued store ownership and ordering checks; prediction needs wrong-path recovery; multiple simultaneous writers need stronger producer tracking. These are separate changes, not prerequisites for in-order superscalar execution. None should be introduced by simply dropping an existing stall.</p>
 <p>Physical implementation should examine register-file ports, dependency compares, ready-chain length and commit fanout. Select a board or ASIC library before writing timing constraints. More lanes are valuable only if wiring, resource cost and clock frequency produce a real workload benefit.</p>
-<h2 id="20-references-and-reproducible-next-steps">20. References and reproducible next steps</h2>
+<h3 id="tutorial-20-references-and-reproducible-next-steps">20. References and reproducible next steps</h3>
 <p>Primary references checked on 2026-09-27:</p>
 <ul><li><a href="https://docs.riscv.org/">RISC-V ratified specifications</a>: authoritative index.</li><li><a href="https://docs.riscv.org/reference/isa/v20260120/unpriv/rv32.html">RV32I versioned chapter</a>: encoding and behavior authority.</li><li><a href="https://docs.riscv.org/reference/isa/unpriv/rvwmo.html">RVWMO memory model</a>: ordering rules for memory-system validation.</li></ul>
 <p>Stage allocation, serialization, scoreboard policy and adapter contracts above are proposed implementation choices. Test them rather than treating an ISA reference as proof of this particular microarchitecture.</p>
@@ -181,8 +358,8 @@ python scripts/build_superscalar_docs.py --check
 wsl -d Ubuntu -- verilator --lint-only -Wall --top-module pipe_reg examples/superscalar/pipe_reg.sv
 wsl -d Ubuntu -- bash scripts/check_hazards.sh</code></pre>
 <p>The next implementation step is a single-lane version of all eight stages with architectural writes at commit. Widen that proven protocol to four lanes rather than duplicating an unverified whole processor four times.</p>
-<h2 id="21-forwarding-unit-and-wiring-contract">21. Forwarding unit and wiring contract</h2>
-<p>Implemented RTL: <a href="../../rtl/superscalar/forwarding_unit.sv">forwarding_unit.sv</a>. Eight source ports serve two architectural operands per DP lane. Sixteen producer ports describe the four lanes in EX, MEM, WB and C. This combinational module resolves operand values/readiness, not packet selection or scoreboard state.</p>
+<h3 id="tutorial-21-forwarding-unit-and-wiring-contract">21. Forwarding unit and wiring contract</h3>
+<p>Implemented RTL: <a href="#source-forwarding_unit">forwarding_unit.sv</a>. Eight source ports serve two architectural operands per DP lane. Sixteen producer ports describe the four lanes in EX, MEM, WB and C. This combinational module resolves operand values/readiness, not packet selection or scoreboard state.</p>
 <p>Each source has an index, used flag, busy bit and commit-refreshed fallback. Each producer has valid, writes_rd, rd, killed, fault, ready and value fields. Include branch comparisons and store data among actual sources. Select immediate and PC inputs after architectural source resolution.</p>
 <p>All producer instructions must be older than every DP candidate. Present them in this exact youngest-to-oldest order:</p>
 <pre><code>ports  0..3  = EX  lanes 3, 2, 1, 0
@@ -195,15 +372,852 @@ ports 12..15 = C   lanes 3, 2, 1, 0</code></pre>
 <p>DP uses resolved source readiness while preserving destination busy and same-packet RAW/WAW checks. Forwarding does not release destination ownership or permit skipping a blocked older lane. Newly selected DP lanes are not producers for other lanes in the same cycle; dependencies still split packets.</p>
 <p>EX-to-DP is a path from the current operation&#x27;s ALU output to the next operation&#x27;s EX input register. Do not make producer validity depend on DP selection, or couple data availability into a combinational ready loop. If timing is too long, withhold EX forwarding readiness until the registered result reaches MEM; the consumer stalls correctly. This is a measured timing choice, not a correctness reason to choose an older source value.</p>
 <p>Once DP offers a selected bundle to EX, freeze both prefix length and values while EX stalls. Use an output holding register or latched selection/operands. Live forwarding mux outputs must not alter an already-offered packet. Continue commit refresh for retained, unselected suffix instructions.</p>
-<h2 id="22-control-hazard-unit-and-recovery-contract">22. Control-hazard unit and recovery contract</h2>
-<p>Implemented RTL: <a href="../../rtl/superscalar/control_hazard_unit.sv">control_hazard_unit.sv</a>. This is a conservative singleton controller, with no predictor. It gates serial dispatch, blocks younger work, prioritizes commit-approved recovery events and holds one redirect until IF accepts ownership. It does not evaluate branches.</p>
-<div class="table"><table><thead><tr><th scope="col">Interface</th><th scope="col">Contract</th></tr></thead><tbody><tr><td>serial_valid / serial_ready</td><td>Singleton dispatch handshake; ready requires empty older backend work</td></tr><tr><td>backend_empty</td><td>Includes EX/MEM/WB/C and outstanding architectural data transactions</td></tr><tr><td>serial_done</td><td>Successful non-control singleton commit pulse, not branch completion</td></tr><tr><td>branch_valid / branch_ready</td><td>Commit-approved next PC, for taken and fall-through control flow</td></tr><tr><td>trap_valid / trap_ready</td><td>Ordered trap with EEI-provided handler/restart PC</td></tr><tr><td>redirect_valid / redirect_ready</td><td>Pending destination held stable until IF owns it</td></tr><tr><td>block_younger</td><td>Suppress ordinary dispatch, including on singleton admission cycle</td></tr><tr><td>stop_fetch</td><td>Stop new sequential requests; allow response draining and redirect acceptance</td></tr><tr><td>flush_frontend</td><td>Acceptance-cycle pulse clearing younger IF/D/R/DP contents</td></tr><tr><td>flush_backend</td><td>Trap acceptance pulse after all older effects are settled</td></tr></tbody></table></div>
+<h3 id="tutorial-22-control-hazard-unit-and-recovery-contract">22. Control-hazard unit and recovery contract</h3>
+<p>Implemented RTL: <a href="#source-control_hazard_unit">control_hazard_unit.sv</a>. This is a conservative singleton controller, with no predictor. It gates serial dispatch, blocks younger work, prioritizes commit-approved recovery events and holds one redirect until IF accepts ownership. It does not evaluate branches.</p>
+<div class="table" tabindex="0" role="region" aria-label="Scrollable reference table"><table><thead><tr><th scope="col">Interface</th><th scope="col">Contract</th></tr></thead><tbody><tr><td>serial_valid / serial_ready</td><td>Singleton dispatch handshake; ready requires empty older backend work</td></tr><tr><td>backend_empty</td><td>Includes EX/MEM/WB/C and outstanding architectural data transactions</td></tr><tr><td>serial_done</td><td>Successful non-control singleton commit pulse, not branch completion</td></tr><tr><td>branch_valid / branch_ready</td><td>Commit-approved next PC, for taken and fall-through control flow</td></tr><tr><td>trap_valid / trap_ready</td><td>Ordered trap with EEI-provided handler/restart PC</td></tr><tr><td>redirect_valid / redirect_ready</td><td>Pending destination held stable until IF owns it</td></tr><tr><td>block_younger</td><td>Suppress ordinary dispatch, including on singleton admission cycle</td></tr><tr><td>stop_fetch</td><td>Stop new sequential requests; allow response draining and redirect acceptance</td></tr><tr><td>flush_frontend</td><td>Acceptance-cycle pulse clearing younger IF/D/R/DP contents</td></tr><tr><td>flush_backend</td><td>Trap acceptance pulse after all older effects are settled</td></tr></tbody></table></div>
 <p>On serial admission, set busy and prevent younger dispatch. Memory/fence singletons release busy on successful serial_done. A branch/trap instead queues its PC and emits one flush. Pending redirects retain their destination and block younger activity until accepted. IF must not gate redirect_ready with stop_fetch; that would deadlock. IF may accept responsibility before a stale response has drained, but its own state must finish that drain before using the new PC.</p>
 <p>When trap and branch requests arrive together at an empty redirect slot, trap wins and branch_ready is low. Commit must cancel the losing younger branch. These are ordered, qualified commit events, not raw EX requests. An already exposed redirect cannot change under backpressure: additional requests wait. The serialized architecture must prevent an older unresolved trap from first appearing after a younger branch has been permitted to commit.</p>
 <p>trap_pc is the handler/restart destination, not the faulting instruction PC in the trap record. While the EEI has not supplied a destination, maintain the existing singleton/commit trap block. Do not invent a vector. Recovery wiring clears the appropriate pipeline valid and scoreboard state when the trap is accepted. Never discard an authorized store or older surviving effect.</p>
 <p>Instruction classification, branch target calculation, scoreboard cleanup, fetch cancellation and external transaction draining are integration duties. The controller does not implement them by itself. Its synchronous reset follows the coordinated core/endpoint reset contract. Conditions and next-state logic are in always_comb; always_ff contains only the state assignment.</p>
-<h2 id="23-pipeline-assessment-and-current-evidence">23. Pipeline assessment and current evidence</h2>
+<h3 id="tutorial-23-pipeline-assessment-and-current-evidence">23. Pipeline assessment and current evidence</h3>
 <p>The pipeline makes sense as a correctness-first four-wide in-order design. Whether eight stages are efficient depends on implementation timing and workloads.</p>
-<div class="table"><table><thead><tr><th scope="col">Decision</th><th scope="col">Assessment</th></tr></thead><tbody><tr><td>Register before dispatch</td><td>Valid with source refresh and dispatch-time forwarding</td></tr><tr><td>Decode, register and dispatch separated</td><td>Clear responsibilities, but additional latency/storage</td></tr><tr><td>Execute then memory</td><td>Appropriate for address generation; ALU packets still maintain order</td></tr><tr><td>Writeback then commit</td><td>Valid when WB holds results and C alone changes architectural state</td></tr><tr><td>Eight register reads/four writes</td><td>Supports independent four-wide work; significant port/mux cost</td></tr><tr><td>Serialized memory/control flow</td><td>Simple precise behavior; major throughput and branch penalties</td></tr><tr><td>In-order dispatch with forwarding</td><td>Reduces RAW stalls; cannot bypass truly blocked older work</td></tr></tbody></table></div>
+<div class="table" tabindex="0" role="region" aria-label="Scrollable reference table"><table><thead><tr><th scope="col">Decision</th><th scope="col">Assessment</th></tr></thead><tbody><tr><td>Register before dispatch</td><td>Valid with source refresh and dispatch-time forwarding</td></tr><tr><td>Decode, register and dispatch separated</td><td>Clear responsibilities, but additional latency/storage</td></tr><tr><td>Execute then memory</td><td>Appropriate for address generation; ALU packets still maintain order</td></tr><tr><td>Writeback then commit</td><td>Valid when WB holds results and C alone changes architectural state</td></tr><tr><td>Eight register reads/four writes</td><td>Supports independent four-wide work; significant port/mux cost</td></tr><tr><td>Serialized memory/control flow</td><td>Simple precise behavior; major throughput and branch penalties</td></tr><tr><td>In-order dispatch with forwarding</td><td>Reduces RAW stalls; cannot bypass truly blocked older work</td></tr></tbody></table></div>
 <p>Keep one clock and valid/ready enables; eight stages do not imply eight clocks. After integrating a scalar version, measure forwarding mux delay, register-file ports, ready-chain length and commit fanout. Merging R/DP or WB/C may eventually reduce overhead, but keep the requested stage structure until measurements justify a change.</p>
-<p>Standalone lint and directed hazard simulation have passed. This is not an end-to-end CPU result. <a href="validation.md">Validation details</a> distinguish tests run from the remaining integration work.</p></main></body></html>
+<p>Standalone lint and directed hazard simulation have passed. This is not an end-to-end CPU result. <a href="validation.md">Validation details</a> distinguish tests run from the remaining integration work.</p>
+</section>
+<section id="skeleton" class="part" aria-label="Implementation workbook">
+<p class="label">Implementation workbook</p>
+<h2 class="part-title" id="skeleton-superscalar-implementation-backbone">Superscalar implementation backbone</h2>
+<p>Start in <a href="#source-core">core.sv</a>. <strong>It is deliberately unfinished.</strong> The new stage modules have real interface declarations and numbered TODOs, but no assignments, state transitions, functional tie-offs or instantiated CPU. Undriven outputs are intentional. Do not run these shells as a processor or interpret successful interface elaboration as functional verification.</p>
+<p>The <a href="#tutorial">architecture tutorial</a> remains the design explanation. This document is the implementation contract/checklist. Types and interfaces are a proposed repository ABI: change related producers/consumers together if you discover a better contract while implementing.</p>
+<h3 id="skeleton-1-what-exists-and-what-you-must-implement">1. What exists and what you must implement</h3>
+<div class="table" tabindex="0" role="region" aria-label="Scrollable reference table"><table><thead><tr><th scope="col">File</th><th scope="col">Present now</th><th scope="col">Your completion responsibility</th></tr></thead><tbody><tr><td><code>hazard_pkg.sv</code></td><td>Implemented hazard types</td><td>Preserve compatibility or update its real tests</td></tr><tr><td><code>forwarding_unit.sv</code></td><td>Implemented/tested resolver</td><td>Wire only older producers in prescribed age order</td></tr><tr><td><code>control_hazard_unit.sv</code></td><td>Implemented/tested singleton/redirect controller</td><td>Integrate with commit/EEI and fetch transaction ownership</td></tr><tr><td><code>rv32_pkg.sv</code></td><td>New shared type declarations only</td><td>Review field ownership and EEI/bus choices</td></tr><tr><td><code>rv32_decode.sv</code></td><td>Empty combinational shell</td><td>All 40 instructions, exact legality, immediate/use flags</td></tr><tr><td><code>alu.sv</code></td><td>Empty combinational shell</td><td>Arithmetic, comparisons, shifts, bitwise results</td></tr><tr><td><code>fetch.sv</code></td><td>Empty sequential shell</td><td>PC, requests, response buffering, stale response drain</td></tr><tr><td><code>decode_stage.sv</code></td><td>Empty sequential shell</td><td>Four decoder instances and stable ordered packet</td></tr><tr><td><code>regfile.sv</code></td><td>Empty sequential shell</td><td>Eight read ports, four commit writes, x0 semantics</td></tr><tr><td><code>scoreboard.sv</code></td><td>Empty sequential shell</td><td>Writer allocation/release, x0 invariant and flush cleanup</td></tr><tr><td><code>register_stage.sv</code></td><td>Empty sequential shell</td><td>Held control packet, live operand sideband, commit bypass</td></tr><tr><td><code>dispatch.sv</code></td><td>Empty sequential shell</td><td>Forwarding hookup, oldest prefix, suffix retention, frozen offer</td></tr><tr><td><code>execute.sv</code></td><td>Empty sequential shell</td><td>Four ALUs, singleton target/address, exceptions and producers</td></tr><tr><td><code>memory_stage.sv</code></td><td>Empty sequential shell</td><td>Loads and data formatting; store descriptors only</td></tr><tr><td><code>writeback.sv</code></td><td>Empty sequential shell</td><td>Result holding, no architectural writes</td></tr><tr><td><code>commit.sv</code></td><td>Empty sequential shell</td><td>Ordered retirement, register writes, stores, traps and redirects</td></tr><tr><td><code>memory_adapter.sv</code></td><td>Empty sequential shell</td><td>One outstanding data request, owner and response routing</td></tr><tr><td><code>recovery.sv</code></td><td>Empty sequential shell</td><td>EEI trap/report/resume state around existing control unit</td></tr><tr><td><code>core.sv</code></td><td>Empty integration shell</td><td>Instantiate, wire and verify all contracts below</td></tr></tbody></table></div>
+<p>The old OoO <code>rtl/alu.sv</code> and new skeleton <code>rtl/superscalar/alu.sv</code> use the same module name intentionally in separate designs. <strong>Never concatenate their file lists into one compilation.</strong> The manifests keep them separate. A future combined build should rename or namespace the modules first.</p>
+<h3 id="skeleton-2-compile-sets-and-honest-status">2. Compile sets and honest status</h3>
+<ul><li><code>rtl/files.f</code>: historical OoO experiment only.</li><li><code>rtl/superscalar/files.f</code>: existing implemented hazard modules only.</li><li><code>rtl/superscalar/skeleton.f</code>: shared types, existing hazards and all new shells.</li></ul>
+<p>Run the following from the repository root:</p>
+<pre><code>wsl -d Ubuntu -- bash scripts/check_skeleton.sh
+wsl -d Ubuntu -- bash scripts/check_hazards.sh
+python scripts/build_superscalar_docs.py --check</code></pre>
+<p>The first command only parses/elaborates each declared interface. It suppresses undriven/unused warnings <strong>only for this intentionally empty skeleton build</strong>. All other warnings remain fatal. The hazard test script still uses strict lint and actual simulation. No placeholder tests or fake passing CPU are supplied.</p>
+<p>As you implement each module, give it a strict lint target without those suppressions and real behavioral tests. Remove its UNIMPLEMENTED banner only when its documented responsibilities and relevant tests pass. An elaboration pass cannot establish reset behavior, handshake stability or ISA correctness.</p>
+<h3 id="skeleton-3-stage-ownership-and-record-validity">3. Stage ownership and record validity</h3>
+<p>The package uses a superset <code>packet_t</code> to avoid dozens of premature per-stage types. Lane 0 is oldest, and valid lanes form a compact prefix. Both outer packet-valid and inner lane-valid must be meaningful; prohibit an outer-valid packet with no valid lanes. Unowned fields are not architectural evidence.</p>
+<div class="table" tabindex="0" role="region" aria-label="Scrollable reference table"><table><thead><tr><th scope="col">Field</th><th scope="col">Owner that establishes meaning</th><th scope="col">Consumer</th></tr></thead><tbody><tr><td>lane valid, PC, instruction, fetch fault</td><td>IF</td><td>All later stages</td></tr><tr><td>decoded fields, illegal fault</td><td>D</td><td>R/DP/EX/C</td></tr><tr><td>live RF read values</td><td>R sideband</td><td>DP on accepted input transfer</td></tr><tr><td>src1/src2 snapshots</td><td>DP</td><td>EX; refresh retained suffix from commit</td></tr><tr><td>result/address/store data/mask/next PC</td><td>EX</td><td>MEM/WB/C</td></tr><tr><td>load result/access fault</td><td>MEM</td><td>Forwarding/WB/C</td></tr><tr><td>held completion packet</td><td>WB</td><td>C</td></tr><tr><td>architectural write and retirement events</td><td>C</td><td>RF/scoreboard/trace/refresh</td></tr><tr><td>accepted trap and restart ownership</td><td>Recovery</td><td>EEI and IF</td></tr></tbody></table></div>
+<p>Preserve prior faults. A fetch-fault word is not valid instruction data, so its decode must not overwrite that earlier fault. A faulted producer remains live and blocks dependent forwarding until valid recovery removes it.</p>
+<p><code>fault_kind_t</code> values are symbolic internal labels, not RISC-V <code>mcause</code> numeric encodings. The EEI must define translation if architectural privilege is added. <code>fault.address</code> is the bad PC/effective address for access/alignment faults, the raw instruction bits for illegal instruction, and zero for ECALL/EBREAK under this proposed external reporting contract. Preserve the original PC and instruction separately in <code>trap_t</code> in all cases.</p>
+<h3 id="skeleton-4-clock-boundaries-do-not-accidentally-build-sixteen-stages">4. Clock boundaries: do not accidentally build sixteen stages</h3>
+<p>Each named sequential stage owns one resident packet. Interpret its input as the previous stage&#x27;s offer and its output as the current resident instruction&#x27;s processed result. Decide explicitly which side of an edge owns every field. Do not add an output register to every module and then add another <code>pipe_reg</code> between the same modules. That doubles the intended stage storage/latency.</p>
+<p>Implement a cycle table for a single instruction before writing the top-level wiring. EX-to-DP forwarding must come from the currently resident EX operation, not the incoming DP candidate; otherwise it can form a combinational ALU loop. DP may need internal suffix/offer state, but it still presents one logical dispatch boundary. Record additional bubbles or buffers honestly if added.</p>
+<p>Use the established pattern, choosing meaningful state per module:</p>
+<pre><code>// Template only. Declare your state_t before using this pattern.
+state_t state_q, state_d;
+always_comb begin
+  state_d = state_q;
+  // TODO Defaults, handshake events, next state, flush priorities.
+  // TODO Synchronous reset overrides applicable next-state fields.
+end
+always_ff @(posedge clk_i) begin
+  state_q &lt;= state_d;
+end</code></pre>
+<p>Do not paste an empty hold-only block and call the module implemented. Keep all logic in <code>always_comb</code> and only assignments in <code>always_ff</code>. Combinational decoder and ALU do not need a clock or state.</p>
+<h3 id="skeleton-5-top-level-wiring-map">5. Top-level wiring map</h3>
+<div class="table" tabindex="0" role="region" aria-label="Scrollable reference table"><table><thead><tr><th scope="col">Connection</th><th scope="col">Required rule</th></tr></thead><tbody><tr><td>IF → D → R → DP → EX → MEM → WB → C</td><td>Stable packet valid/ready except the explicitly separate live RF sideband</td></tr><tr><td>R indices ↔ RF read values</td><td>Source slot <code>2*lane</code> = rs1, <code>2*lane+1</code> = rs2</td></tr><tr><td>R live operands → DP</td><td>Sample only with R-to-DP handshake; handle same-edge commit bypass</td></tr><tr><td>C writes → RF, scoreboard, R and DP</td><td>One accepted event supplies state update, busy clear and operand refresh</td></tr><tr><td>DP allocate mask → scoreboard</td><td>Pulse only for actual DP-to-EX transfers with nonzero destinations</td></tr><tr><td>EX/MEM/WB/C producer arrays → DP</td><td>Each module exposes natural lane indices; core reverses lanes per stage</td></tr><tr><td>DP ↔ recovery serial handshake</td><td>A singleton cannot start independently of its EX transfer</td></tr><tr><td>C load/store adapter links</td><td>MEM owns loads; C alone authorizes stores</td></tr><tr><td>C branch/trap → recovery</td><td>Commit-qualified events, not raw EX exceptions</td></tr><tr><td>Recovery redirect → IF</td><td>IF accepts ownership even while stop_fetch is asserted</td></tr><tr><td>Frontend flush → IF/D/R/DP</td><td>Discard only younger contents and preserve required external response ownership</td></tr><tr><td>Backend trap flush → EX/MEM/WB/scoreboard</td><td>Only after all older effects settle; C/RF are not indiscriminately cleared</td></tr></tbody></table></div>
+<p>Map forwarding producer ports 0..3 to EX lanes 3..0, then MEM, WB and C the same way. All producers are older than DP consumers under this in-order design. <code>occupied_o</code> must account for any live resident packet, even when output-valid is low while waiting for memory. Compute backend_empty from EX/MEM/WB/C occupancy and adapter idle, not merely their output-valid signals. Do not include the waiting DP singleton itself in this drain condition.</p>
+<h3 id="skeleton-6-the-singleton-handshake-trap">6. The singleton handshake trap</h3>
+<p>The existing control unit raises block_younger in the cycle a singleton starts. If DP uses that same signal to suppress the singleton&#x27;s own serial_valid, you create a combinational loop. Apply block_younger to ordinary younger work, not to the special admission path that generated it.</p>
+<p>Require serial admission and DP-to-EX transfer to be the same edge. DP may only assert serial_valid when it has selected the singleton and EX can accept; serial_ready then authorizes that singleton&#x27;s transfer. EX ready must depend on capacity, not on serial_valid or block_younger. If you choose a different two-phase reservation scheme, document who owns a granted-but-not-yet-issued singleton and update tests before relying on it.</p>
+<p>For ordinary ALU dispatch, freeze an offered prefix and its resolved values through backpressure. Do not grow the prefix or recompute changing forwarded payloads while valid remains high. Retained suffix operands still need commit refresh. Busy destination ownership is released only at commit, not forwarding.</p>
+<h3 id="skeleton-7-abstract-memory-contracts">7. Abstract memory contracts</h3>
+<p>The top-level instruction interface requests one aligned 16-byte block and returns four words plus individual access-error bits. Only one request may be outstanding. Emit a short prefix for a PC near a block end. There is no AXI, cache or MMU implementation hidden behind these types.</p>
+<p>The data interface uses aligned four-byte addresses, four little-endian byte strobes and one outstanding transaction. The packet retains the original byte address for extraction and fault reporting. Misaligned halfword/word operations trap before sending requests. Writes are issued only from C, never MEM.</p>
+<p>The adapter tracks owner until response consumption, even when the external request has disappeared. idle means no held request, accepted transaction or buffered response. Under serialization MEM and C should never compete; assert that invariant, but still specify defensive arbitration rather than creating two simultaneously ready requesters.</p>
+<p>Successful acknowledgement must meet the selected EEI&#x27;s completion/ordering contract. A failed store must not already have externally visible partial effects. If the selected bus cannot guarantee that, revise the platform error contract; a pipeline flush cannot undo a device write. Reset must coordinate with endpoints or drain outstanding transactions before losing ownership.</p>
+<h3 id="skeleton-8-trap-report-and-resume-are-different-events">8. Trap report and resume are different events</h3>
+<p>Commit produces a stable trap record. Recovery accepts ownership, holds it for the EEI, and keeps younger work blocked after C releases the faulting packet. Only after the EEI accepts the report may recovery accept a resume PC. That PC becomes the existing control-hazard unit&#x27;s trap redirect destination. The faulting PC is not implicitly a handler address.</p>
+<p>If the EEI never requests resume, remain blocked. Do not clear the controller&#x27;s serial busy state merely because the report was delivered. Keep successful serial_done for ordinary non-control singletons, not branches or faults. Branch retirement/link write must coincide with acceptance of the corresponding branch event; losing a branch to an older trap must not write its link register.</p>
+<p>The tested control unit only arbitrates qualified events and holds redirects. <code>recovery.sv</code> is the still-missing state machine that owns this longer report/ resume lifecycle. Its unit tests must exercise report stalls, delayed/no resume, simultaneous branch/trap requests, and stale fetch responses during restart.</p>
+<h3 id="skeleton-9-completion-tests-by-block">9. Completion tests by block</h3>
+<div class="table" tabindex="0" role="region" aria-label="Scrollable reference table"><table><thead><tr><th scope="col">Block</th><th scope="col">Minimum evidence before completion</th></tr></thead><tbody><tr><td>Decoder</td><td>Every supported encoding family, reserved functions, immediate extrema, correct source-use flags</td></tr><tr><td>ALU</td><td>Signed boundaries, shifts 0/31, overflow wrap, comparisons and bitwise operations</td></tr><tr><td>IF</td><td>All four block offsets, delayed request/response, stall, redirect with outstanding response</td></tr><tr><td>D/R</td><td>Held-packet stability, fetch-fault preservation, RF same-edge write/read</td></tr><tr><td>RF/scoreboard</td><td>x0, four distinct commits, allocation/release overlap, exact live-writer ownership</td></tr><tr><td>DP</td><td>Prefix lengths 0..4, each lane dependency pair, retained suffix, frozen offer, singleton atomicity</td></tr><tr><td>EX</td><td>All result classes, branch link/target/alignment, no load-address forwarding</td></tr><tr><td>MEM/adapter</td><td>Each width/sign/mask, request exactly once, delayed response and owner retention</td></tr><tr><td>WB</td><td>Simultaneous consume/replace, stalls, faulted writer visibility</td></tr><tr><td>C</td><td>Four-wide retirement, older-prefix-before-fault, authorized store once, stalled events</td></tr><tr><td>Recovery</td><td>Trap/report/resume lifecycle, priority, one-shot flush, pending redirect stability</td></tr><tr><td>Core</td><td>Independent retirement model, memory effects, no wrong-path side effects, coordinated reset</td></tr></tbody></table></div>
+<p>Do not write a test that passes just because an output stays zero in a shell. Build tests when behavior is implemented and require them to detect meaningful errors. The existing hazard tests remain real independent checks of those two implemented blocks, not substitutes for this matrix.</p>
+<h3 id="skeleton-10-suggested-implementation-sequence">10. Suggested implementation sequence</h3>
+<ol><li>Review types and establish the external memory and EEI contract.</li><li>Implement decoder and ALU; prove their behavior separately.</li><li>Implement register file, scoreboard and packet storage conventions.</li><li>Build a single-lane eight-stage arithmetic path and retirement comparison.</li><li>Add serialized branches, loads/stores, fences and trap/report/resume handling.</li><li>Widen to four independent ALUs, then packet splitting and all hazard cases.</li><li>Integrate the existing forwarding/control units and verify full-core timing.</li><li>Run instruction coverage, independent ISA comparison and architectural tests under the documented EEI before claiming full RV32I support.</li></ol>
+<p>The roadmap can be adjusted as you learn, but preserve the distinction between declared interfaces, implemented behavior, standalone tests and integrated proof.</p>
+</section>
+<section id="modules" class="part" aria-label="Every module explained">
+<p class="label">Every module explained</p>
+<h2 class="part-title" id="modules-a-guided-tour-of-the-actual-files">A guided tour of the actual files</h2>
+<p>Read a module as a contract: what question it answers, which information it owns, what event changes its state, and what must remain true when it stalls. The source appendix below embeds the current repository files verbatim. These listings are regenerated from the files, so declarations are not hand-copied.</p>
+<h3 id="modules-m1-shared-types-rv32-pkg-and-hazard-pkg">M1. Shared types: rv32_pkg and hazard_pkg</h3>
+<p><a href="#source-rv32_pkg">rv32_pkg.sv</a> defines the language spoken by the stage interfaces. It is a package, not an instantiated hardware stage. An enum such as OP_ADD gives a bit pattern a readable internal name. A packed struct gathers related bits; an array repeats that record for multiple lanes. Changing a field changes every connected module&#x27;s contract.</p>
+<p><code>decoded_t</code> distinguishes source indices from source-use flags: an immediate&#x27;s bits may occupy the rs2 bit positions without naming a real source. Using those bits as a dependency would create false stalls. <code>lane_t</code> carries both decoded fault information and the accumulated instruction fault. Define the propagation rule explicitly: later stages must preserve an earlier valid fault.</p>
+<p><a href="#source-hazard_pkg">hazard_pkg.sv</a> separates the consumer query from the producer description. A source has <code>used</code>, <code>rs</code>, <code>busy</code> and a fallback value. A producer has validity, destination, value, and separate killed/fault/ready flags. Ready is about availability; fault is about whether the result is usable; killed is about whether that instruction still exists. They are not synonyms.</p>
+<h3 id="modules-m2-rv32-decode-translate-one-word">M2. rv32_decode: translate one word</h3>
+<p><a href="#source-rv32_decode">rv32_decode.sv</a> has no clock because it answers a pure combinational question. The stage using it supplies storage. Start from a safe illegal result, recognize a legal encoding, then fill the operation, source-use flags, destination behavior, immediate and serial class. An opcode selects an instruction family; function fields distinguish members. Checking only the opcode is insufficient to reject unsupported encodings.</p>
+<p>For ADD, both sources matter. For ADDI, only rs1 matters and the other ALU input comes from an immediate. For a store, rs1 forms the address and rs2 supplies data, with no integer destination. For LUI, neither source register is used. These differences affect dependency checking as much as arithmetic.</p>
+<p>Begin with a hand-written decode table and explicit expected records for a few real instruction words. Then extend coverage to every supported family and boundary. The versioned ISA linked in the architecture reference is the authority for bit encodings; this module&#x27;s shell is not an encoding reference.</p>
+<h3 id="modules-m3-alu-a-calculation-without-ownership">M3. alu: a calculation without ownership</h3>
+<p><a href="#source-alu">alu.sv</a> computes a value from an operation and two operands. It should not know whether an instruction is valid, retiring, stalled, or writing x0. EX chooses operands and decides whether the result is meaningful. This separation makes the arithmetic easy to test independently.</p>
+<p>Treat addition/subtraction as fixed-width arithmetic. Explicitly distinguish signed comparisons and arithmetic shifts from unsigned comparisons and logical shifts. A barrel shifter is a combinational network selecting shifted bit positions; it need not take one clock per bit. Whether that network meets a future timing target must be measured after synthesis, not assumed here.</p>
+<p>Test extreme bit patterns as well as small positive integers. A design that adds 2+3 correctly can still mishandle a negative comparison or shift by 31.</p>
+<h3 id="modules-m4-fetch-own-a-request-until-it-is-finished">M4. fetch: own a request until it is finished</h3>
+<p><a href="#source-fetch">fetch.sv</a> connects the instruction port to D. <code>request_valid_o</code> offers an aligned block address; <code>request_ready_i</code> accepts it. <code>response_valid_i</code> later offers words and per-word errors; <code>response_ready_o</code> accepts that separate response. Request acceptance does not mean data arrived.</p>
+<p>Plan state for the desired PC, offered/accepted request, buffered response, word offset and stale-response disposition. With only one outstanding request, there is no need for multiple transaction tags, but ownership still exists. <code>outstanding_o</code> must reflect unfinished instruction-port ownership according to the implemented contract, not merely the current request-valid pulse.</p>
+<p>A redirect may arrive while old-path memory is answering. Accept responsibility for the new PC, mark the old response for discard, and drain it. Do not interpret the late response as the first block of the new path. <code>stop_fetch_i</code> prevents new sequential work; it must not prohibit the actions needed to complete recovery.</p>
+<h3 id="modules-m5-decode-stage-four-decoders-plus-one-stage-boundary">M5. decode_stage: four decoders plus one stage boundary</h3>
+<p><a href="#source-decode_stage">decode_stage.sv</a> applies per-instruction decode to the resident packet. It retains original PCs, instruction bits and lane validity. Invalid lanes must not become fake illegal instructions. A valid lane already carrying a fetch error must preserve that error.</p>
+<p>Its packet handshake is the ordinary pipeline contract: hold a stalled offer, accept replacement when capacity permits, and cancel younger state on the appropriate flush. Four combinational decoder instances do not require four sequential cycles. Nor should you insert another register between each decoder and this stage&#x27;s own storage.</p>
+<h3 id="modules-m6-regfile-committed-state-with-many-ports">M6. regfile: committed state with many ports</h3>
+<p><a href="#source-regfile">regfile.sv</a> is the architectural storage for x0–x31. Eight read indices select up to eight values simultaneously; four accepted commit records may write distinct nonzero destinations at an edge. These are logical ports. A particular FPGA&#x27;s memory blocks may not directly provide this combination, so physical implementation is a later platform decision.</p>
+<p>Writes to x0 have no effect and reads of x0 return zero. The single-writer rule should prevent duplicate nonzero destinations in one commit bundle; assert this instead of silently relying on loop order to select a winner. Define startup initialization in the implementation/EEI without assuming software can rely on unspecified register contents.</p>
+<p>Read-during-write behavior matters. A consumer accepting its operands on the same edge as an older commit must receive the new value via explicit bypass where the R contract requires it. Do not rely on a vendor RAM&#x27;s accidental read-first or write-first behavior.</p>
+<h3 id="modules-m7-scoreboard-ownership-not-result-storage">M7. scoreboard: ownership, not result storage</h3>
+<p><a href="#source-scoreboard">scoreboard.sv</a> owns one busy bit per register. DP supplies allocation events; C supplies release events through accepted writes. The table contains no arithmetic results. Forwarding becoming ready does not clear a busy bit, because the instruction still owns its architectural write.</p>
+<p>Reason about simultaneous release and allocation. If the design permits a new writer to take a name on the same edge the old writer commits, the next state must remain busy for the new owner. A conservative extra stall is also possible, but must be consistent with DP&#x27;s admission rule. Never lose a new allocation because a later assignment clears the same bit.</p>
+<p>Recovery may clear ownership only when it has canceled every remaining owner represented by the bits. The architectural register values themselves survive. Check busy[0]=0 after every event and compare the table against live writers in integration tests.</p>
+<h3 id="modules-m8-register-stage-stable-indices-live-values">M8. register_stage: stable indices, live values</h3>
+<p><a href="#source-register_stage">register_stage.sv</a> holds the control packet and drives <code>read_indices_o</code>. Source slot 2*lane is rs1; slot 2*lane+1 is rs2. <code>read_values_i</code> returns the selected committed values. Accepted <code>commit_writes_i</code> provide the same-edge bypass information.</p>
+<p><code>packet_o</code> must remain stable while stalled. The explicitly separate <code>live_operands_o</code> may change as older instructions commit. DP samples that sideband only when accepting the packet. This is an intentional exception for the sideband, not permission to mutate an ordinary stalled packet.</p>
+<p>Without this separation, a packet can wait long enough for its producer to commit and disappear from forwarding, yet still carry an obsolete snapshot. The pipeline then has no producer to correct the stale value. DP&#x27;s later commit refresh solves the same problem for its retained suffix.</p>
+<h3 id="modules-m9-forwarding-unit-resolve-eight-questions">M9. forwarding_unit: resolve eight questions</h3>
+<p><a href="#source-forwarding_unit">forwarding_unit.sv</a> is already implemented. For each source it handles unused/x0 first, establishes the committed fallback, then scans producers youngest to oldest. <code>found</code> prevents an older match replacing the first match. A first match that is unready or faulted blocks the source; it does not permit searching for an obsolete value.</p>
+<p><code>ready_o</code> says a source value is usable. <code>forwarded_o</code> distinguishes an actual producer match from the fallback/x0 paths. <code>values_o</code> is meaningful for execution only when the relevant source is ready. It is not a dispatch-valid signal.</p>
+<p>The module does not inspect dependencies between instructions still in DP. DP must separately prevent a younger lane reading a destination produced by an older lane selected in the same cycle. There is no same-cycle chained ALU forwarding across the four newly dispatched lanes in this starting design.</p>
+<h3 id="modules-m10-dispatch-choose-the-oldest-legal-prefix">M10. dispatch: choose the oldest legal prefix</h3>
+<p><a href="#source-dispatch">dispatch.sv</a> holds the waiting suffix, refreshes snapshots from commit, asks the resolver about older producers, and walks lanes from oldest to youngest. Stop at the first blocked source, busy destination, within-packet dependency or unavailable resource. The allowed selection is a prefix, not a set of arbitrary ready instructions.</p>
+<p>For a candidate lane, compare its sources and destination with older lanes already selected. A dependency on an older selected destination cannot use its future ALU result yet. A second writer to the same nonzero name cannot share the packet either. An independent younger lane still waits behind a blocked one.</p>
+<p>Once offering a packet to EX, freeze its selected lanes and values until acceptance. On that edge, pulse <code>allocate_mask_o</code>, remove the accepted prefix, and compact the suffix. Refresh remaining snapshots without changing an already offered payload. A singleton requires serial admission and EX acceptance at the same edge; the workbook explains how to avoid the block_younger loop.</p>
+<h3 id="modules-m11-execute-establish-result-meaning">M11. execute: establish result meaning</h3>
+<p><a href="#source-execute">execute.sv</a> chooses ALU operands and uses four ALU instances for ordinary integer lanes. It also handles the one admitted branch/address operation. A PC-relative calculation must use the owning lane&#x27;s PC. Store data comes from the source value, not the computed effective address.</p>
+<p>EX establishes result, effective address, store formatting and resolved next-PC fields as applicable. It detects applicable alignment faults. For a conditional branch, a target alignment fault is relevant only if the branch is taken. For a jump, keep link-value computation separate from permission to commit it.</p>
+<p><code>producers_o</code> describes resident older instructions in natural lane order. Arithmetic can be ready, but a load address is not load data. A faulted writer remains a visible blocking producer. <code>occupied_o</code> describes ownership even if an output is temporarily not offered. The core reorders producer arrays for DP.</p>
+<h3 id="modules-m12-memory-stage-complete-loads-and-retain-stores">M12. memory_stage: complete loads and retain stores</h3>
+<p><a href="#source-memory_stage">memory_stage.sv</a> distinguishes pass-through ALU work, load transactions and store descriptors. A load needs state recording whether its request has been accepted. Otherwise a stalled instruction can issue the same read repeatedly. Some reads may have device effects, so serialization and exact request ownership matter even when no register result is used.</p>
+<p>After response acceptance, select the addressed byte/halfword from the aligned word and extend it according to the operation. Preserve the original effective address for faults and trace; the bus-aligned address is a different value. A response error must become an instruction fault, not a ready zero result.</p>
+<p>Stores pass their descriptors onward without sending writes here. MEM must retain occupancy during a pending load even if <code>packet_valid_o</code> is low. Otherwise the control unit could incorrectly conclude that all older work has drained.</p>
+<h3 id="modules-m13-writeback-a-completion-buffer">M13. writeback: a completion buffer</h3>
+<p><a href="#source-writeback">writeback.sv</a> holds the packet between MEM and C and exposes its producers. Its name is historical terminology: this project&#x27;s register file is written by C. The WB stage must not allocate or release a busy name, issue a store, or emit a retirement event.</p>
+<p>The difficult cases are consume-and-replace, a stalled downstream, and a flush with a resident packet. Preserve fault metadata. A packet being complete does not imply its faulted result is usable for forwarding. Begin its tests with a downstream stall and verify the whole offered record stays unchanged.</p>
+<h3 id="modules-m14-commit-one-place-authorizes-permanent-effects">M14. commit: one place authorizes permanent effects</h3>
+<p><a href="#source-commit">commit.sv</a> owns the oldest packet and any cursor needed for partial retirement. <code>commit_writes_o</code> and <code>retire_o</code> describe accepted events, not persistent offers. Repeating them while stalled would count or write the same instruction again. Trap and branch channels, in contrast, use valid/ ready and retain their records until accepted.</p>
+<p>For an ordinary integer lane, authorize the nonzero destination write and trace together. For a store, send its request once, retain ownership while waiting, and retire only after success; an error becomes a trap. For a branch/jump, couple retirement and any link write with the accepted branch event. A fence waits for the memory completion contract. Successful non-control singletons pulse <code>serial_done_o</code>; branches and faults use recovery instead.</p>
+<p>At the first fault, finish only the permitted older prefix and transfer the trap record to recovery. The faulting instruction is not a normal retirement. There is intentionally no generic flush input that lets younger control erase this ordering owner or its accepted store.</p>
+<h3 id="modules-m15-memory-adapter-remember-who-must-receive-the-answer">M15. memory_adapter: remember who must receive the answer</h3>
+<p><a href="#source-memory_adapter">memory_adapter.sv</a> joins MEM&#x27;s load channel and C&#x27;s store channel onto one abstract external data channel. The request payload says what to do; retained owner state says where the response belongs. Ownership lasts until response consumption, not just request acceptance.</p>
+<p>For example, if a load request is accepted and the external bus becomes ready again, this does not authorize a store request: the load still owns the sole outstanding slot. A buffered response also keeps the adapter non-idle until its consumer accepts it. Never route by whichever client is requesting this cycle.</p>
+<p>Serialization should prevent simultaneous clients. Assert that invariant, and choose/document defensive arbitration before implementation. The abstract port is not AXI or a cache. Its ordering, failed-store and reset guarantees must be met by whatever real environment is selected later.</p>
+<h3 id="modules-m16-control-hazard-unit-one-serialized-operation-and-one-redirect">M16. control_hazard_unit: one serialized operation and one redirect</h3>
+<p><a href="#source-control_hazard_unit">control_hazard_unit.sv</a> is already implemented. Its state contains serial_busy, redirect_valid and redirect_pc. It admits a singleton only when the backend is empty and no conflicting control event/pending redirect exists. Admission blocks younger work in that same cycle.</p>
+<p>An accepted branch or trap event flushes the appropriate younger state and stores a redirect. The redirect is then held until IF accepts responsibility. Trap wins simultaneous new requests when the redirect slot is empty. An already pending redirect is not overwritten; the integration must not present a newly discovered older fault that should have preceded an already committed branch.</p>
+<p>This controller&#x27;s trap input is a restart PC. It has no full trap-record port and cannot report an exception to the environment or wait for a later response by itself. Those missing duties belong to recovery, described next.</p>
+<h3 id="modules-m17-recovery-report-wait-then-restart">M17. recovery: report, wait, then restart</h3>
+<p><a href="#source-recovery">recovery.sv</a> must wrap the control unit and own the longer trap lifecycle. A useful planning sequence is: accept the commit trap, hold an EEI report, wait for report acceptance, wait for resume, offer the chosen restart PC, and wait for IF to accept that redirect. These are proposed state responsibilities, not implemented state encodings.</p>
+<p>Keep younger dispatch/fetch blocked throughout, including the interval after C has handed off the trap but the environment has not supplied a resume PC. <code>eei_trap_ready_i</code> only acknowledges the report. It does not select a handler or authorize resumption. Accept <code>resume_pc_i</code> only at the defined resume handshake.</p>
+<p>Older effects must already be settled before removing backend ownership. If cleanup is deferred until the control unit accepts the eventual trap redirect, the retained work must remain blocked meanwhile. Never use a flush to abandon an accepted memory transaction. Tests must delay report, resume and redirect acceptance independently to expose gaps in this ownership chain.</p>
+<h3 id="modules-m18-core-integration-is-a-correctness-task">M18. core: integration is a correctness task</h3>
+<p><a href="#source-core">core.sv</a> must instantiate and connect all of these blocks. It currently contains ports and TODOs only. The external instruction, data, trap, resume and retirement interfaces are the proposed system boundary. They do not provide a reset vector, memory map or privileged environment.</p>
+<p>Wire ordinary packet channels forward and capacity information backward. Send accepted commit writes to RF, scoreboard, R bypass and DP refresh. Pack the forwarding array as EX[3..0], MEM[3..0], WB[3..0], C[3..0]. Compute backend_empty from actual ownership in EX/MEM/WB/C and adapter idle; DP itself is excluded.</p>
+<p>Review every feedback path for a combinational cycle. Drawing arrows is not enough: mark which arrows pass through stored state. Finally, run an instruction stream and compare accepted architectural effects with an independent reference. Module-level arithmetic tests alone cannot detect a wrongly wired commit path.</p>
+<h3 id="modules-m19-pipe-reg-learn-the-storage-pattern">M19. pipe_reg: learn the storage pattern</h3>
+<p><a href="#source-pipe_reg">pipe_reg.sv</a> is a working generic example, not another mandatory stage to insert between every pair of modules. <code>valid_q</code> records whether it owns an item; <code>data_q</code> stores that item. The ready equation allows a free slot or replacement of an item accepted downstream.</p>
+<p>All decisions, including reset/kill selection, are in always_comb. The always_ff block only assigns next-state values to current-state registers. When neither replacement nor kill/reset occurs, defaults retain the old state. When the consumer accepts and no new item replaces it, valid clears and the old data bits become irrelevant. This is how a bubble is represented without inventing a NOP.</p>
+<h3 id="modules-m20-read-a-cycle-table-correctly">M20. Read a cycle table correctly</h3>
+<p>This illustrative table uses “cycle” to mean the interval when an instruction resides in a named stage. Transfers happen at the following rising edge. Assume fetch supplies the required words, all four lanes are independent ALU operations, and all consumers accept without stalls. A–D name instructions, not stages.</p>
+<div class="table" tabindex="0" role="region" aria-label="Scrollable reference table"><table><thead><tr><th scope="col">Cycle</th><th scope="col">IF</th><th scope="col">D</th><th scope="col">R</th><th scope="col">DP</th><th scope="col">EX</th><th scope="col">MEM</th><th scope="col">WB</th><th scope="col">C</th></tr></thead><tbody><tr><td>1</td><td>A–D</td><td>empty</td><td>empty</td><td>empty</td><td>empty</td><td>empty</td><td>empty</td><td>empty</td></tr><tr><td>2</td><td>E–H</td><td>A–D</td><td>empty</td><td>empty</td><td>empty</td><td>empty</td><td>empty</td><td>empty</td></tr><tr><td>3</td><td>I–L</td><td>E–H</td><td>A–D</td><td>empty</td><td>empty</td><td>empty</td><td>empty</td><td>empty</td></tr><tr><td>4</td><td>M–P</td><td>I–L</td><td>E–H</td><td>A–D</td><td>empty</td><td>empty</td><td>empty</td><td>empty</td></tr><tr><td>5</td><td>Q–T</td><td>M–P</td><td>I–L</td><td>E–H</td><td>A–D</td><td>empty</td><td>empty</td><td>empty</td></tr><tr><td>6</td><td>U–X</td><td>Q–T</td><td>M–P</td><td>I–L</td><td>E–H</td><td>A–D</td><td>empty</td><td>empty</td></tr><tr><td>7</td><td>Y–AB</td><td>U–X</td><td>Q–T</td><td>M–P</td><td>I–L</td><td>E–H</td><td>A–D</td><td>empty</td></tr><tr><td>8</td><td>AC–AF</td><td>Y–AB</td><td>U–X</td><td>Q–T</td><td>M–P</td><td>I–L</td><td>E–H</td><td>A–D</td></tr></tbody></table></div>
+<p>The edge after cycle 8 can retire A–D under these assumptions. This is a pipeline illustration, not a throughput claim for the unimplemented fetch port. Request/response latency can leave IF empty and change the table immediately. Do not include memory wait time implicitly in a claimed fixed eight-cycle latency.</p>
+<p>If C stops accepting, WB first retains its work. Occupied buffers then propagate backpressure toward IF. It need not halt every stage on the very first cycle: empty intermediate slots can still fill. A global stall wire is simpler to draw but is a different control scheme that must preserve all the same ownership.</p>
+<h3 id="modules-m21-critical-paths-and-physical-cost">M21. Critical paths and physical cost</h3>
+<p>A cycle is long enough only if data can propagate through its combinational logic before the next edge&#x27;s setup requirement. A critical path is the slowest such path under the chosen implementation. More stages do not automatically make a CPU faster if one stage contains nearly all of the difficult decisions.</p>
+<p>DP is a likely design challenge: eight source queries compare against sixteen producer descriptions, then priority selection, prefix eligibility and resource checks determine an offer. The product 8×16 describes 128 potential source/ producer comparisons, not a measured gate count or delay. The register file&#x27;s eight reads/four writes and wide packet routing also have physical costs.</p>
+<p>Synthesis maps RTL into cells or FPGA resources; placement/routing determine actual interconnect; timing analysis checks the clock constraint. No target device, clock frequency, area or power result is supplied for this skeleton. Optimize only after correctness, then measure. Adding a pipeline boundary to fix timing changes latency and forwarding ownership, so update the cycle table and stage specification together.</p>
+<h3 id="modules-m22-a-short-vocabulary-to-keep-nearby">M22. A short vocabulary to keep nearby</h3>
+<div class="table" tabindex="0" role="region" aria-label="Scrollable reference table"><table><thead><tr><th scope="col">Term</th><th scope="col">Meaning in this project</th></tr></thead><tbody><tr><td>Architectural</td><td>Visible in the program&#x27;s committed register/memory behavior</td></tr><tr><td>Microarchitecture</td><td>The internal stages, storage and scheduling implementing that behavior</td></tr><tr><td>Resident</td><td>Currently owned by a particular stage&#x27;s storage</td></tr><tr><td>Offer</td><td>Valid payload waiting for the receiving side to accept</td></tr><tr><td>Fire / acceptance</td><td>valid AND ready at the relevant clock edge</td></tr><tr><td>Backpressure</td><td>A receiver&#x27;s lack of capacity prevents its sender from transferring</td></tr><tr><td>Prefix</td><td>Consecutive oldest lanes up to the first excluded lane</td></tr><tr><td>Suffix</td><td>Remaining younger lanes after removing a prefix</td></tr><tr><td>RAW</td><td>A reader needs an older writer&#x27;s result</td></tr><tr><td>WAW</td><td>Two instructions want to write the same register name</td></tr><tr><td>WAR</td><td>A younger write must not change an older instruction&#x27;s required input</td></tr><tr><td>Structural hazard</td><td>Two operations need a resource that cannot serve both</td></tr><tr><td>Serialize</td><td>Drain older backend work, run one operation, block younger dispatch until completion/recovery</td></tr><tr><td>Retire / commit</td><td>Accept the instruction&#x27;s permanent architectural effects in order</td></tr><tr><td>Precise trap</td><td>Older effects are complete and faulting/younger normal effects are absent</td></tr><tr><td>EEI</td><td>Execution environment interface: platform rules outside the base instruction semantics</td></tr><tr><td>Elaboration</td><td>Resolve modules, parameters and types; not evidence of correct execution</td></tr></tbody></table></div>
+<p>When debugging, write down a specific instruction PC, its current owner, its validity and the edge event you expect. This turns “the pipeline is broken” into a checkable question such as “why did PC 0x108 allocate x7 twice while EX was stalled?” Keep a separate list of observed results and design intentions.</p>
+</section>
+<section class="part" id="sources"><h2>Current source, not pseudocode</h2><p>Expand a file to inspect its exact declarations and comments. These listings are embedded at documentation build time and work offline. The fifteen unfinished modules stay unfinished. Successful interface checks are not CPU simulation results.</p><details id="source-hazard_pkg"><summary>rtl/superscalar/hazard_pkg.sv</summary><p class="status">Shared type declarations</p><pre><code>package hazard_pkg;
+  localparam int SOURCES = 8;    // Four lanes, two architectural sources each.
+  localparam int PRODUCERS = 16; // Four lanes in EX, MEM, WB and C.
+  typedef struct packed {
+    logic used;
+    logic [4:0] rs;
+    logic busy;
+    logic [31:0] fallback_value; // R snapshot maintained by commit refresh.
+  } source_t;
+  typedef struct packed {
+    logic valid, writes_rd, killed, fault, ready;
+    logic [4:0] rd;
+    logic [31:0] value;
+  } producer_t;
+endpackage</code></pre></details><details id="source-rv32_pkg"><summary>rtl/superscalar/rv32_pkg.sv</summary><p class="status">Shared type declarations</p><pre><code>// Interface specification only. This package implements no processor behavior.
+package rv32_pkg;
+  localparam int LANES = 4;
+  localparam int XLEN = 32;
+  typedef logic [XLEN-1:0] word_t;
+  typedef logic [4:0] reg_idx_t;
+  typedef logic [LANES-1:0] lane_mask_t;
+  typedef word_t [LANES-1:0] lane_values_t;
+  typedef reg_idx_t [7:0] read_indices_t;
+  typedef word_t [7:0] read_values_t;
+
+  typedef enum logic [5:0] {
+    OP_ILLEGAL, OP_LUI, OP_AUIPC,
+    OP_ADD, OP_SUB, OP_SLL, OP_SLT, OP_SLTU, OP_XOR, OP_SRL, OP_SRA, OP_OR, OP_AND,
+    OP_ADDI, OP_SLTI, OP_SLTIU, OP_XORI, OP_ORI, OP_ANDI, OP_SLLI, OP_SRLI, OP_SRAI,
+    OP_BEQ, OP_BNE, OP_BLT, OP_BGE, OP_BLTU, OP_BGEU, OP_JAL, OP_JALR,
+    OP_LB, OP_LH, OP_LW, OP_LBU, OP_LHU, OP_SB, OP_SH, OP_SW,
+    OP_FENCE, OP_ECALL, OP_EBREAK
+  } op_t;
+  // Symbolic internal causes, NOT privileged mcause encodings. An EEI adapter
+  // must translate these if privileged architectural state is added later.
+  typedef enum logic [3:0] {
+    FAULT_NONE, FAULT_INSN_ALIGN, FAULT_INSN_ACCESS, FAULT_ILLEGAL,
+    FAULT_BREAKPOINT, FAULT_LOAD_ALIGN, FAULT_LOAD_ACCESS,
+    FAULT_STORE_ALIGN, FAULT_STORE_ACCESS, FAULT_ECALL
+  } fault_kind_t;
+  typedef struct packed {
+    logic valid;
+    fault_kind_t kind;
+    word_t address; // Relevant address/instruction bits per specification.
+  } fault_t;
+  typedef struct packed {
+    op_t op;
+    reg_idx_t rs1, rs2, rd;
+    logic uses_rs1, uses_rs2, writes_rd;
+    logic serial; // Memory/control/fence/system/illegal instruction.
+    word_t imm;
+    fault_t fault;
+  } decoded_t;
+  // A single superset keeps stage interfaces understandable. Fields are only
+  // meaningful after their owning stage (see skeleton.md ownership table).
+  typedef struct packed {
+    logic valid;
+    word_t pc, instruction;
+    decoded_t decoded;
+    word_t src1, src2;
+    word_t result, address, store_data;
+    logic [3:0] byte_mask;
+    logic next_pc_valid;
+    word_t next_pc;
+    fault_t fault;
+  } lane_t;
+  typedef lane_t [LANES-1:0] packet_t; // lane 0 oldest, compact valid prefix.
+  typedef struct packed {
+    logic valid; // Accepted architectural register write this edge.
+    reg_idx_t rd;
+    word_t value;
+  } reg_write_t;
+  typedef reg_write_t [LANES-1:0] commit_writes_t;
+  typedef struct packed {
+    logic valid; // Passive event, no ready: receiver must observe every cycle.
+    word_t pc, instruction;
+    logic writes_rd;
+    reg_idx_t rd;
+    word_t value;
+    logic memory;
+    logic memory_write;
+    word_t address, memory_data;
+    logic [3:0] byte_mask;
+  } retire_t;
+  typedef retire_t [LANES-1:0] retire_bundle_t;
+  typedef struct packed {
+    word_t pc, instruction;
+    fault_t fault;
+  } trap_t;
+  // Abstract instruction port: one outstanding aligned 16-byte block request.
+  // Each word has its own access-error bit. This is not an AXI implementation.
+  typedef struct packed {
+    lane_values_t words;
+    lane_mask_t access_error;
+  } if_response_t;
+  // Abstract data port: aligned 4-byte address, little endian, one outstanding.
+  // Original effective address remains in the instruction for trap/trace use.
+  typedef struct packed {
+    logic write;
+    word_t aligned_address, write_data;
+    logic [3:0] byte_mask;
+  } mem_request_t;
+  typedef struct packed {
+    word_t read_data;
+    logic error;
+  } mem_response_t;
+endpackage</code></pre></details><details id="source-forwarding_unit"><summary>rtl/superscalar/forwarding_unit.sv</summary><p class="status">Implemented hazard unit; see standalone validation report</p><pre><code>// Combinational DP operand resolver. Does NOT perform packet-prefix selection.
+// Producers MUST be older than every DP consumer and ordered youngest first:
+// EX lane 3..0, MEM lane 3..0, WB lane 3..0, C lane 3..0.
+// Keep a writer visible while its result is unready or faulted. Otherwise an
+// older matching value could be selected incorrectly. Killed writers are absent.
+module forwarding_unit (
+  input hazard_pkg::source_t [hazard_pkg::SOURCES-1:0] sources_i,
+  input hazard_pkg::producer_t [hazard_pkg::PRODUCERS-1:0] producers_i,
+  output logic [hazard_pkg::SOURCES-1:0] ready_o, forwarded_o,
+  output logic [hazard_pkg::SOURCES-1:0][31:0] values_o
+);
+  import hazard_pkg::*;
+  logic [SOURCES-1:0] found;
+  always_comb begin
+    ready_o = &#x27;0;
+    forwarded_o = &#x27;0;
+    values_o = &#x27;0;
+    found = &#x27;0;
+    for (int s = 0; s &lt; SOURCES; s++) begin
+      if (!sources_i[s].used || sources_i[s].rs == 0) begin
+        ready_o[s] = 1&#x27;b1;
+      end else begin
+        ready_o[s] = !sources_i[s].busy;
+        values_o[s] = sources_i[s].fallback_value;
+        for (int p = 0; p &lt; PRODUCERS; p++) begin
+          if (!found[s] &amp;&amp; producers_i[p].valid &amp;&amp; producers_i[p].writes_rd &amp;&amp;
+              !producers_i[p].killed &amp;&amp; producers_i[p].rd != 0 &amp;&amp;
+              producers_i[p].rd == sources_i[s].rs) begin
+            found[s] = 1&#x27;b1;
+            ready_o[s] = producers_i[p].ready &amp;&amp; !producers_i[p].fault;
+            forwarded_o[s] = ready_o[s];
+            // A matching unready/faulted producer blocks even if an older one
+            // is ready. Zero invalid data to make accidental consumption clear.
+            values_o[s] = ready_o[s] ? producers_i[p].value : 32&#x27;b0;
+          end
+        end
+      end
+    end
+  end
+endmodule</code></pre></details><details id="source-control_hazard_unit"><summary>rtl/superscalar/control_hazard_unit.sv</summary><p class="status">Implemented hazard unit; see standalone validation report</p><pre><code>// Conservative singleton controller. No prediction or selective age recovery.
+// DP may dispatch a serialized instruction only on serial_valid &amp;&amp; serial_ready.
+// backend_empty must include EX/MEM/WB/C and outstanding architectural data work.
+// Commit supplies trap/branch requests, holding valid + PC until ready. Branch
+// requests include the resolved next PC for BOTH taken and not-taken outcomes.
+// trap_pc_i is the EEI-provided restart/handler PC, NOT the faulting instruction PC.
+// Trap wins simultaneous requests; commit must cancel the losing younger branch.
+// While a redirect is pending, new events wait: redirect payload never changes.
+module control_hazard_unit (
+  input logic clk_i, rst_i,
+  input logic serial_valid_i, backend_empty_i,
+  output logic serial_ready_o,
+  input logic serial_done_i, // Successful non-control singleton commit pulse.
+  input logic branch_valid_i,
+  input logic [31:0] branch_pc_i,
+  output logic branch_ready_o,
+  input logic trap_valid_i,
+  input logic [31:0] trap_pc_i,
+  output logic trap_ready_o,
+  output logic redirect_valid_o,
+  output logic [31:0] redirect_pc_o,
+  input logic redirect_ready_i, // IF has accepted ownership, including stale drain.
+  output logic block_younger_o, stop_fetch_o,
+  output logic flush_frontend_o, flush_backend_o
+);
+  typedef struct packed {
+    logic serial_busy;
+    logic redirect_valid;
+    logic [31:0] redirect_pc;
+  } state_t;
+  state_t state_q, state_d;
+  logic start_fire, branch_fire, trap_fire;
+  always_comb begin
+    state_d = state_q;
+    trap_ready_o = !rst_i &amp;&amp; !state_q.redirect_valid;
+    branch_ready_o = trap_ready_o &amp;&amp; !trap_valid_i;
+    trap_fire = trap_valid_i &amp;&amp; trap_ready_o;
+    branch_fire = branch_valid_i &amp;&amp; branch_ready_o;
+    serial_ready_o = !rst_i &amp;&amp; backend_empty_i &amp;&amp; !state_q.serial_busy &amp;&amp;
+                     !state_q.redirect_valid &amp;&amp; !branch_valid_i &amp;&amp; !trap_valid_i;
+    start_fire = serial_valid_i &amp;&amp; serial_ready_o;
+    redirect_valid_o = state_q.redirect_valid &amp;&amp; !rst_i;
+    redirect_pc_o = state_q.redirect_pc;
+    // These are same-cycle cancellation controls, sampled at the accepting edge.
+    flush_frontend_o = trap_fire || branch_fire;
+    flush_backend_o = trap_fire; // Commit already retired all older effects.
+    block_younger_o = rst_i || state_q.serial_busy || state_q.redirect_valid ||
+                      start_fire || branch_valid_i || trap_valid_i;
+    stop_fetch_o = block_younger_o;
+    if (serial_done_i) state_d.serial_busy = 1&#x27;b0;
+    if (redirect_valid_o &amp;&amp; redirect_ready_i) begin
+      state_d.redirect_valid = 1&#x27;b0;
+      state_d.serial_busy = 1&#x27;b0;
+    end
+    if (start_fire) state_d.serial_busy = 1&#x27;b1;
+    if (trap_fire || branch_fire) begin
+      state_d.serial_busy = 1&#x27;b1;
+      state_d.redirect_valid = 1&#x27;b1;
+      state_d.redirect_pc = trap_fire ? trap_pc_i : branch_pc_i;
+    end
+    if (rst_i) state_d = &#x27;0;
+  end
+  always_ff @(posedge clk_i) begin
+    state_q &lt;= state_d;
+  end
+endmodule</code></pre></details><details id="source-rv32_decode"><summary>rtl/superscalar/rv32_decode.sv</summary><p class="status">Unimplemented shell: outputs intentionally undriven</p><pre><code>// UNIMPLEMENTED SKELETON: interface contract only; outputs intentionally undriven.
+// See docs/superscalar/skeleton.md. This file must not be used as working RTL.
+// No tie-offs, behavioral substitutes, or inferred test results are provided.
+// TODO DEC-01: Decode all 40 RV32I instructions; validate opcode/funct fields.
+// TODO DEC-02: Build immediates, source-use flags and serial classification.
+// TODO DEC-03: Record symbolic illegal fault; never silently substitute ADD.
+module rv32_decode (
+  input rv32_pkg::word_t instruction_i,
+  output rv32_pkg::decoded_t decoded_o
+);
+  import rv32_pkg::*;
+  // TODO Declare module-specific state_q/state_d, if this block owns state.
+  // TODO Implement next-state/defaults/reset/flush in always_comb.
+  // TODO Use always_ff only for nonblocking state assignments.
+  // TODO Add meaningful directed tests before declaring this block complete.
+endmodule</code></pre></details><details id="source-alu"><summary>rtl/superscalar/alu.sv</summary><p class="status">Unimplemented shell: outputs intentionally undriven</p><pre><code>// UNIMPLEMENTED SKELETON: interface contract only; outputs intentionally undriven.
+// See docs/superscalar/skeleton.md. This file must not be used as working RTL.
+// No tie-offs, behavioral substitutes, or inferred test results are provided.
+// TODO ALU-01: Implement integer data operations only; no memory or control effects.
+// TODO ALU-02: Specify signed comparisons/right shifts and low-five-bit shift amount.
+// TODO ALU-03: Immediate/PC operand selection belongs to execute, not this block.
+module alu (
+  input rv32_pkg::op_t op_i,
+  input rv32_pkg::word_t a_i, b_i,
+  output rv32_pkg::word_t result_o
+);
+  import rv32_pkg::*;
+  // TODO Declare module-specific state_q/state_d, if this block owns state.
+  // TODO Implement next-state/defaults/reset/flush in always_comb.
+  // TODO Use always_ff only for nonblocking state assignments.
+  // TODO Add meaningful directed tests before declaring this block complete.
+endmodule</code></pre></details><details id="source-fetch"><summary>rtl/superscalar/fetch.sv</summary><p class="status">Unimplemented shell: outputs intentionally undriven</p><pre><code>// UNIMPLEMENTED SKELETON: interface contract only; outputs intentionally undriven.
+// See docs/superscalar/skeleton.md. This file must not be used as working RTL.
+// No tie-offs, behavioral substitutes, or inferred test results are provided.
+// TODO IF-01: Own PC, aligned block request, response buffer and next-word offset.
+// TODO IF-02: Hold accepted request ownership; drain stale responses after redirect.
+// TODO IF-03: stop_fetch blocks new sequential requests, not response/redirect acceptance.
+// TODO IF-04: Emit compact prefixes with per-word PCs and access faults; reset PC is sampled on reset.
+// TODO STATE: PC; request accepted/pending; buffered response; discard-on-return; pending redirect.
+module fetch (
+  input logic clk_i, rst_i,
+  input rv32_pkg::word_t reset_pc_i,
+  input logic stop_fetch_i, flush_i,
+  input logic redirect_valid_i,
+  input rv32_pkg::word_t redirect_pc_i,
+  output logic redirect_ready_o,
+  output logic request_valid_o,
+  output rv32_pkg::word_t request_address_o,
+  input logic request_ready_i,
+  input logic response_valid_i,
+  input rv32_pkg::if_response_t response_i,
+  output logic response_ready_o,
+  output logic packet_valid_o,
+  output rv32_pkg::packet_t packet_o,
+  input logic packet_ready_i,
+  output logic outstanding_o
+);
+  import rv32_pkg::*;
+  // TODO Declare module-specific state_q/state_d, if this block owns state.
+  // TODO Implement next-state/defaults/reset/flush in always_comb.
+  // TODO Use always_ff only for nonblocking state assignments.
+  // TODO Add meaningful directed tests before declaring this block complete.
+endmodule</code></pre></details><details id="source-decode_stage"><summary>rtl/superscalar/decode_stage.sv</summary><p class="status">Unimplemented shell: outputs intentionally undriven</p><pre><code>// UNIMPLEMENTED SKELETON: interface contract only; outputs intentionally undriven.
+// See docs/superscalar/skeleton.md. This file must not be used as working RTL.
+// No tie-offs, behavioral substitutes, or inferred test results are provided.
+// TODO D-01: Instantiate four rv32_decode blocks and one ordered output holding register.
+// TODO D-02: Retain earlier fetch fault; do not replace it with decode of meaningless bytes.
+// TODO D-03: Preserve PC/order and every unowned field; no architectural effects.
+// TODO STATE: output packet and valid; reset/flush invalidate the packet.
+module decode_stage (
+  input logic clk_i, rst_i, flush_i,
+  input logic packet_valid_i,
+  input rv32_pkg::packet_t packet_i,
+  output logic packet_ready_o,
+  output logic packet_valid_o,
+  output rv32_pkg::packet_t packet_o,
+  input logic packet_ready_i
+);
+  import rv32_pkg::*;
+  // TODO Declare module-specific state_q/state_d, if this block owns state.
+  // TODO Implement next-state/defaults/reset/flush in always_comb.
+  // TODO Use always_ff only for nonblocking state assignments.
+  // TODO Add meaningful directed tests before declaring this block complete.
+endmodule</code></pre></details><details id="source-regfile"><summary>rtl/superscalar/regfile.sv</summary><p class="status">Unimplemented shell: outputs intentionally undriven</p><pre><code>// UNIMPLEMENTED SKELETON: interface contract only; outputs intentionally undriven.
+// See docs/superscalar/skeleton.md. This file must not be used as working RTL.
+// No tie-offs, behavioral substitutes, or inferred test results are provided.
+// TODO RF-01: Provide eight combinational reads and four accepted commit writes.
+// TODO RF-02: x0 reads zero and ignores writes; choose/reset all other registers explicitly.
+// TODO RF-03: Define simultaneous read/write behavior with explicit commit bypass at R/DP.
+// TODO RF-04: Assert no two accepted nonzero writes target the same rd under one-writer policy.
+// TODO STATE: committed registers only; no flush input because committed state survives recovery.
+module regfile (
+  input logic clk_i, rst_i,
+  input rv32_pkg::read_indices_t read_indices_i,
+  output rv32_pkg::read_values_t read_values_o,
+  input rv32_pkg::commit_writes_t commit_writes_i
+);
+  import rv32_pkg::*;
+  // TODO Declare module-specific state_q/state_d, if this block owns state.
+  // TODO Implement next-state/defaults/reset/flush in always_comb.
+  // TODO Use always_ff only for nonblocking state assignments.
+  // TODO Add meaningful directed tests before declaring this block complete.
+endmodule</code></pre></details><details id="source-scoreboard"><summary>rtl/superscalar/scoreboard.sv</summary><p class="status">Unimplemented shell: outputs intentionally undriven</p><pre><code>// UNIMPLEMENTED SKELETON: interface contract only; outputs intentionally undriven.
+// See docs/superscalar/skeleton.md. This file must not be used as working RTL.
+// No tie-offs, behavioral substitutes, or inferred test results are provided.
+// TODO SB-01: Set bits only on accepted dispatch; clear only accepted commit writes.
+// TODO SB-02: Keep bit zero clear. Allocation wins same-bit clear if reuse is enabled.
+// TODO SB-03: flush means ALL remaining writers are killed after older effects settle.
+// TODO SB-04: Assert at most one live writer per nonzero register; forwarding never clears busy.
+// TODO STATE: 32-bit busy bitmap.
+module scoreboard (
+  input logic clk_i, rst_i, flush_i,
+  input logic [31:0] allocate_mask_i,
+  input rv32_pkg::commit_writes_t commit_writes_i,
+  output logic [31:0] busy_o
+);
+  import rv32_pkg::*;
+  // TODO Declare module-specific state_q/state_d, if this block owns state.
+  // TODO Implement next-state/defaults/reset/flush in always_comb.
+  // TODO Use always_ff only for nonblocking state assignments.
+  // TODO Add meaningful directed tests before declaring this block complete.
+endmodule</code></pre></details><details id="source-register_stage"><summary>rtl/superscalar/register_stage.sv</summary><p class="status">Unimplemented shell: outputs intentionally undriven</p><pre><code>// UNIMPLEMENTED SKELETON: interface contract only; outputs intentionally undriven.
+// See docs/superscalar/skeleton.md. This file must not be used as working RTL.
+// No tie-offs, behavioral substitutes, or inferred test results are provided.
+// TODO R-01: Hold a stable index/control packet and continuously read its RF indices.
+// TODO R-02: live_operands is a separate changing sideband sampled only on R-to-DP acceptance.
+// TODO R-03: Bypass simultaneous accepted commit writes into live reads; x0 always zero.
+// TODO R-04: packet_o src1/src2 are not authoritative; dispatch samples live_operands instead.
+// TODO STATE: ordered control packet and valid; no early register writes.
+module register_stage (
+  input logic clk_i, rst_i, flush_i,
+  input logic packet_valid_i,
+  input rv32_pkg::packet_t packet_i,
+  output logic packet_ready_o,
+  output rv32_pkg::read_indices_t read_indices_o,
+  input rv32_pkg::read_values_t read_values_i,
+  input rv32_pkg::commit_writes_t commit_writes_i,
+  output logic packet_valid_o,
+  output rv32_pkg::packet_t packet_o,
+  output rv32_pkg::read_values_t live_operands_o,
+  input logic packet_ready_i
+);
+  import rv32_pkg::*;
+  // TODO Declare module-specific state_q/state_d, if this block owns state.
+  // TODO Implement next-state/defaults/reset/flush in always_comb.
+  // TODO Use always_ff only for nonblocking state assignments.
+  // TODO Add meaningful directed tests before declaring this block complete.
+endmodule</code></pre></details><details id="source-dispatch"><summary>rtl/superscalar/dispatch.sv</summary><p class="status">Unimplemented shell: outputs intentionally undriven</p><pre><code>// UNIMPLEMENTED SKELETON: interface contract only; outputs intentionally undriven.
+// See docs/superscalar/skeleton.md. This file must not be used as working RTL.
+// No tie-offs, behavioral substitutes, or inferred test results are provided.
+// TODO DP-01: Own remaining packet suffix and operand snapshots; refresh on every commit.
+// TODO DP-02: Instantiate forwarding_unit; sources = 2*lane + operand (rs1=0, rs2=1).
+// TODO DP-03: Select oldest executable prefix; enforce source readiness, WAW and same-packet RAW.
+// TODO DP-04: Freeze offered bundle under EX backpressure; no duplicate dispatch after compaction.
+// TODO DP-05: Atomic singleton transfer requires serial_ready AND EX acceptance; avoid combinational loop
+// TODO        with block_younger (which rises on serial handshake); it gates ordinary lanes only.
+// TODO DP-06: allocate_mask pulses on actual EX transfer; do not allocate for a held offer.
+// TODO STATE: retained suffix, snapshots and frozen offered prefix/values; no rename tags.
+module dispatch (
+  input logic clk_i, rst_i, flush_i,
+  input logic packet_valid_i,
+  input rv32_pkg::packet_t packet_i,
+  input rv32_pkg::read_values_t live_operands_i,
+  output logic packet_ready_o,
+  input rv32_pkg::commit_writes_t commit_writes_i,
+  input logic [31:0] busy_i,
+  input hazard_pkg::producer_t [hazard_pkg::PRODUCERS-1:0] producers_i,
+  input logic block_younger_i,
+  output logic serial_valid_o,
+  input logic serial_ready_i,
+  output logic [31:0] allocate_mask_o,
+  output logic packet_valid_o,
+  output rv32_pkg::packet_t packet_o,
+  input logic packet_ready_i
+);
+  import rv32_pkg::*;
+  // TODO Declare module-specific state_q/state_d, if this block owns state.
+  // TODO Implement next-state/defaults/reset/flush in always_comb.
+  // TODO Use always_ff only for nonblocking state assignments.
+  // TODO Add meaningful directed tests before declaring this block complete.
+endmodule</code></pre></details><details id="source-execute"><summary>rtl/superscalar/execute.sv</summary><p class="status">Unimplemented shell: outputs intentionally undriven</p><pre><code>// UNIMPLEMENTED SKELETON: interface contract only; outputs intentionally undriven.
+// See docs/superscalar/skeleton.md. This file must not be used as working RTL.
+// No tie-offs, behavioral substitutes, or inferred test results are provided.
+// TODO EX-01: Four ALUs; select register/immediate/PC operands and compute results.
+// TODO EX-02: Singleton address/branch path computes target/link/effective address, not side effects.
+// TODO EX-03: Check taken-target alignment and data alignment; retain earlier faults.
+// TODO EX-04: producers_o[lane] describes resident operation; never mark a load address as ready data.
+// TODO EX-05: Define the resident EX packet and its combinational result path exactly once; no extra
+// TODO        hidden ninth stage or dependence on new DP selection to validate current EX results.
+// TODO STATE: resident EX packet; output valid/data hold across downstream backpressure.
+module execute (
+  input logic clk_i, rst_i, flush_i,
+  input logic packet_valid_i,
+  input rv32_pkg::packet_t packet_i,
+  output logic packet_ready_o,
+  output logic packet_valid_o,
+  output rv32_pkg::packet_t packet_o,
+  input logic packet_ready_i,
+  output hazard_pkg::producer_t [3:0] producers_o,
+  output logic occupied_o
+);
+  import rv32_pkg::*;
+  // TODO Declare module-specific state_q/state_d, if this block owns state.
+  // TODO Implement next-state/defaults/reset/flush in always_comb.
+  // TODO Use always_ff only for nonblocking state assignments.
+  // TODO Add meaningful directed tests before declaring this block complete.
+endmodule</code></pre></details><details id="source-memory_stage"><summary>rtl/superscalar/memory_stage.sv</summary><p class="status">Unimplemented shell: outputs intentionally undriven</p><pre><code>// UNIMPLEMENTED SKELETON: interface contract only; outputs intentionally undriven.
+// See docs/superscalar/skeleton.md. This file must not be used as working RTL.
+// No tie-offs, behavioral substitutes, or inferred test results are provided.
+// TODO MEM-01: Pass ALU results in order; issue a singleton load exactly once and wait for response.
+// TODO MEM-02: Extract little-endian bytes and sign/zero extend; preserve original fault address.
+// TODO MEM-03: Package stores only, never issue them; commit owns store requests.
+// TODO MEM-04: A load is a live unready producer until actual data arrives; fault blocks forwarding.
+// TODO MEM-05: Coordinate flush with adapter ownership; accepted external requests still need draining.
+// TODO STATE: resident packet; request-sent flag; load response/result holding.
+module memory_stage (
+  input logic clk_i, rst_i, flush_i,
+  input logic packet_valid_i,
+  input rv32_pkg::packet_t packet_i,
+  output logic packet_ready_o,
+  output logic load_request_valid_o,
+  output rv32_pkg::mem_request_t load_request_o,
+  input logic load_request_ready_i,
+  input logic load_response_valid_i,
+  input rv32_pkg::mem_response_t load_response_i,
+  output logic load_response_ready_o,
+  output logic packet_valid_o,
+  output rv32_pkg::packet_t packet_o,
+  input logic packet_ready_i,
+  output hazard_pkg::producer_t [3:0] producers_o,
+  output logic occupied_o
+);
+  import rv32_pkg::*;
+  // TODO Declare module-specific state_q/state_d, if this block owns state.
+  // TODO Implement next-state/defaults/reset/flush in always_comb.
+  // TODO Use always_ff only for nonblocking state assignments.
+  // TODO Add meaningful directed tests before declaring this block complete.
+endmodule</code></pre></details><details id="source-writeback"><summary>rtl/superscalar/writeback.sv</summary><p class="status">Unimplemented shell: outputs intentionally undriven</p><pre><code>// UNIMPLEMENTED SKELETON: interface contract only; outputs intentionally undriven.
+// See docs/superscalar/skeleton.md. This file must not be used as working RTL.
+// No tie-offs, behavioral substitutes, or inferred test results are provided.
+// TODO WB-01: Hold completed result/exception packet for C; no architectural write ports.
+// TODO WB-02: Transfer whole packet; C owns any partial retirement suffix.
+// TODO WB-03: Expose resident live writers including faulted entries until recovery.
+// TODO STATE: packet holding register and valid.
+module writeback (
+  input logic clk_i, rst_i, flush_i,
+  input logic packet_valid_i,
+  input rv32_pkg::packet_t packet_i,
+  output logic packet_ready_o,
+  output logic packet_valid_o,
+  output rv32_pkg::packet_t packet_o,
+  input logic packet_ready_i,
+  output hazard_pkg::producer_t [3:0] producers_o,
+  output logic occupied_o
+);
+  import rv32_pkg::*;
+  // TODO Declare module-specific state_q/state_d, if this block owns state.
+  // TODO Implement next-state/defaults/reset/flush in always_comb.
+  // TODO Use always_ff only for nonblocking state assignments.
+  // TODO Add meaningful directed tests before declaring this block complete.
+endmodule</code></pre></details><details id="source-commit"><summary>rtl/superscalar/commit.sv</summary><p class="status">Unimplemented shell: outputs intentionally undriven</p><pre><code>// UNIMPLEMENTED SKELETON: interface contract only; outputs intentionally undriven.
+// See docs/superscalar/skeleton.md. This file must not be used as working RTL.
+// No tie-offs, behavioral substitutes, or inferred test results are provided.
+// TODO C-01: Retire oldest legal prefix; commit_writes and passive trace occur exactly once.
+// TODO C-02: Hold trap report stable until recovery accepts it; no faulting/younger retirement.
+// TODO C-03: Branch link write/retirement and branch handshake are one atomic accepted event.
+// TODO C-04: Issue authorized store once, hold until response, then retire or report error.
+// TODO C-05: serial_done only on successful non-control serial completion; fence requires memory idle.
+// TODO C-06: Trap report acceptance retires NO faulting instruction; clear its C ownership only after
+// TODO       recovery owns the report. Recovery still blocks all younger work until resume.
+// TODO STATE: current packet/cursor; store-sent/response ownership; trap/branch event holding.
+// TODO No external flush port: this is the architectural ordering owner, not a younger stage.
+module commit (
+  input logic clk_i, rst_i,
+  input logic packet_valid_i,
+  input rv32_pkg::packet_t packet_i,
+  output logic packet_ready_o,
+  output rv32_pkg::commit_writes_t commit_writes_o,
+  output rv32_pkg::retire_bundle_t retire_o,
+  output logic trap_valid_o,
+  output rv32_pkg::trap_t trap_o,
+  input logic trap_ready_i,
+  output logic branch_valid_o,
+  output rv32_pkg::word_t branch_pc_o,
+  input logic branch_ready_i,
+  output logic serial_done_o,
+  output logic store_request_valid_o,
+  output rv32_pkg::mem_request_t store_request_o,
+  input logic store_request_ready_i,
+  input logic store_response_valid_i,
+  input rv32_pkg::mem_response_t store_response_i,
+  output logic store_response_ready_o,
+  input logic memory_idle_i,
+  output hazard_pkg::producer_t [3:0] producers_o,
+  output logic occupied_o
+);
+  import rv32_pkg::*;
+  // TODO Declare module-specific state_q/state_d, if this block owns state.
+  // TODO Implement next-state/defaults/reset/flush in always_comb.
+  // TODO Use always_ff only for nonblocking state assignments.
+  // TODO Add meaningful directed tests before declaring this block complete.
+endmodule</code></pre></details><details id="source-memory_adapter"><summary>rtl/superscalar/memory_adapter.sv</summary><p class="status">Unimplemented shell: outputs intentionally undriven</p><pre><code>// UNIMPLEMENTED SKELETON: interface contract only; outputs intentionally undriven.
+// See docs/superscalar/skeleton.md. This file must not be used as working RTL.
+// No tie-offs, behavioral substitutes, or inferred test results are provided.
+// TODO BUS-01: Route serialized MEM loads and C stores to one abstract data port.
+// TODO BUS-02: Track owner through response consumption; never route response to new owner.
+// TODO BUS-03: Assert loads/stores do not compete under serialization; document arbitration defensively.
+// TODO BUS-04: idle means no offered/accepted/buffered data transaction remains, not just bus-ready.
+// TODO BUS-05: Failed store has no visible effects; ack meets EEI ordering. No silent posted-write model.
+// TODO STATE: request owner, request/response holding, acceptance state. Reset coordinated with endpoint.
+// TODO This is an abstract bridge, NOT an unfinished AXI implementation with invented signals.
+module memory_adapter (
+  input logic clk_i, rst_i,
+  input logic load_request_valid_i,
+  input rv32_pkg::mem_request_t load_request_i,
+  output logic load_request_ready_o,
+  output logic load_response_valid_o,
+  output rv32_pkg::mem_response_t load_response_o,
+  input logic load_response_ready_i,
+  input logic store_request_valid_i,
+  input rv32_pkg::mem_request_t store_request_i,
+  output logic store_request_ready_o,
+  output logic store_response_valid_o,
+  output rv32_pkg::mem_response_t store_response_o,
+  input logic store_response_ready_i,
+  output logic request_valid_o,
+  output rv32_pkg::mem_request_t request_o,
+  input logic request_ready_i,
+  input logic response_valid_i,
+  input rv32_pkg::mem_response_t response_i,
+  output logic response_ready_o,
+  output logic idle_o
+);
+  import rv32_pkg::*;
+  // TODO Declare module-specific state_q/state_d, if this block owns state.
+  // TODO Implement next-state/defaults/reset/flush in always_comb.
+  // TODO Use always_ff only for nonblocking state assignments.
+  // TODO Add meaningful directed tests before declaring this block complete.
+endmodule</code></pre></details><details id="source-recovery"><summary>rtl/superscalar/recovery.sv</summary><p class="status">Unimplemented shell: outputs intentionally undriven</p><pre><code>// UNIMPLEMENTED SKELETON: interface contract only; outputs intentionally undriven.
+// See docs/superscalar/skeleton.md. This file must not be used as working RTL.
+// No tie-offs, behavioral substitutes, or inferred test results are provided.
+// TODO REC-01: Instantiate existing control_hazard_unit; translate accepted commit trap to EEI report.
+// TODO REC-02: Retain trap metadata across EEI stalls; wait for report acceptance before accepting resume.
+// TODO REC-03: Gate younger work throughout trap-report/resume wait, even after C releases its packet.
+// TODO REC-04: resume PC becomes controller trap_pc; never substitute faulting PC or invented vector.
+// TODO REC-05: Flush only after older effects settle; trap wins branch and losing branch is canceled.
+// TODO STATE: trap report holding; report-accepted/wait-resume; controller pending redirect state.
+module recovery (
+  input logic clk_i, rst_i,
+  input logic serial_valid_i, backend_empty_i,
+  output logic serial_ready_o,
+  input logic serial_done_i,
+  input logic branch_valid_i,
+  input rv32_pkg::word_t branch_pc_i,
+  output logic branch_ready_o,
+  input logic commit_trap_valid_i,
+  input rv32_pkg::trap_t commit_trap_i,
+  output logic commit_trap_ready_o,
+  output logic eei_trap_valid_o,
+  output rv32_pkg::trap_t eei_trap_o,
+  input logic eei_trap_ready_i,
+  input logic resume_valid_i,
+  input rv32_pkg::word_t resume_pc_i,
+  output logic resume_ready_o,
+  output logic redirect_valid_o,
+  output rv32_pkg::word_t redirect_pc_o,
+  input logic redirect_ready_i,
+  output logic block_younger_o, stop_fetch_o,
+  output logic flush_frontend_o, flush_backend_o
+);
+  import rv32_pkg::*;
+  // TODO Declare module-specific state_q/state_d, if this block owns state.
+  // TODO Implement next-state/defaults/reset/flush in always_comb.
+  // TODO Use always_ff only for nonblocking state assignments.
+  // TODO Add meaningful directed tests before declaring this block complete.
+endmodule</code></pre></details><details id="source-core"><summary>rtl/superscalar/core.sv</summary><p class="status">Unimplemented shell: outputs intentionally undriven</p><pre><code>// UNIMPLEMENTED SKELETON: interface contract only; outputs intentionally undriven.
+// See docs/superscalar/skeleton.md. This file must not be used as working RTL.
+// No tie-offs, behavioral substitutes, or inferred test results are provided.
+// TODO TOP-01: Wire IF/D/R/DP/EX/MEM/WB/C, RF, scoreboard, adapter and recovery.
+// TODO TOP-02: Pack producer ports youngest first: EX[3..0], MEM[3..0], WB[3..0], C[3..0].
+// TODO TOP-03: Broadcast accepted commit writes to RF, scoreboard, R and DP.
+// TODO TOP-04: backend_empty = no EX/MEM/WB/C owner and memory_adapter idle.
+// TODO TOP-05: Frontend flush covers IF/D/R/DP; backend trap flush covers EX/MEM/WB and scoreboard.
+// TODO TOP-06: C and committed RF are NOT indiscriminately reset on a branch redirect.
+// TODO TOP-07: Prove packet-stage ownership, singleton handshake, no ready/data loops and no extra stages.
+// TODO TOP-08: Keep all top outputs deliberately undriven until actual submodules are wired.
+module core (
+  input logic clk_i, rst_i,
+  input rv32_pkg::word_t reset_pc_i,
+  output logic instruction_request_valid_o,
+  output rv32_pkg::word_t instruction_request_address_o,
+  input logic instruction_request_ready_i,
+  input logic instruction_response_valid_i,
+  input rv32_pkg::if_response_t instruction_response_i,
+  output logic instruction_response_ready_o,
+  output logic data_request_valid_o,
+  output rv32_pkg::mem_request_t data_request_o,
+  input logic data_request_ready_i,
+  input logic data_response_valid_i,
+  input rv32_pkg::mem_response_t data_response_i,
+  output logic data_response_ready_o,
+  output rv32_pkg::retire_bundle_t retire_o,
+  output logic trap_valid_o,
+  output rv32_pkg::trap_t trap_o,
+  input logic trap_ready_i,
+  input logic resume_valid_i,
+  input rv32_pkg::word_t resume_pc_i,
+  output logic resume_ready_o
+);
+  import rv32_pkg::*;
+  // TODO Declare module-specific state_q/state_d, if this block owns state.
+  // TODO Implement next-state/defaults/reset/flush in always_comb.
+  // TODO Use always_ff only for nonblocking state assignments.
+  // TODO Add meaningful directed tests before declaring this block complete.
+endmodule</code></pre></details><details id="source-pipe_reg"><summary>examples/superscalar/pipe_reg.sv</summary><p class="status">Generic storage example</p><pre><code>// One-entry elastic register, NOT a CPU stage implementation.
+// Synchronous active-high reset; transfer on valid &amp;&amp; ready at an edge.
+// kill_i suppresses both interfaces and clears state at the next edge.
+module pipe_reg #(
+  parameter int unsigned WIDTH = 32
+) (
+  input  logic clk_i, rst_i, kill_i,
+  input  logic valid_i,
+  output logic ready_o,
+  input  logic [WIDTH-1:0] data_i,
+  output logic valid_o,
+  input  logic ready_i,
+  output logic [WIDTH-1:0] data_o
+);
+  logic valid_q, valid_d;
+  logic [WIDTH-1:0] data_q, data_d;
+  always_comb begin
+    // Replace an occupied entry only when downstream consumes it.
+    ready_o = (!valid_q || ready_i) &amp;&amp; !rst_i &amp;&amp; !kill_i;
+    valid_o = valid_q &amp;&amp; !rst_i &amp;&amp; !kill_i;
+    data_o = data_q;
+    valid_d = valid_q;
+    data_d = data_q;
+    if (ready_o) begin
+      valid_d = valid_i;
+      if (valid_i) data_d = data_i;
+    end
+    // All control and reset selection stays in always_comb.
+    if (rst_i || kill_i) begin
+      valid_d = 1&#x27;b0;
+      data_d = &#x27;0;
+    end
+  end
+  always_ff @(posedge clk_i) begin
+    valid_q &lt;= valid_d;
+    data_q &lt;= data_d;
+  end
+endmodule</code></pre></details></section></main><script>
+const search = document.querySelector('#chapter-search');
+const groups = [...document.querySelectorAll('.nav-group')];
+search.addEventListener('input', () => {
+  const query = search.value.trim().toLowerCase();
+  let matches = 0;
+  groups.forEach(group => {
+    let visible = 0;
+    group.querySelectorAll('a:not(.group-title)').forEach(link => {
+      link.hidden = !link.textContent.toLowerCase().includes(query);
+      if (!link.hidden) visible++;
+    });
+    group.hidden = visible === 0;
+    matches += visible;
+  });
+  document.querySelector('#search-status').textContent = query
+    ? `${matches} matching chapter titles. Clear to show all.`
+    : 'Filter titles here; use Ctrl+F to search the full text.';
+});
+function revealSource() {
+  const target = document.getElementById(decodeURIComponent(location.hash.slice(1)));
+  if (target && target.tagName === 'DETAILS') target.open = true;
+}
+window.addEventListener('hashchange', revealSource);
+revealSource();
+</script></body></html>

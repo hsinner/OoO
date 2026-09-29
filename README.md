@@ -13,10 +13,14 @@ The skeleton and historical OoO manifests must not be combined in one build.
 
 **Instruction fetch → Decode → Register → Dispatch → Execute → Memory → Writeback → Commit**
 
-Start with the [current design tutorial](docs/superscalar/tutorial.md), which
-renders on GitHub, or download the [standalone HTML edition](docs/superscalar/tutorial.html).
-It specifies the stage contracts, hazards, packet splitting, precise commit,
-memory protocol and implementation sequence for a four-wide RV32I target.
+Start with the [beginner's guide](docs/superscalar/beginner.md), then read the
+[architecture reference](docs/superscalar/tutorial.md) and
+[module walkthroughs](docs/superscalar/modules.md). These render on GitHub.
+The [standalone HTML handbook](docs/superscalar/tutorial.html) combines all three
+with the full implementation workbook and expandable actual RTL source listings.
+Download/open it locally for chapter filtering and internal navigation. It covers
+clock edges, all eight stages, worked instructions, forwarding, packet splitting,
+memory ownership, precise commit, recovery, and implementation/verification steps.
 
 This is a design specification with standalone hazard RTL, not a complete CPU yet.
 [Forwarding](rtl/superscalar/forwarding_unit.sv) and
@@ -37,7 +41,12 @@ wsl -d Ubuntu -- bash scripts/check_hazards.sh
 
 New modules live in `rtl/superscalar/`, with tests in `tests/superscalar/`.
 Design documents live in `docs/superscalar/`; small RTL examples live in
-`examples/superscalar/`. The HTML builder uses Python's standard library.
+`examples/superscalar/`. The HTML builder uses Python's standard library. Edit
+`beginner.md`, `tutorial.md`, `skeleton.md` or `modules.md`, then regenerate the
+HTML. The builder embeds every source in `skeleton.f` plus the pipeline-register
+example and checks local links and internal anchors. Regenerate after RTL edits
+too; CI's `--check` rejects stale source listings. No network is needed to read
+the handbook; external specification links require a connection.
 
 ## Historical experiment: out-of-order backend
 
