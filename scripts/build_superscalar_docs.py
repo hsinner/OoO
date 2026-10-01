@@ -1,4 +1,4 @@
-"""Build an offline handbook from four Markdown guides and actual RTL sources.
+"""Build an offline course from Markdown guides and actual RTL sources.
 
 Standard library only. Validate links, unique IDs, manifest source coverage and
 reproducible output. This renderer supports the repository's Markdown subset.
@@ -14,6 +14,8 @@ DOCS = ROOT / "docs/superscalar"
 TARGET = DOCS / "tutorial.html"
 CHAPTERS = [
     ("beginner", "Start here: first principles"),
+    ("course", "Course: CPU architectures"),
+    ("labs", "Labs: build and verify"),
     ("tutorial", "Architecture reference"),
     ("skeleton", "Implementation workbook"),
     ("modules", "Every module explained"),
@@ -223,19 +225,22 @@ def build():
     diagram = '<div class="pipeline" aria-label="Eight stages in order">' + ''.join(
         f'<a href="#beginner-a7-the-eight-stages-explained-without-shortcuts"><b>{i}. {stage}</b>{label}</a>'
         for i, (stage, label) in enumerate(stages, 1)) + '</div>'
-    intro = ('<header><p class="label">An offline learning handbook · RV32I · Four-wide · In-order</p>'
-             '<h1>Build your processor, one clear contract at a time.</h1>'
-             '<p>Learn what each stage owns, how instructions move, and why hazards need explicit rules. '
-             'Begin with the guided examples, then use the reference and module walkthroughs while implementing.</p>'
+    intro = ('<header><p class="label">An offline CPU design course · RV32I · Four-wide · In-order</p>'
+             '<h1>Learn the architecture. Build the processor.</h1>'
+             '<p>Start from clock edges and instructions, build a four-wide in-order pipeline, '
+             'then study prediction, caches, renaming, out-of-order scheduling and recovery. '
+             'Thirty course lessons and seventeen labs connect the concepts to your module skeletons.</p>'
              '<div class="note"><p><strong>This is a design and implementation guide, not a completed CPU.</strong></p>'
              '<p>The forwarding and control-hazard blocks are implemented. The fifteen processor shells '
-             'remain yours to build. Cycle tables are illustrations, not measured execution results.</p></div>'
+             'remain yours to build. Advanced architectures are optional study and redesign paths, '
+             'not implemented features. Cycle tables are illustrations, not measured execution results.</p></div>'
              + diagram + '<div class="routes"><a href="#beginner">1 · Learn the basics</a>'
-             '<a href="#tutorial">2 · Read the design</a><a href="#skeleton">3 · Plan implementation</a>'
-             '<a href="#modules">4 · Explore each file</a></div></header>')
+             '<a href="#course">2 · Follow the course</a><a href="#labs">3 · Work through the labs</a>'
+             '<a href="#tutorial">Architecture reference</a><a href="#skeleton">Implementation contracts</a>'
+             '<a href="#modules">Every module explained</a></div></header>')
     document = ('<!doctype html><html lang="en"><head><meta charset="utf-8">'
                 '<meta name="viewport" content="width=device-width, initial-scale=1">'
-                '<title>Four-wide RV32I — beginner handbook and architecture reference</title><style>'
+                '<title>Build a superscalar CPU — RV32I course, architectures and labs</title><style>'
                 + STYLE + '</style></head><body><a class="skip" href="#content">Skip to tutorial</a>'
                 '<nav aria-label="Chapters"><strong>RV32I / Four-wide</strong>'
                 '<label for="chapter-search">Find a chapter</label><input id="chapter-search" type="search" placeholder="Try forwarding or commit">'
@@ -256,7 +261,7 @@ if __name__ == "__main__":
     document = build()
     if args.check:
         assert TARGET.read_text(encoding="utf-8") == document, "HTML stale; run builder"
-        print("PASS: HTML matches four Markdown guides and all manifest RTL; links and anchors checked")
+        print(f"PASS: HTML matches {len(CHAPTERS)} Markdown guides and all manifest RTL; links and anchors checked")
     else:
         TARGET.write_text(document, encoding="utf-8", newline="\n")
         print("Built docs/superscalar/tutorial.html")

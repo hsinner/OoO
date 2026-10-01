@@ -65,7 +65,11 @@ for encodings and semantics. A four-wide microarchitecture does not change them.
 
 Choose a little-endian execution environment for the first implementation. Trap
 misaligned halfword/word data accesses before issuing their transactions. Treat
-unsupported/reserved encodings as illegal-instruction events by project policy.
+unsupported encodings and reserved encodings without specified compatible
+behavior as illegal-instruction events by project policy. Honor ISA-defined
+exceptions: for example, FENCE's ignored fields and reserved configurations have
+specified conservative handling, and defined HINT encodings are not arbitrary
+illegal instructions. Use the specification's per-family rules when decoding.
 Do not invent a production reset PC, memory map, bus or FPGA target: make those
 integration choices explicit before implementing their adapters.
 

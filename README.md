@@ -16,8 +16,13 @@ The skeleton and historical OoO manifests must not be combined in one build.
 Start with the [beginner's guide](docs/superscalar/beginner.md), then read the
 [architecture reference](docs/superscalar/tutorial.md) and
 [module walkthroughs](docs/superscalar/modules.md). These render on GitHub.
-The [standalone HTML handbook](docs/superscalar/tutorial.html) combines all three
-with the full implementation workbook and expandable actual RTL source listings.
+The [standalone HTML course](docs/superscalar/tutorial.html) combines all three
+with the implementation workbook, a [30-lesson architecture course](docs/superscalar/course.md),
+[17 practical labs](docs/superscalar/labs.md), and expandable actual RTL listings.
+The course connects each module to design alternatives: prediction, multiport
+register files, scheduling, caches, memory ordering, renaming, ROBs, recovery,
+verification and implementation. Advanced mechanisms are study/extension paths;
+they are not features implemented by the current skeleton.
 Download/open it locally for chapter filtering and internal navigation. It covers
 clock edges, all eight stages, worked instructions, forwarding, packet splitting,
 memory ownership, precise commit, recovery, and implementation/verification steps.
@@ -42,7 +47,7 @@ wsl -d Ubuntu -- bash scripts/check_hazards.sh
 New modules live in `rtl/superscalar/`, with tests in `tests/superscalar/`.
 Design documents live in `docs/superscalar/`; small RTL examples live in
 `examples/superscalar/`. The HTML builder uses Python's standard library. Edit
-`beginner.md`, `tutorial.md`, `skeleton.md` or `modules.md`, then regenerate the
+`beginner.md`, `course.md`, `labs.md`, `tutorial.md`, `skeleton.md` or `modules.md`, then regenerate the
 HTML. The builder embeds every source in `skeleton.f` plus the pipeline-register
 example and checks local links and internal anchors. Regenerate after RTL edits
 too; CI's `--check` rejects stale source listings. No network is needed to read
