@@ -20,6 +20,7 @@ CHAPTERS = [
     ("skeleton", "Implementation workbook"),
     ("modules", "Every module explained"),
 ]
+FINAL_GUIDE = ("build-guide", "Start building: step-by-step RTL")
 
 
 def slug(value):
@@ -39,7 +40,7 @@ def source_paths():
 class Renderer:
     def __init__(self, sources):
         self.links = {(DOCS / f"{name}.md").resolve(): f"#{name}"
-                      for name, _ in CHAPTERS}
+                      for name, _ in [*CHAPTERS, FINAL_GUIDE]}
         self.links.update({path.resolve(): f"#source-{path.stem}" for path in sources})
         self.toc = []
 
@@ -219,6 +220,8 @@ def build():
                     '<p>Expand a file to inspect its exact declarations and comments. These listings are embedded '
                     'at documentation build time and work offline. The fifteen unfinished modules stay unfinished. '
                     'Successful interface checks are not CPU simulation results.</p>' + ''.join(listings) + '</section>')
+    # Keep the hands-on build guide last, after even the source appendix.
+    sections.append(renderer.markdown(*FINAL_GUIDE))
     stages = [('IF', 'Fetch words'), ('D', 'Decode meaning'), ('R', 'Read registers'),
               ('DP', 'Check and dispatch'), ('EX', 'Compute results'), ('MEM', 'Process memory'),
               ('WB', 'Hold completion'), ('C', 'Commit effects')]
@@ -261,7 +264,7 @@ if __name__ == "__main__":
     document = build()
     if args.check:
         assert TARGET.read_text(encoding="utf-8") == document, "HTML stale; run builder"
-        print(f"PASS: HTML matches {len(CHAPTERS)} Markdown guides and all manifest RTL; links and anchors checked")
+        print(f"PASS: HTML matches {len(CHAPTERS) + 1} Markdown guides and all manifest RTL; links and anchors checked")
     else:
         TARGET.write_text(document, encoding="utf-8", newline="\n")
         print("Built docs/superscalar/tutorial.html")

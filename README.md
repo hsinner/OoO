@@ -47,11 +47,16 @@ wsl -d Ubuntu -- bash scripts/check_hazards.sh
 New modules live in `rtl/superscalar/`, with tests in `tests/superscalar/`.
 Design documents live in `docs/superscalar/`; small RTL examples live in
 `examples/superscalar/`. The HTML builder uses Python's standard library. Edit
-`beginner.md`, `course.md`, `labs.md`, `tutorial.md`, `skeleton.md` or `modules.md`, then regenerate the
+`beginner.md`, `course.md`, `labs.md`, `tutorial.md`, `skeleton.md`, `modules.md` or `build-guide.md`, then regenerate the
 HTML. The builder embeds every source in `skeleton.f` plus the pipeline-register
 example and checks local links and internal anchors. Regenerate after RTL edits
 too; CI's `--check` rejects stale source listings. No network is needed to read
 the handbook; external specification links require a connection.
+
+Ready to code? The [step-by-step build guide](docs/superscalar/build-guide.md)
+is the final section of the HTML, after the RTL listings. Start with ADDI decode
+and ALU checks, then follow its checkpoints through single-lane integration,
+control/memory, four-lane operation and full-core validation.
 
 ## Historical experiment: out-of-order backend
 
