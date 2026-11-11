@@ -30,3 +30,39 @@ compliance, synthesis or timing closure. Dispatch prefix freezing, same-cycle
 commit refresh, scoreboard flush wiring, actual branch semantics, fetch response
 draining, and externally visible store ordering still require integration tests.
 No complete superscalar CPU is claimed.
+
+## Decoder validation — 2026-11-11
+
+Run from the repo root:
+
+```powershell
+wsl -d Ubuntu -- bash scripts/check_decode.sh
+```
+
+Strict Verilator lint and simulation passed:
+
+```text
+PASS: 99496 RV32I decoder vectors, complete records checked
+```
+
+The independent vector generator encodes instructions from supplied operands and
+compares their expected records against the real RTL. Coverage includes all 40
+operations, every register index, exhaustive signed I/S/B immediates, all shift
+amounts, U/J boundaries and bit positions, all OP funct7/funct3 combinations,
+shift function restrictions, unsupported opcodes/functions, FENCE variants and
+SYSTEM restrictions. A known ADDI word is also checked independently of the
+encoder, before and after an illegal word. This is not exhaustive coverage of
+all 32-bit instruction words, formal proof, or integrated ISA compliance.
+
+Decoder conventions: unused register indices are zero; writes_rd excludes x0;
+source-use flags indicate operand roles even for x0; shift immediates contain
+only the shift amount. Loads to x0 remain serialized loads. ECALL/EBREAK keep
+their own op names and carry FAULT_ECALL/FAULT_BREAKPOINT with address zero.
+Unsupported encodings produce a canonical OP_ILLEGAL record with no operand or
+write flags and the instruction bits as fault.address. FENCE ignores encoded
+rs1/rd and handles all fm/pred/succ variants conservatively via serialization;
+FENCE.I, CSR, privileged instructions and other extensions are not implemented.
+
+The WSL build emitted a file timestamp clock-skew warning; strict RTL lint,
+compilation and the executable completed successfully. Fetch faults must still
+take precedence over this decoder's record when decode_stage is implemented.

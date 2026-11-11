@@ -27,7 +27,8 @@ killed is about whether that instruction still exists. They are not synonyms.
 
 ## M2. rv32_decode: translate one word
 
-[rv32_decode.sv](../../rtl/superscalar/rv32_decode.sv) has no clock because it
+[rv32_decode.sv](../../rtl/superscalar/rv32_decode.sv) is now implemented and
+checked by scripts/check_decode.sh. It has no clock because it
 answers a pure combinational question. The stage using it supplies storage.
 Start from a safe illegal result, recognize a legal encoding, then fill the
 operation, source-use flags, destination behavior, immediate and serial class.
@@ -42,7 +43,7 @@ These differences affect dependency checking as much as arithmetic.
 Begin with a hand-written decode table and explicit expected records for a few
 real instruction words. Then extend coverage to every supported family and
 boundary. The versioned ISA linked in the architecture reference is the authority
-for bit encodings; this module's shell is not an encoding reference.
+for bit encodings. The completed module is a worked implementation to study.
 
 ## M3. alu: a calculation without ownership
 

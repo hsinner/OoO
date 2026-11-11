@@ -4,9 +4,14 @@
 
 **Your implementation scaffold is ready:** start with
 [the skeleton specification and completion checklist](docs/superscalar/skeleton.md)
-and [core.sv](rtl/superscalar/core.sv). Fifteen new module shells have typed ports
+and [core.sv](rtl/superscalar/core.sv). Fourteen module shells have typed ports
 and specific TODOs. Their outputs are deliberately undriven; they do not simulate
-a working processor. The existing hazard units remain implemented and tested.
+a working processor. The decoder and existing hazard units are implemented and tested.
+
+`rv32_decode.sv` now decodes all 40 RV32I operations combinationally. Run
+`wsl -d Ubuntu -- bash scripts/check_decode.sh` for strict lint and 99,496
+generated encode-to-decode vectors checking complete output records. See
+[decoder validation and conventions](docs/superscalar/validation.md).
 
 Use `wsl -d Ubuntu -- bash scripts/check_skeleton.sh` for interface checks only.
 The skeleton and historical OoO manifests must not be combined in one build.

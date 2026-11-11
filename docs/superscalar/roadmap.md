@@ -6,7 +6,7 @@ not a completed implementation milestone below.
 | Stage | Deliverable | Acceptance gate |
 | --- | --- | --- |
 | S0 (this change) | Architecture tutorial and storage example | Review stage contracts and platform assumptions |
-| Scaffold (available) | Fifteen empty module shells and shared interface types | Interface elaboration only; implement TODOs in skeleton.md |
+| Scaffold (available) | Fourteen empty module shells and shared interface types | Interface elaboration only; implement TODOs in skeleton.md |
 | S1 | Single-lane pipeline with all eight stages | Arithmetic retirement comparison, stalls and reset |
 | S2 | Complete decode and serialized branches/jumps | Encoding, link values and target/alignment tests |
 | S3 | Serialized data memory, fence and trap interface | Widths, byte masks, faults, delayed responses, precise stores |
@@ -15,6 +15,8 @@ not a completed implementation milestone below.
 | S6 | Selected forwarding and performance improvements | Producer priority, load-use hazards and measured IPC/timing |
 
 Standalone forwarding and control-hazard modules now exist with directed tests.
+The per-instruction decoder is also implemented with strict lint and standalone
+encode-to-decode tests. This does not complete the integrated S2 milestone.
 They are prerequisites for S4/S6 and control-flow integration, not completion
 of those milestones. EX/MEM/WB/C forwarding is part of the target design now;
 S6 validates integrated paths and performance. See tutorial sections 21–23.

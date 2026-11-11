@@ -19,7 +19,7 @@ discover a better contract while implementing.
 | `forwarding_unit.sv` | Implemented/tested resolver | Wire only older producers in prescribed age order |
 | `control_hazard_unit.sv` | Implemented/tested singleton/redirect controller | Integrate with commit/EEI and fetch transaction ownership |
 | `rv32_pkg.sv` | New shared type declarations only | Review field ownership and EEI/bus choices |
-| `rv32_decode.sv` | Empty combinational shell | All 40 instructions, exact legality, immediate/use flags |
+| `rv32_decode.sv` | Implemented/tested combinational decoder | Integrate four instances; preserve earlier fetch faults in D |
 | `alu.sv` | Empty combinational shell | Arithmetic, comparisons, shifts, bitwise results |
 | `fetch.sv` | Empty sequential shell | PC, requests, response buffering, stale response drain |
 | `decode_stage.sv` | Empty sequential shell | Four decoder instances and stable ordered packet |

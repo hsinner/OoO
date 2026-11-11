@@ -5,8 +5,10 @@ stages before enabling four-lane dispatch. Keep the existing four-lane interface
 throughout; initially only lane 0 carries valid instructions. This final section
 is your practical route through the course, from the first edit to integration.
 
-The processor modules are intentionally unfinished. The forwarding and
-control-hazard units already contain implementations. The code below illustrates
+Fourteen processor modules remain intentionally unfinished. The decoder,
+forwarding and control-hazard units now contain implementations. The decoder
+steps below remain useful as a guided reading/reimplementation exercise; you
+can inspect the completed rv32_decode.sv and run check_decode.sh. The code below illustrates
 structure and leaves the assignment logic for you; it does not complete the RTL.
 
 Your first milestone is: **decode ADDI, calculate its result, and verify both
