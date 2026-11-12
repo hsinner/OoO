@@ -47,6 +47,24 @@ for bit encodings. The completed module is a worked implementation to study.
 
 ## M3. alu: a calculation without ownership
 
+This module is now implemented. Run scripts/check_alu.sh for strict lint and
+16,936 comparisons against an independent Python integer model. The RTL has
+one always_comb block and no state or clock. Its only intermediate signal,
+shift_amount, is b_i[4:0]; it selects a shift from zero through 31.
+
+EX supplies actual values: for ADD, a_i/b_i are resolved register operands;
+for ADDI, b_i is the decoded immediate. Both operation names select addition.
+LUI returns b_i, which must already contain the shifted U-immediate. AUIPC
+adds a_i (the owning instruction's PC) to b_i (that U-immediate). Signed
+comparisons cast both operands with $signed; arithmetic right shift casts its
+left operand so >>> repeats its sign bit. Comparisons zero-extend their one-bit
+answer into a 32-bit zero or one. Addition/subtraction retain the low 32 bits.
+
+Non-ALU operation names return zero by default. This is not a successful
+completion or a fault indication: EX still owns branch/jump/address behavior,
+validity and prior faults. The ALU does not read register indices, write the RF,
+issue memory transactions or advance the PC.
+
 [alu.sv](../../rtl/superscalar/alu.sv) computes a value from an operation and two
 operands. It should not know whether an instruction is valid, retiring, stalled,
 or writing x0. EX chooses operands and decides whether the result is meaningful.

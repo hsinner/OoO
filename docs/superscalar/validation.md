@@ -66,3 +66,17 @@ FENCE.I, CSR, privileged instructions and other extensions are not implemented.
 The WSL build emitted a file timestamp clock-skew warning; strict RTL lint,
 compilation and the executable completed successfully. Fetch faults must still
 take precedence over this decoder's record when decode_stage is implemented.
+
+## ALU validation — 2026-11-12
+
+Run `wsl -d Ubuntu -- bash scripts/check_alu.sh` from the repository root.
+Strict Verilator lint and simulation passed: `PASS: 16936 ALU vectors`.
+Tests cover all 21 supported operation names, boundary operand cross-products,
+deterministic pseudorandom operands (seed 0x32a1), all 32 shift amounts with
+upper shift-operand bits set/clear, and the zero default for every other named
+operation after a nonzero result. Expected values come from Python unbounded
+integer arithmetic with explicit truncation and division-based right shifts.
+
+This is standalone functional evidence, not exhaustive proof, integrated EX
+verification, FPGA synthesis or timing closure. The host/WSL build emitted a
+timestamp clock-skew warning; compilation and execution completed successfully.

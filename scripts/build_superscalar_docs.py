@@ -210,6 +210,7 @@ def build():
                   else "Shared type declarations" if path.stem.endswith("_pkg")
                   else "Generic storage example" if path.stem == "pipe_reg"
                   else "Implemented RV32I decoder; see standalone validation report" if path.stem == "rv32_decode"
+                  else "Implemented integer ALU; see standalone validation report" if path.stem == "alu"
                   else "Implemented hazard unit; see standalone validation report")
         relative = path.relative_to(ROOT).as_posix()
         listings.append(f'<details id="{key}"><summary>{relative}</summary><p class="status">{status}</p>'
@@ -219,7 +220,7 @@ def build():
                         + ''.join(links) + '</div>')
     sections.append('<section class="part" id="sources"><h2>Current source, not pseudocode</h2>'
                     '<p>Expand a file to inspect its exact declarations and comments. These listings are embedded '
-                    'at documentation build time and work offline. Fourteen processor modules remain unfinished. '
+                    'at documentation build time and work offline. Thirteen processor modules remain unfinished. '
                     'Successful interface checks are not CPU simulation results.</p>' + ''.join(listings) + '</section>')
     # Keep the hands-on build guide last, after even the source appendix.
     sections.append(renderer.markdown(*FINAL_GUIDE))
@@ -235,7 +236,7 @@ def build():
              'then study prediction, caches, renaming, out-of-order scheduling and recovery. '
              'Thirty course lessons and seventeen labs connect the concepts to your module skeletons.</p>'
              '<div class="note"><p><strong>This is a design and implementation guide, not a completed CPU.</strong></p>'
-             '<p>The decoder, forwarding and control-hazard blocks are implemented. The fourteen processor shells '
+             '<p>The decoder, ALU, forwarding and control-hazard blocks are implemented. The thirteen processor shells '
              'remain yours to build. Advanced architectures are optional study and redesign paths, '
              'not implemented features. Cycle tables are illustrations, not measured execution results.</p></div>'
              + diagram + '<div class="routes"><a href="#beginner">1 · Learn the basics</a>'

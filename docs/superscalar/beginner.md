@@ -4,7 +4,7 @@ Read this guided introduction before the detailed design reference. You do
 not need to know what a scoreboard, retirement packet or handshake is yet.
 We will define each one, show why it exists, and connect it to the actual files.
 
-**Project status:** the decoder, forwarding and control-hazard units have working RTL
+**Project status:** the decoder, ALU, forwarding and control-hazard units have working RTL
 and standalone tests. The rest of the new processor is a set of typed, deliberately
 unfinished skeletons. This guide describes the machine you are going to build;
 its worked cycle examples are design illustrations, not recorded CPU simulations.

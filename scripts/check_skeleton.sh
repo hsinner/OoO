@@ -2,8 +2,8 @@
 set -euo pipefail
 # Interface checks ONLY. These exclusions are local to deliberately empty shells.
 # Strict functional lint for implemented modules remains in check_hazards.sh.
-# rv32_decode is implemented and checked strictly by check_decode.sh.
-modules=(alu fetch decode_stage regfile scoreboard register_stage dispatch execute memory_stage writeback commit memory_adapter recovery core)
+# Decoder/ALU are checked strictly by check_decode.sh and check_alu.sh.
+modules=(fetch decode_stage regfile scoreboard register_stage dispatch execute memory_stage writeback commit memory_adapter recovery core)
 for module in "${modules[@]}"; do
   verilator --lint-only -Wall -Wno-UNDRIVEN -Wno-UNUSEDSIGNAL -Wno-UNUSEDPARAM \
     --top-module "$module" -f rtl/superscalar/skeleton.f
