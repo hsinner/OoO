@@ -12,4 +12,6 @@ package hazard_pkg;
     logic [4:0] rd;
     logic [31:0] value;
   } producer_t;
+  typedef source_t [SOURCES-1:0] sources_t;
+  typedef producer_t [PRODUCERS-1:0] producers_t;
 endpackage

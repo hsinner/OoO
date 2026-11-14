@@ -1,15 +1,4 @@
-// UNIMPLEMENTED SKELETON: interface contract only; outputs intentionally undriven.
-// See docs/superscalar/skeleton.md. This file must not be used as working RTL.
-// No tie-offs, behavioral substitutes, or inferred test results are provided.
-// TODO C-01: Retire oldest legal prefix; commit_writes and passive trace occur exactly once.
-// TODO C-02: Hold trap report stable until recovery accepts it; no faulting/younger retirement.
-// TODO C-03: Branch link write/retirement and branch handshake are one atomic accepted event.
-// TODO C-04: Issue authorized store once, hold until response, then retire or report error.
-// TODO C-05: serial_done only on successful non-control serial completion; fence requires memory idle.
-// TODO C-06: Trap report acceptance retires NO faulting instruction; clear its C ownership only after
-// TODO       recovery owns the report. Recovery still blocks all younger work until resume.
-// TODO STATE: current packet/cursor; store-sent/response ownership; trap/branch event holding.
-// TODO No external flush port: this is the architectural ordering owner, not a younger stage.
+// Ordered architectural effects. Store, branch and trap events retain ownership.
 module commit (
   input logic clk_i, rst_i,
   input logic packet_valid_i,
@@ -35,8 +24,100 @@ module commit (
   output logic occupied_o
 );
   import rv32_pkg::*;
-  // TODO Declare module-specific state_q/state_d, if this block owns state.
-  // TODO Implement next-state/defaults/reset/flush in always_comb.
-  // TODO Use always_ff only for nonblocking state assignments.
-  // TODO Add meaningful directed tests before declaring this block complete.
+  typedef struct packed { packet_t packet; logic valid,sent,done; } state_t;
+  state_t q,d;
+  logic stop,retire_lane;
+  int count;
+  logic [31:0] unused_store_read_data;
+  always_comb begin
+    for (int i=0; i<4; i++) producers_o[i]=make_producer(q.packet[i],q.valid && !rst_i,1'b1);
+  end
+  always_comb begin
+    occupied_o=q.valid;
+  end
+  always_comb begin
+    // Deliberate bubble between commit packets.
+    packet_ready_o=!q.valid && !rst_i;
+  end
+  always_comb begin
+    store_request_o='{write:1,aligned_address:{q.packet[0].address[31:2],2'b0},
+                      write_data:q.packet[0].store_data,byte_mask:q.packet[0].byte_mask};
+  end
+  always_comb begin
+    store_response_ready_o=q.valid && q.sent && !q.done && !rst_i;
+  end
+  always_comb begin
+    unused_store_read_data=store_response_i.read_data;
+    trap_valid_o=q.valid && q.packet[0].valid && q.packet[0].fault.valid && !rst_i;
+    trap_o='{pc:q.packet[0].pc,instruction:q.packet[0].instruction,fault:q.packet[0].fault};
+    branch_valid_o=q.valid && q.packet[0].valid && !q.packet[0].fault.valid && is_control(q.packet[0].decoded.op) && !rst_i;
+    branch_pc_o=q.packet[0].next_pc;
+    store_request_valid_o=q.valid && q.packet[0].valid && !q.packet[0].fault.valid && is_store(q.packet[0].decoded.op) && !q.sent && !rst_i;
+  end
+  always_comb begin
+    d=q;
+
+    commit_writes_o='0; retire_o='0;
+
+    serial_done_o=0;
+
+    if (store_response_valid_i && store_response_ready_o) begin
+      d.done=1;
+      if (store_response_i.error)
+        d.packet[0].fault='{valid:1,kind:FAULT_STORE_ACCESS,address:q.packet[0].address};
+    end
+    stop=!q.valid || rst_i;
+    count=0;
+    retire_lane=0;
+    for (int i=0; i<4; i++) begin
+
+      retire_lane=0;
+      if (!q.packet[i].valid) stop=1;
+      if (!stop) begin
+        if (q.packet[i].fault.valid) begin
+          // First retire any older prefix. Present a stable trap only at lane 0.
+          if (i==0) begin
+
+            if (trap_ready_i) d='0;
+          end
+          stop=1;
+        end else if (is_control(q.packet[i].decoded.op)) begin
+          if (i==0) begin retire_lane=branch_ready_i; end
+          stop=1;
+        end else if (is_store(q.packet[i].decoded.op)) begin
+          if (i==0) begin
+
+            if (store_request_valid_o && store_request_ready_i) d.sent=1;
+            retire_lane=q.done;
+          end
+          stop=1;
+        end else if (q.packet[i].decoded.op==OP_FENCE) begin
+          retire_lane=memory_idle_i;
+          stop=1;
+        end else retire_lane=1;
+        if (retire_lane) begin
+          count++;
+          commit_writes_o[i]='{valid:q.packet[i].decoded.writes_rd,
+                               rd:q.packet[i].decoded.rd,value:q.packet[i].result};
+          retire_o[i]='{valid:1,pc:q.packet[i].pc,instruction:q.packet[i].instruction,
+            writes_rd:q.packet[i].decoded.writes_rd,rd:q.packet[i].decoded.rd,value:q.packet[i].result,
+            memory:is_load(q.packet[i].decoded.op)||is_store(q.packet[i].decoded.op),
+            memory_write:is_store(q.packet[i].decoded.op),address:q.packet[i].address,
+            memory_data:is_store(q.packet[i].decoded.op)?q.packet[i].store_data:q.packet[i].result,
+            byte_mask:q.packet[i].byte_mask};
+          if (q.packet[i].decoded.serial && !is_control(q.packet[i].decoded.op)) serial_done_o=1;
+        end
+      end
+    end
+    if (count!=0) begin
+      d.packet='0; d.sent=0; d.done=0;
+      for (int i=0; i<4; i++) if (i+count<4) d.packet[i]=q.packet[i+count];
+      d.valid=d.packet[0].valid;
+    end
+    if (packet_valid_i && packet_ready_o) begin d='0; d.valid=1; d.packet=packet_i; end
+    if (rst_i) d='0;
+  end
+  always_ff @(posedge clk_i) begin
+    q <= d;
+  end
 endmodule

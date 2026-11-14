@@ -2,11 +2,16 @@
 
 ## Current project: eight-stage in-order superscalar
 
-**Your implementation scaffold is ready:** start with
-[the skeleton specification and completion checklist](docs/superscalar/skeleton.md)
-and [core.sv](rtl/superscalar/core.sv). Thirteen module shells have typed ports
-and specific TODOs. Their outputs are deliberately undriven; they do not simulate
-a working processor. The decoder, ALU and existing hazard units are implemented and tested.
+**The complete baseline pipeline is implemented.** Start with
+[the file-by-file implementation walkthrough](docs/superscalar/implementation.md)
+and [core.sv](rtl/superscalar/core.sv). It includes four-wide ordered arithmetic,
+forwarding, scoreboarding, singleton memory/control execution, commit-only
+architectural updates, memory ownership and EEI trap/resume recovery.
+
+Run `wsl -d Ubuntu -- bash scripts/check_core.sh` for strict lint and full-core
+simulation against an independent Python architectural oracle. See
+[validation scope](docs/superscalar/validation.md). This is an educational abstract-port
+processor; FPGA/SoC integration and timing/area validation remain future work.
 
 `rv32_decode.sv` now decodes all 40 RV32I operations combinationally. Run
 `wsl -d Ubuntu -- bash scripts/check_decode.sh` for strict lint and 99,496
@@ -17,7 +22,7 @@ The superscalar `alu.sv` is also implemented. Run
 `wsl -d Ubuntu -- bash scripts/check_alu.sh` for strict lint and 16,936 arithmetic,
 comparison, shift and default-result checks against a Python integer oracle.
 
-Use `wsl -d Ubuntu -- bash scripts/check_skeleton.sh` for interface checks only.
+Use `wsl -d Ubuntu -- bash scripts/check_skeleton.sh` for strict full-core lint.
 The skeleton and historical OoO manifests must not be combined in one build.
 
 **Instruction fetch → Decode → Register → Dispatch → Execute → Memory → Writeback → Commit**
@@ -31,20 +36,14 @@ with the implementation workbook, a [30-lesson architecture course](docs/supersc
 The course connects each module to design alternatives: prediction, multiport
 register files, scheduling, caches, memory ordering, renaming, ROBs, recovery,
 verification and implementation. Advanced mechanisms are study/extension paths;
-they are not features implemented by the current skeleton.
+they are not features implemented by the current baseline.
 Download/open it locally for chapter filtering and internal navigation. It covers
 clock edges, all eight stages, worked instructions, forwarding, packet splitting,
 memory ownership, precise commit, recovery, and implementation/verification steps.
 
-This is a design specification with standalone hazard RTL, not a complete CPU yet.
-[Forwarding](rtl/superscalar/forwarding_unit.sv) and
-[control hazards](rtl/superscalar/control_hazard_unit.sv) now have implemented
-modules and directed simulation. Their integration contracts and the pipeline
-assessment are in tutorial sections 21–23. The
-[pipeline register example](examples/superscalar/pipe_reg.sv) demonstrates the
-assignment-only `always_ff` convention. Start with one lane through all eight
-stages, then widen the verified protocol to four lanes. See the
-[current roadmap](docs/superscalar/roadmap.md).
+The [pipeline register example](examples/superscalar/pipe_reg.sv) demonstrates the
+assignment-only `always_ff` convention used throughout the implementation.
+Earlier labs remain useful as guided reimplementation exercises.
 
 ```powershell
 python scripts/build_superscalar_docs.py
@@ -56,7 +55,7 @@ wsl -d Ubuntu -- bash scripts/check_hazards.sh
 New modules live in `rtl/superscalar/`, with tests in `tests/superscalar/`.
 Design documents live in `docs/superscalar/`; small RTL examples live in
 `examples/superscalar/`. The HTML builder uses Python's standard library. Edit
-`beginner.md`, `course.md`, `labs.md`, `tutorial.md`, `skeleton.md`, `modules.md` or `build-guide.md`, then regenerate the
+`implementation.md`, `beginner.md`, `course.md`, `labs.md`, `tutorial.md`, `skeleton.md`, `modules.md` or `build-guide.md`, then regenerate the
 HTML. The builder embeds every source in `skeleton.f` plus the pipeline-register
 example and checks local links and internal anchors. Regenerate after RTL edits
 too; CI's `--check` rejects stale source listings. No network is needed to read

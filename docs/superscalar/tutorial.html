@@ -16,9 +16,151 @@ details{border:1px solid #c7dfe1;border-radius:6px;padding:12px 18px;margin:20px
 @media(max-width:850px){nav{position:relative;width:auto;max-height:320px}main{margin:0;padding:24px}.pipeline{grid-template-columns:repeat(2,1fr)}h2{font-size:28px}}
 @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
 @media print{nav,.routes,.skip{display:none}main{margin:0;padding:0}body{font-size:11pt}.part{break-before:page}pre{white-space:pre-wrap;overflow-wrap:anywhere;color:black;background:#f0f3f5}.table{overflow:visible}}
-</style></head><body><a class="skip" href="#content">Skip to tutorial</a><nav aria-label="Chapters"><strong>RV32I / Four-wide</strong><label for="chapter-search">Find a chapter</label><input id="chapter-search" type="search" placeholder="Try forwarding or commit"><p id="search-status" role="status">Filter titles here; use Ctrl+F to search the full text.</p><div class="nav-group"><a class="group-title" href="#beginner">Start here: first principles</a><a href="#beginner-a1-what-a-processor-actually-does">A1. What a processor actually does</a><a href="#beginner-a2-the-three-kinds-of-storage-you-must-distinguish">A2. The three kinds of storage you must distinguish</a><a href="#beginner-a3-bits-signed-values-addresses-and-byte-order">A3. Bits, signed values, addresses and byte order</a><a href="#beginner-a4-what-a-clock-edge-means">A4. What a clock edge means</a><a href="#beginner-a5-pipeline-depth-and-superscalar-width-are-different">A5. Pipeline depth and superscalar width are different</a><a href="#beginner-a6-the-whole-machine-in-one-annotated-picture">A6. The whole machine in one annotated picture</a><a href="#beginner-a7-the-eight-stages-explained-without-shortcuts">A7. The eight stages, explained without shortcuts</a><a href="#beginner-a8-follow-one-real-instruction-through-every-stage">A8. Follow one real instruction through every stage</a><a href="#beginner-a9-valid-and-ready-an-agreement-at-a-clock-edge">A9. Valid and ready: an agreement at a clock edge</a><a href="#beginner-a10-packets-lanes-and-splitting-an-instruction-group">A10. Packets, lanes and splitting an instruction group</a><a href="#beginner-a11-dependencies-and-the-scoreboard-with-concrete-values">A11. Dependencies and the scoreboard, with concrete values</a><a href="#beginner-a12-forwarding-is-choosing-a-value-not-changing-the-register-file">A12. Forwarding is choosing a value, not changing the register file</a><a href="#beginner-a13-a-four-instruction-worked-scheduling-example">A13. A four-instruction worked scheduling example</a><a href="#beginner-a14-loads-follow-the-address-response-and-result-separately">A14. Loads: follow the address, response and result separately</a><a href="#beginner-a15-stores-why-computing-the-address-is-not-permission-to-write">A15. Stores: why computing the address is not permission to write</a><a href="#beginner-a16-branches-and-the-difference-between-a-fault-pc-and-a-restart-pc">A16. Branches and the difference between a fault PC and a restart PC</a><a href="#beginner-a17-precise-commit-and-a-fault-in-the-middle-of-a-group">A17. Precise commit and a fault in the middle of a group</a><a href="#beginner-a18-read-the-systemverilog-types-as-a-vocabulary">A18. Read the SystemVerilog types as a vocabulary</a><a href="#beginner-a19-how-to-implement-one-module-without-getting-lost">A19. How to implement one module without getting lost</a><a href="#beginner-a20-what-is-intentionally-not-part-of-this-first-processor">A20. What is intentionally not part of this first processor</a></div><div class="nav-group"><a class="group-title" href="#course">Course: CPU architectures</a><a href="#course-c1-your-syllabus-and-what-completion-means">C1. Your syllabus and what completion means</a><a href="#course-c2-scalar-superscalar-in-order-and-out-of-order-are-separate-choices">C2. Scalar, superscalar, in-order and out-of-order are separate choices</a><a href="#course-c3-work-backwards-from-architectural-effects">C3. Work backwards from architectural effects</a><a href="#course-c4-elastic-stages-buffers-and-credit-flow">C4. Elastic stages, buffers and credit flow</a><a href="#course-c5-fetch-bandwidth-alignment-and-queues">C5. Fetch bandwidth, alignment and queues</a><a href="#course-c6-branch-prediction-direction-and-target-are-different-questions">C6. Branch prediction: direction and target are different questions</a><a href="#course-c7-direction-algorithms-counters-history-and-tage">C7. Direction algorithms: counters, history and TAGE</a><a href="#course-c8-perceptrons-hybrid-prediction-and-prediction-cost">C8. Perceptrons, hybrid prediction and prediction cost</a><a href="#course-c9-decode-predecode-micro-ops-and-fusion">C9. Decode, predecode, micro-ops and fusion</a><a href="#course-c10-architectural-and-physical-register-files">C10. Architectural and physical register files</a><a href="#course-c11-scoreboarding-and-its-exact-limits">C11. Scoreboarding and its exact limits</a><a href="#course-c12-dispatch-a-greedy-prefix-algorithm">C12. Dispatch: a greedy prefix algorithm</a><a href="#course-c13-forwarding-networks-and-load-use-timing">C13. Forwarding networks and load-use timing</a><a href="#course-c14-alus-address-units-and-variable-latency-execution">C14. ALUs, address units and variable-latency execution</a><a href="#course-c15-completion-writeback-arbitration-and-retirement-bandwidth">C15. Completion, writeback arbitration and retirement bandwidth</a><a href="#course-c16-load-store-formatting-and-ownership">C16. Load/store formatting and ownership</a><a href="#course-c17-store-buffers-load-queues-and-memory-dependence">C17. Store buffers, load queues and memory dependence</a><a href="#course-c18-caches-tags-data-and-misses">C18. Caches: tags, data and misses</a><a href="#course-c19-replacement-writes-and-prefetching">C19. Replacement, writes and prefetching</a><a href="#course-c20-memory-ordering-and-coherence-solve-different-problems">C20. Memory ordering and coherence solve different problems</a><a href="#course-c21-commit-robs-and-precise-exceptions">C21. Commit, ROBs and precise exceptions</a><a href="#course-c22-recovery-checkpoints-and-transient-execution">C22. Recovery, checkpoints and transient execution</a><a href="#course-c23-renaming-give-each-value-a-distinct-identity">C23. Renaming: give each value a distinct identity</a><a href="#course-c24-tomasulo-style-scheduling-wakeup-and-selection">C24. Tomasulo-style scheduling, wakeup and selection</a><a href="#course-c25-connecting-the-advanced-machine-without-pretending-it-is-eight-stages">C25. Connecting the advanced machine without pretending it is eight stages</a><a href="#course-c26-translation-privilege-interrupts-and-extensions">C26. Translation, privilege, interrupts and extensions</a><a href="#course-c27-verification-is-a-hierarchy-of-different-evidence">C27. Verification is a hierarchy of different evidence</a><a href="#course-c28-measure-bottlenecks-before-optimizing">C28. Measure bottlenecks before optimizing</a><a href="#course-c29-rtl-to-implementation-synthesis-timing-power-and-reproducibility">C29. RTL to implementation: synthesis, timing, power and reproducibility</a><a href="#course-c30-your-two-capstones-and-advancement-gates">C30. Your two capstones and advancement gates</a></div><div class="nav-group"><a class="group-title" href="#labs">Labs: build and verify</a><a href="#labs-l1-establish-an-engineering-notebook">L1. Establish an engineering notebook</a><a href="#labs-l2-explain-one-storage-slot">L2. Explain one storage slot</a><a href="#labs-l3-write-the-decoder-matrix-before-rtl">L3. Write the decoder matrix before RTL</a><a href="#labs-l4-test-the-alu-at-boundaries">L4. Test the ALU at boundaries</a><a href="#labs-l5-register-reads-during-commit">L5. Register reads during commit</a><a href="#labs-l6-scoreboard-lifetime">L6. Scoreboard lifetime</a><a href="#labs-l7-prefixes-compaction-and-forwarding">L7. Prefixes, compaction and forwarding</a><a href="#labs-l8-fetch-under-redirection">L8. Fetch under redirection</a><a href="#labs-l9-one-arithmetic-lane-through-eight-stages">L9. One arithmetic lane through eight stages</a><a href="#labs-l10-loads-and-adapter-ownership">L10. Loads and adapter ownership</a><a href="#labs-l11-stores-and-fences">L11. Stores and fences</a><a href="#labs-l12-branches-traps-and-resume">L12. Branches, traps and resume</a><a href="#labs-l13-widen-and-challenge-each-lane">L13. Widen and challenge each lane</a><a href="#labs-l14-architectural-comparison-and-progress">L14. Architectural comparison and progress</a><a href="#labs-l15-optional-frontend-and-cache-experiments">L15. Optional frontend and cache experiments</a><a href="#labs-l16-optional-rename-issue-and-memory-experiments">L16. Optional rename, issue and memory experiments</a><a href="#labs-l17-graduation-rubric">L17. Graduation rubric</a></div><div class="nav-group"><a class="group-title" href="#tutorial">Architecture reference</a><a href="#tutorial-1-define-the-machine-before-writing-rtl">1. Define the machine before writing RTL</a><a href="#tutorial-2-rv32i-and-the-execution-environment">2. RV32I and the execution environment</a><a href="#tutorial-3-the-important-distinction-writeback-versus-commit">3. The important distinction: writeback versus commit</a><a href="#tutorial-4-packets-and-per-instruction-metadata">4. Packets and per-instruction metadata</a><a href="#tutorial-5-instruction-fetch">5. Instruction fetch</a><a href="#tutorial-6-decode">6. Decode</a><a href="#tutorial-7-register-access-and-stale-operands">7. Register access and stale operands</a><a href="#tutorial-8-dispatch-accept-an-oldest-prefix">8. Dispatch: accept an oldest prefix</a><a href="#tutorial-9-raw-waw-and-war-examples">9. RAW, WAW and WAR examples</a><a href="#tutorial-10-execute">10. Execute</a><a href="#tutorial-11-memory-and-the-adapter-contract">11. Memory and the adapter contract</a><a href="#tutorial-12-writeback-holding">12. Writeback holding</a><a href="#tutorial-13-commit-faults-and-store-authorization">13. Commit, faults and store authorization</a><a href="#tutorial-14-control-flow-fences-and-recovery">14. Control flow, fences and recovery</a><a href="#tutorial-15-systemverilog-pipeline-control">15. SystemVerilog pipeline control</a><a href="#tutorial-16-example-pipeline-timing">16. Example pipeline timing</a><a href="#tutorial-17-module-layout-and-how-to-start">17. Module layout and how to start</a><a href="#tutorial-18-verification-and-acceptance-tests">18. Verification and acceptance tests</a><a href="#tutorial-19-optimize-only-after-the-protocol-works">19. Optimize only after the protocol works</a><a href="#tutorial-20-references-and-reproducible-next-steps">20. References and reproducible next steps</a><a href="#tutorial-21-forwarding-unit-and-wiring-contract">21. Forwarding unit and wiring contract</a><a href="#tutorial-22-control-hazard-unit-and-recovery-contract">22. Control-hazard unit and recovery contract</a><a href="#tutorial-23-pipeline-assessment-and-current-evidence">23. Pipeline assessment and current evidence</a></div><div class="nav-group"><a class="group-title" href="#skeleton">Implementation workbook</a><a href="#skeleton-1-what-exists-and-what-you-must-implement">1. What exists and what you must implement</a><a href="#skeleton-2-compile-sets-and-honest-status">2. Compile sets and honest status</a><a href="#skeleton-3-stage-ownership-and-record-validity">3. Stage ownership and record validity</a><a href="#skeleton-4-clock-boundaries-do-not-accidentally-build-sixteen-stages">4. Clock boundaries: do not accidentally build sixteen stages</a><a href="#skeleton-5-top-level-wiring-map">5. Top-level wiring map</a><a href="#skeleton-6-the-singleton-handshake-trap">6. The singleton handshake trap</a><a href="#skeleton-7-abstract-memory-contracts">7. Abstract memory contracts</a><a href="#skeleton-8-trap-report-and-resume-are-different-events">8. Trap report and resume are different events</a><a href="#skeleton-9-completion-tests-by-block">9. Completion tests by block</a><a href="#skeleton-10-suggested-implementation-sequence">10. Suggested implementation sequence</a></div><div class="nav-group"><a class="group-title" href="#modules">Every module explained</a><a href="#modules-m1-shared-types-rv32-pkg-and-hazard-pkg">M1. Shared types: rv32_pkg and hazard_pkg</a><a href="#modules-m2-rv32-decode-translate-one-word">M2. rv32_decode: translate one word</a><a href="#modules-m3-alu-a-calculation-without-ownership">M3. alu: a calculation without ownership</a><a href="#modules-m4-fetch-own-a-request-until-it-is-finished">M4. fetch: own a request until it is finished</a><a href="#modules-m5-decode-stage-four-decoders-plus-one-stage-boundary">M5. decode_stage: four decoders plus one stage boundary</a><a href="#modules-m6-regfile-committed-state-with-many-ports">M6. regfile: committed state with many ports</a><a href="#modules-m7-scoreboard-ownership-not-result-storage">M7. scoreboard: ownership, not result storage</a><a href="#modules-m8-register-stage-stable-indices-live-values">M8. register_stage: stable indices, live values</a><a href="#modules-m9-forwarding-unit-resolve-eight-questions">M9. forwarding_unit: resolve eight questions</a><a href="#modules-m10-dispatch-choose-the-oldest-legal-prefix">M10. dispatch: choose the oldest legal prefix</a><a href="#modules-m11-execute-establish-result-meaning">M11. execute: establish result meaning</a><a href="#modules-m12-memory-stage-complete-loads-and-retain-stores">M12. memory_stage: complete loads and retain stores</a><a href="#modules-m13-writeback-a-completion-buffer">M13. writeback: a completion buffer</a><a href="#modules-m14-commit-one-place-authorizes-permanent-effects">M14. commit: one place authorizes permanent effects</a><a href="#modules-m15-memory-adapter-remember-who-must-receive-the-answer">M15. memory_adapter: remember who must receive the answer</a><a href="#modules-m16-control-hazard-unit-one-serialized-operation-and-one-redirect">M16. control_hazard_unit: one serialized operation and one redirect</a><a href="#modules-m17-recovery-report-wait-then-restart">M17. recovery: report, wait, then restart</a><a href="#modules-m18-core-integration-is-a-correctness-task">M18. core: integration is a correctness task</a><a href="#modules-m19-pipe-reg-learn-the-storage-pattern">M19. pipe_reg: learn the storage pattern</a><a href="#modules-m20-read-a-cycle-table-correctly">M20. Read a cycle table correctly</a><a href="#modules-m21-critical-paths-and-physical-cost">M21. Critical paths and physical cost</a><a href="#modules-m22-a-short-vocabulary-to-keep-nearby">M22. A short vocabulary to keep nearby</a></div><div class="nav-group"><a class="group-title" href="#sources">Actual RTL source</a><a href="#source-hazard_pkg">hazard_pkg.sv</a><a href="#source-rv32_pkg">rv32_pkg.sv</a><a href="#source-forwarding_unit">forwarding_unit.sv</a><a href="#source-control_hazard_unit">control_hazard_unit.sv</a><a href="#source-rv32_decode">rv32_decode.sv</a><a href="#source-alu">alu.sv</a><a href="#source-fetch">fetch.sv</a><a href="#source-decode_stage">decode_stage.sv</a><a href="#source-regfile">regfile.sv</a><a href="#source-scoreboard">scoreboard.sv</a><a href="#source-register_stage">register_stage.sv</a><a href="#source-dispatch">dispatch.sv</a><a href="#source-execute">execute.sv</a><a href="#source-memory_stage">memory_stage.sv</a><a href="#source-writeback">writeback.sv</a><a href="#source-commit">commit.sv</a><a href="#source-memory_adapter">memory_adapter.sv</a><a href="#source-recovery">recovery.sv</a><a href="#source-core">core.sv</a><a href="#source-pipe_reg">pipe_reg.sv</a></div><div class="nav-group"><a class="group-title" href="#build-guide">Start building: step-by-step RTL</a><a href="#build-guide-b1-open-these-files-and-understand-the-vocabulary">B1. Open these files and understand the vocabulary</a><a href="#build-guide-b2-write-a-contract-before-writing-logic">B2. Write a contract before writing logic</a><a href="#build-guide-b3-implement-one-decoder-case-first">B3. Implement one decoder case first</a><a href="#build-guide-b4-verify-the-decoded-record-before-expanding-it">B4. Verify the decoded record before expanding it</a><a href="#build-guide-b5-implement-the-matching-alu-behavior">B5. Implement the matching ALU behavior</a><a href="#build-guide-b6-learn-the-clocked-state-pattern">B6. Learn the clocked-state pattern</a><a href="#build-guide-b7-build-the-register-file-and-scoreboard">B7. Build the register file and scoreboard</a><a href="#build-guide-b8-integrate-one-lane-through-the-eight-stages">B8. Integrate one lane through the eight stages</a><a href="#build-guide-b9-add-control-flow-and-trap-recovery">B9. Add control flow and trap recovery</a><a href="#build-guide-b10-add-serialized-memory-and-fences">B10. Add serialized memory and fences</a><a href="#build-guide-b11-enable-four-lane-dispatch-and-execution">B11. Enable four-lane dispatch and execution</a><a href="#build-guide-b12-finish-with-full-core-verification-and-reproducible-evidence">B12. Finish with full-core verification and reproducible evidence</a><a href="#build-guide-b13-keep-this-build-order-checklist-beside-your-editor">B13. Keep this build-order checklist beside your editor</a><a href="#build-guide-b14-your-next-coding-session">B14. Your next coding session</a></div></nav><main id="content"><header><p class="label">An offline CPU design course · RV32I · Four-wide · In-order</p><h1>Learn the architecture. Build the processor.</h1><p>Start from clock edges and instructions, build a four-wide in-order pipeline, then study prediction, caches, renaming, out-of-order scheduling and recovery. Thirty course lessons and seventeen labs connect the concepts to your module skeletons.</p><div class="note"><p><strong>This is a design and implementation guide, not a completed CPU.</strong></p><p>The decoder, ALU, forwarding and control-hazard blocks are implemented. The thirteen processor shells remain yours to build. Advanced architectures are optional study and redesign paths, not implemented features. Cycle tables are illustrations, not measured execution results.</p></div><div class="pipeline" aria-label="Eight stages in order"><a href="#beginner-a7-the-eight-stages-explained-without-shortcuts"><b>1. IF</b>Fetch words</a><a href="#beginner-a7-the-eight-stages-explained-without-shortcuts"><b>2. D</b>Decode meaning</a><a href="#beginner-a7-the-eight-stages-explained-without-shortcuts"><b>3. R</b>Read registers</a><a href="#beginner-a7-the-eight-stages-explained-without-shortcuts"><b>4. DP</b>Check and dispatch</a><a href="#beginner-a7-the-eight-stages-explained-without-shortcuts"><b>5. EX</b>Compute results</a><a href="#beginner-a7-the-eight-stages-explained-without-shortcuts"><b>6. MEM</b>Process memory</a><a href="#beginner-a7-the-eight-stages-explained-without-shortcuts"><b>7. WB</b>Hold completion</a><a href="#beginner-a7-the-eight-stages-explained-without-shortcuts"><b>8. C</b>Commit effects</a></div><div class="routes"><a href="#beginner">1 · Learn the basics</a><a href="#course">2 · Follow the course</a><a href="#labs">3 · Work through the labs</a><a href="#tutorial">Architecture reference</a><a href="#skeleton">Implementation contracts</a><a href="#modules">Every module explained</a></div></header><section id="beginner" class="part" aria-label="Start here: first principles">
+</style></head><body><a class="skip" href="#content">Skip to tutorial</a><nav aria-label="Chapters"><strong>RV32I / Four-wide</strong><label for="chapter-search">Find a chapter</label><input id="chapter-search" type="search" placeholder="Try forwarding or commit"><p id="search-status" role="status">Filter titles here; use Ctrl+F to search the full text.</p><div class="nav-group"><a class="group-title" href="#implementation">Implemented pipeline: every file and connection</a><a href="#implementation-1-first-understand-the-machine-s-two-kinds-of-state">1. First understand the machine&#x27;s two kinds of state</a><a href="#implementation-2-the-connecting-wires-and-the-meaning-of-a-packet">2. The connecting wires and the meaning of a packet</a><a href="#implementation-3-rv32-pkg-sv-the-shared-vocabulary">3. rv32_pkg.sv: the shared vocabulary</a><a href="#implementation-4-hazard-pkg-sv-describe-a-consumer-and-a-producer">4. hazard_pkg.sv: describe a consumer and a producer</a><a href="#implementation-5-fetch-sv-acquire-instructions-and-remember-memory-ownership">5. fetch.sv: acquire instructions and remember memory ownership</a><a href="#implementation-6-rv32-decode-sv-identify-what-each-word-means">6. rv32_decode.sv: identify what each word means</a><a href="#implementation-7-decode-stage-sv-turn-four-decoders-into-a-pipeline-stage">7. decode_stage.sv: turn four decoders into a pipeline stage</a><a href="#implementation-8-regfile-sv-store-only-committed-register-values">8. regfile.sv: store only committed register values</a><a href="#implementation-9-scoreboard-sv-remember-unfinished-writers">9. scoreboard.sv: remember unfinished writers</a><a href="#implementation-10-register-stage-sv-hold-control-and-read-current-operands">10. register_stage.sv: hold control and read current operands</a><a href="#implementation-11-forwarding-unit-sv-find-the-correct-newest-older-value">11. forwarding_unit.sv: find the correct newest older value</a><a href="#implementation-12-dispatch-sv-choose-an-ordered-prefix-and-keep-the-rest">12. dispatch.sv: choose an ordered prefix and keep the rest</a><a href="#implementation-13-alu-sv-calculate-one-integer-result">13. alu.sv: calculate one integer result</a><a href="#implementation-14-execute-sv-choose-operands-calculate-addresses-and-resolve-control">14. execute.sv: choose operands, calculate addresses and resolve control</a><a href="#implementation-15-memory-stage-sv-complete-a-load-exactly-once">15. memory_stage.sv: complete a load exactly once</a><a href="#implementation-16-writeback-sv-hold-completion-not-architectural-state">16. writeback.sv: hold completion, not architectural state</a><a href="#implementation-17-commit-sv-make-effects-visible-in-order">17. commit.sv: make effects visible in order</a><a href="#implementation-18-memory-adapter-sv-remember-which-client-owns-the-response">18. memory_adapter.sv: remember which client owns the response</a><a href="#implementation-19-control-hazard-unit-sv-enforce-the-singleton-interval">19. control_hazard_unit.sv: enforce the singleton interval</a><a href="#implementation-20-recovery-sv-report-the-fault-before-choosing-a-new-pc">20. recovery.sv: report the fault before choosing a new PC</a><a href="#implementation-21-core-sv-the-wiring-diagram-made-executable">21. core.sv: the wiring diagram made executable</a><a href="#implementation-22-examples-superscalar-pipe-reg-sv-the-storage-lesson">22. examples/superscalar/pipe_reg.sv: the storage lesson</a><a href="#implementation-23-walk-one-dependency-through-the-connected-design">23. Walk one dependency through the connected design</a><a href="#implementation-24-test-files-build-files-and-what-the-evidence-means">24. Test files, build files and what the evidence means</a></div><div class="nav-group"><a class="group-title" href="#beginner">Start here: first principles</a><a href="#beginner-a1-what-a-processor-actually-does">A1. What a processor actually does</a><a href="#beginner-a2-the-three-kinds-of-storage-you-must-distinguish">A2. The three kinds of storage you must distinguish</a><a href="#beginner-a3-bits-signed-values-addresses-and-byte-order">A3. Bits, signed values, addresses and byte order</a><a href="#beginner-a4-what-a-clock-edge-means">A4. What a clock edge means</a><a href="#beginner-a5-pipeline-depth-and-superscalar-width-are-different">A5. Pipeline depth and superscalar width are different</a><a href="#beginner-a6-the-whole-machine-in-one-annotated-picture">A6. The whole machine in one annotated picture</a><a href="#beginner-a7-the-eight-stages-explained-without-shortcuts">A7. The eight stages, explained without shortcuts</a><a href="#beginner-a8-follow-one-real-instruction-through-every-stage">A8. Follow one real instruction through every stage</a><a href="#beginner-a9-valid-and-ready-an-agreement-at-a-clock-edge">A9. Valid and ready: an agreement at a clock edge</a><a href="#beginner-a10-packets-lanes-and-splitting-an-instruction-group">A10. Packets, lanes and splitting an instruction group</a><a href="#beginner-a11-dependencies-and-the-scoreboard-with-concrete-values">A11. Dependencies and the scoreboard, with concrete values</a><a href="#beginner-a12-forwarding-is-choosing-a-value-not-changing-the-register-file">A12. Forwarding is choosing a value, not changing the register file</a><a href="#beginner-a13-a-four-instruction-worked-scheduling-example">A13. A four-instruction worked scheduling example</a><a href="#beginner-a14-loads-follow-the-address-response-and-result-separately">A14. Loads: follow the address, response and result separately</a><a href="#beginner-a15-stores-why-computing-the-address-is-not-permission-to-write">A15. Stores: why computing the address is not permission to write</a><a href="#beginner-a16-branches-and-the-difference-between-a-fault-pc-and-a-restart-pc">A16. Branches and the difference between a fault PC and a restart PC</a><a href="#beginner-a17-precise-commit-and-a-fault-in-the-middle-of-a-group">A17. Precise commit and a fault in the middle of a group</a><a href="#beginner-a18-read-the-systemverilog-types-as-a-vocabulary">A18. Read the SystemVerilog types as a vocabulary</a><a href="#beginner-a19-how-to-implement-one-module-without-getting-lost">A19. How to implement one module without getting lost</a><a href="#beginner-a20-what-is-intentionally-not-part-of-this-first-processor">A20. What is intentionally not part of this first processor</a></div><div class="nav-group"><a class="group-title" href="#course">Course: CPU architectures</a><a href="#course-c1-your-syllabus-and-what-completion-means">C1. Your syllabus and what completion means</a><a href="#course-c2-scalar-superscalar-in-order-and-out-of-order-are-separate-choices">C2. Scalar, superscalar, in-order and out-of-order are separate choices</a><a href="#course-c3-work-backwards-from-architectural-effects">C3. Work backwards from architectural effects</a><a href="#course-c4-elastic-stages-buffers-and-credit-flow">C4. Elastic stages, buffers and credit flow</a><a href="#course-c5-fetch-bandwidth-alignment-and-queues">C5. Fetch bandwidth, alignment and queues</a><a href="#course-c6-branch-prediction-direction-and-target-are-different-questions">C6. Branch prediction: direction and target are different questions</a><a href="#course-c7-direction-algorithms-counters-history-and-tage">C7. Direction algorithms: counters, history and TAGE</a><a href="#course-c8-perceptrons-hybrid-prediction-and-prediction-cost">C8. Perceptrons, hybrid prediction and prediction cost</a><a href="#course-c9-decode-predecode-micro-ops-and-fusion">C9. Decode, predecode, micro-ops and fusion</a><a href="#course-c10-architectural-and-physical-register-files">C10. Architectural and physical register files</a><a href="#course-c11-scoreboarding-and-its-exact-limits">C11. Scoreboarding and its exact limits</a><a href="#course-c12-dispatch-a-greedy-prefix-algorithm">C12. Dispatch: a greedy prefix algorithm</a><a href="#course-c13-forwarding-networks-and-load-use-timing">C13. Forwarding networks and load-use timing</a><a href="#course-c14-alus-address-units-and-variable-latency-execution">C14. ALUs, address units and variable-latency execution</a><a href="#course-c15-completion-writeback-arbitration-and-retirement-bandwidth">C15. Completion, writeback arbitration and retirement bandwidth</a><a href="#course-c16-load-store-formatting-and-ownership">C16. Load/store formatting and ownership</a><a href="#course-c17-store-buffers-load-queues-and-memory-dependence">C17. Store buffers, load queues and memory dependence</a><a href="#course-c18-caches-tags-data-and-misses">C18. Caches: tags, data and misses</a><a href="#course-c19-replacement-writes-and-prefetching">C19. Replacement, writes and prefetching</a><a href="#course-c20-memory-ordering-and-coherence-solve-different-problems">C20. Memory ordering and coherence solve different problems</a><a href="#course-c21-commit-robs-and-precise-exceptions">C21. Commit, ROBs and precise exceptions</a><a href="#course-c22-recovery-checkpoints-and-transient-execution">C22. Recovery, checkpoints and transient execution</a><a href="#course-c23-renaming-give-each-value-a-distinct-identity">C23. Renaming: give each value a distinct identity</a><a href="#course-c24-tomasulo-style-scheduling-wakeup-and-selection">C24. Tomasulo-style scheduling, wakeup and selection</a><a href="#course-c25-connecting-the-advanced-machine-without-pretending-it-is-eight-stages">C25. Connecting the advanced machine without pretending it is eight stages</a><a href="#course-c26-translation-privilege-interrupts-and-extensions">C26. Translation, privilege, interrupts and extensions</a><a href="#course-c27-verification-is-a-hierarchy-of-different-evidence">C27. Verification is a hierarchy of different evidence</a><a href="#course-c28-measure-bottlenecks-before-optimizing">C28. Measure bottlenecks before optimizing</a><a href="#course-c29-rtl-to-implementation-synthesis-timing-power-and-reproducibility">C29. RTL to implementation: synthesis, timing, power and reproducibility</a><a href="#course-c30-your-two-capstones-and-advancement-gates">C30. Your two capstones and advancement gates</a></div><div class="nav-group"><a class="group-title" href="#labs">Labs: build and verify</a><a href="#labs-l1-establish-an-engineering-notebook">L1. Establish an engineering notebook</a><a href="#labs-l2-explain-one-storage-slot">L2. Explain one storage slot</a><a href="#labs-l3-write-the-decoder-matrix-before-rtl">L3. Write the decoder matrix before RTL</a><a href="#labs-l4-test-the-alu-at-boundaries">L4. Test the ALU at boundaries</a><a href="#labs-l5-register-reads-during-commit">L5. Register reads during commit</a><a href="#labs-l6-scoreboard-lifetime">L6. Scoreboard lifetime</a><a href="#labs-l7-prefixes-compaction-and-forwarding">L7. Prefixes, compaction and forwarding</a><a href="#labs-l8-fetch-under-redirection">L8. Fetch under redirection</a><a href="#labs-l9-one-arithmetic-lane-through-eight-stages">L9. One arithmetic lane through eight stages</a><a href="#labs-l10-loads-and-adapter-ownership">L10. Loads and adapter ownership</a><a href="#labs-l11-stores-and-fences">L11. Stores and fences</a><a href="#labs-l12-branches-traps-and-resume">L12. Branches, traps and resume</a><a href="#labs-l13-widen-and-challenge-each-lane">L13. Widen and challenge each lane</a><a href="#labs-l14-architectural-comparison-and-progress">L14. Architectural comparison and progress</a><a href="#labs-l15-optional-frontend-and-cache-experiments">L15. Optional frontend and cache experiments</a><a href="#labs-l16-optional-rename-issue-and-memory-experiments">L16. Optional rename, issue and memory experiments</a><a href="#labs-l17-graduation-rubric">L17. Graduation rubric</a></div><div class="nav-group"><a class="group-title" href="#tutorial">Architecture reference</a><a href="#tutorial-1-define-the-machine-before-writing-rtl">1. Define the machine before writing RTL</a><a href="#tutorial-2-rv32i-and-the-execution-environment">2. RV32I and the execution environment</a><a href="#tutorial-3-the-important-distinction-writeback-versus-commit">3. The important distinction: writeback versus commit</a><a href="#tutorial-4-packets-and-per-instruction-metadata">4. Packets and per-instruction metadata</a><a href="#tutorial-5-instruction-fetch">5. Instruction fetch</a><a href="#tutorial-6-decode">6. Decode</a><a href="#tutorial-7-register-access-and-stale-operands">7. Register access and stale operands</a><a href="#tutorial-8-dispatch-accept-an-oldest-prefix">8. Dispatch: accept an oldest prefix</a><a href="#tutorial-9-raw-waw-and-war-examples">9. RAW, WAW and WAR examples</a><a href="#tutorial-10-execute">10. Execute</a><a href="#tutorial-11-memory-and-the-adapter-contract">11. Memory and the adapter contract</a><a href="#tutorial-12-writeback-holding">12. Writeback holding</a><a href="#tutorial-13-commit-faults-and-store-authorization">13. Commit, faults and store authorization</a><a href="#tutorial-14-control-flow-fences-and-recovery">14. Control flow, fences and recovery</a><a href="#tutorial-15-systemverilog-pipeline-control">15. SystemVerilog pipeline control</a><a href="#tutorial-16-example-pipeline-timing">16. Example pipeline timing</a><a href="#tutorial-17-module-layout-and-how-to-start">17. Module layout and how to start</a><a href="#tutorial-18-verification-and-acceptance-tests">18. Verification and acceptance tests</a><a href="#tutorial-19-optimize-only-after-the-protocol-works">19. Optimize only after the protocol works</a><a href="#tutorial-20-references-and-reproducible-next-steps">20. References and reproducible next steps</a><a href="#tutorial-21-forwarding-unit-and-wiring-contract">21. Forwarding unit and wiring contract</a><a href="#tutorial-22-control-hazard-unit-and-recovery-contract">22. Control-hazard unit and recovery contract</a><a href="#tutorial-23-pipeline-assessment-and-current-evidence">23. Pipeline assessment and current evidence</a></div><div class="nav-group"><a class="group-title" href="#skeleton">Implementation workbook</a><a href="#skeleton-1-what-exists-and-what-you-must-implement">1. What exists and what you must implement</a><a href="#skeleton-2-compile-sets-and-honest-status">2. Compile sets and honest status</a><a href="#skeleton-3-stage-ownership-and-record-validity">3. Stage ownership and record validity</a><a href="#skeleton-4-clock-boundaries-do-not-accidentally-build-sixteen-stages">4. Clock boundaries: do not accidentally build sixteen stages</a><a href="#skeleton-5-top-level-wiring-map">5. Top-level wiring map</a><a href="#skeleton-6-the-singleton-handshake-trap">6. The singleton handshake trap</a><a href="#skeleton-7-abstract-memory-contracts">7. Abstract memory contracts</a><a href="#skeleton-8-trap-report-and-resume-are-different-events">8. Trap report and resume are different events</a><a href="#skeleton-9-completion-tests-by-block">9. Completion tests by block</a><a href="#skeleton-10-suggested-implementation-sequence">10. Suggested implementation sequence</a></div><div class="nav-group"><a class="group-title" href="#modules">Every module explained</a><a href="#modules-m1-shared-types-rv32-pkg-and-hazard-pkg">M1. Shared types: rv32_pkg and hazard_pkg</a><a href="#modules-m2-rv32-decode-translate-one-word">M2. rv32_decode: translate one word</a><a href="#modules-m3-alu-a-calculation-without-ownership">M3. alu: a calculation without ownership</a><a href="#modules-m4-fetch-own-a-request-until-it-is-finished">M4. fetch: own a request until it is finished</a><a href="#modules-m5-decode-stage-four-decoders-plus-one-stage-boundary">M5. decode_stage: four decoders plus one stage boundary</a><a href="#modules-m6-regfile-committed-state-with-many-ports">M6. regfile: committed state with many ports</a><a href="#modules-m7-scoreboard-ownership-not-result-storage">M7. scoreboard: ownership, not result storage</a><a href="#modules-m8-register-stage-stable-indices-live-values">M8. register_stage: stable indices, live values</a><a href="#modules-m9-forwarding-unit-resolve-eight-questions">M9. forwarding_unit: resolve eight questions</a><a href="#modules-m10-dispatch-choose-the-oldest-legal-prefix">M10. dispatch: choose the oldest legal prefix</a><a href="#modules-m11-execute-establish-result-meaning">M11. execute: establish result meaning</a><a href="#modules-m12-memory-stage-complete-loads-and-retain-stores">M12. memory_stage: complete loads and retain stores</a><a href="#modules-m13-writeback-a-completion-buffer">M13. writeback: a completion buffer</a><a href="#modules-m14-commit-one-place-authorizes-permanent-effects">M14. commit: one place authorizes permanent effects</a><a href="#modules-m15-memory-adapter-remember-who-must-receive-the-answer">M15. memory_adapter: remember who must receive the answer</a><a href="#modules-m16-control-hazard-unit-one-serialized-operation-and-one-redirect">M16. control_hazard_unit: one serialized operation and one redirect</a><a href="#modules-m17-recovery-report-wait-then-restart">M17. recovery: report, wait, then restart</a><a href="#modules-m18-core-integration-is-a-correctness-task">M18. core: integration is a correctness task</a><a href="#modules-m19-pipe-reg-learn-the-storage-pattern">M19. pipe_reg: learn the storage pattern</a><a href="#modules-m20-read-a-cycle-table-correctly">M20. Read a cycle table correctly</a><a href="#modules-m21-critical-paths-and-physical-cost">M21. Critical paths and physical cost</a><a href="#modules-m22-a-short-vocabulary-to-keep-nearby">M22. A short vocabulary to keep nearby</a></div><div class="nav-group"><a class="group-title" href="#sources">Actual RTL source</a><a href="#source-hazard_pkg">hazard_pkg.sv</a><a href="#source-rv32_pkg">rv32_pkg.sv</a><a href="#source-forwarding_unit">forwarding_unit.sv</a><a href="#source-control_hazard_unit">control_hazard_unit.sv</a><a href="#source-rv32_decode">rv32_decode.sv</a><a href="#source-alu">alu.sv</a><a href="#source-fetch">fetch.sv</a><a href="#source-decode_stage">decode_stage.sv</a><a href="#source-regfile">regfile.sv</a><a href="#source-scoreboard">scoreboard.sv</a><a href="#source-register_stage">register_stage.sv</a><a href="#source-dispatch">dispatch.sv</a><a href="#source-execute">execute.sv</a><a href="#source-memory_stage">memory_stage.sv</a><a href="#source-writeback">writeback.sv</a><a href="#source-commit">commit.sv</a><a href="#source-memory_adapter">memory_adapter.sv</a><a href="#source-recovery">recovery.sv</a><a href="#source-core">core.sv</a><a href="#source-pipe_reg">pipe_reg.sv</a></div><div class="nav-group"><a class="group-title" href="#build-guide">Start building: step-by-step RTL</a><a href="#build-guide-b1-open-these-files-and-understand-the-vocabulary">B1. Open these files and understand the vocabulary</a><a href="#build-guide-b2-write-a-contract-before-writing-logic">B2. Write a contract before writing logic</a><a href="#build-guide-b3-implement-one-decoder-case-first">B3. Implement one decoder case first</a><a href="#build-guide-b4-verify-the-decoded-record-before-expanding-it">B4. Verify the decoded record before expanding it</a><a href="#build-guide-b5-implement-the-matching-alu-behavior">B5. Implement the matching ALU behavior</a><a href="#build-guide-b6-learn-the-clocked-state-pattern">B6. Learn the clocked-state pattern</a><a href="#build-guide-b7-build-the-register-file-and-scoreboard">B7. Build the register file and scoreboard</a><a href="#build-guide-b8-integrate-one-lane-through-the-eight-stages">B8. Integrate one lane through the eight stages</a><a href="#build-guide-b9-add-control-flow-and-trap-recovery">B9. Add control flow and trap recovery</a><a href="#build-guide-b10-add-serialized-memory-and-fences">B10. Add serialized memory and fences</a><a href="#build-guide-b11-enable-four-lane-dispatch-and-execution">B11. Enable four-lane dispatch and execution</a><a href="#build-guide-b12-finish-with-full-core-verification-and-reproducible-evidence">B12. Finish with full-core verification and reproducible evidence</a><a href="#build-guide-b13-keep-this-build-order-checklist-beside-your-editor">B13. Keep this build-order checklist beside your editor</a><a href="#build-guide-b14-your-next-coding-session">B14. Your next coding session</a></div></nav><main id="content"><header><p class="label">An offline CPU design course · RV32I · Four-wide · In-order</p><h1>Learn the architecture. Build the processor.</h1><p>Start from clock edges and instructions, build a four-wide in-order pipeline, then study prediction, caches, renaming, out-of-order scheduling and recovery. Thirty course lessons and seventeen labs connect the concepts to the implemented RTL.</p><div class="note"><p><strong>The eight-stage baseline is implemented and has full-core simulation tests.</strong></p><p>Read the implementation chapter for every module, its signals and its connections. Advanced architectures are optional study and redesign paths, not implemented features. Cycle tables are illustrations, not measured execution results.</p></div><div class="pipeline" aria-label="Eight stages in order"><a href="#beginner-a7-the-eight-stages-explained-without-shortcuts"><b>1. IF</b>Fetch words</a><a href="#beginner-a7-the-eight-stages-explained-without-shortcuts"><b>2. D</b>Decode meaning</a><a href="#beginner-a7-the-eight-stages-explained-without-shortcuts"><b>3. R</b>Read registers</a><a href="#beginner-a7-the-eight-stages-explained-without-shortcuts"><b>4. DP</b>Check and dispatch</a><a href="#beginner-a7-the-eight-stages-explained-without-shortcuts"><b>5. EX</b>Compute results</a><a href="#beginner-a7-the-eight-stages-explained-without-shortcuts"><b>6. MEM</b>Process memory</a><a href="#beginner-a7-the-eight-stages-explained-without-shortcuts"><b>7. WB</b>Hold completion</a><a href="#beginner-a7-the-eight-stages-explained-without-shortcuts"><b>8. C</b>Commit effects</a></div><div class="routes"><a href="#beginner">1 · Learn the basics</a><a href="#course">2 · Follow the course</a><a href="#labs">3 · Work through the labs</a><a href="#tutorial">Architecture reference</a><a href="#skeleton">Implementation contracts</a><a href="#implementation">Current implementation explained</a><a href="#modules">Module design lessons</a></div></header><section id="implementation" class="part" aria-label="Implemented pipeline: every file and connection">
+<p class="label">Implemented pipeline: every file and connection</p>
+<h2 class="part-title" id="implementation-the-implemented-processor-read-the-rtl-from-end-to-end">The implemented processor: read the RTL from end to end</h2>
+<p>This chapter explains the working baseline in <code>rtl/superscalar/</code>. The earlier lessons remain useful as exercises: you can hide an implementation, write it yourself, then compare behavior. The source appendix contains the actual current RTL. Start here when you want to understand how the pieces now connect.</p>
+<p>The design is a <strong>four-wide, in-order RV32I pipeline</strong> with eight stages. Four-wide means that a packet can contain up to four instructions, and four independent arithmetic instructions can execute and retire together. It does not mean four instructions finish on every clock. Fetch waits for memory, dependencies split packets, dispatch and commit deliberately insert bubbles between packets, and memory/control/system instructions execute alone after older work drains.</p>
+<p>This is an educational processor with abstract instruction/data ports and an external execution environment interface (EEI). It has no cache, predictor, privileged CSRs, interrupts, MMU, multiply/divide, compressed instructions, physical register renaming or out-of-order scheduler. Those remain extension lessons. FPGA integration still requires a memory/bus implementation, an EEI policy, clock/reset constraints and device-specific synthesis and timing checks.</p>
+<h3 id="implementation-1-first-understand-the-machine-s-two-kinds-of-state">1. First understand the machine&#x27;s two kinds of state</h3>
+<p><strong>Architectural state</strong> is what a program can observe: committed register values, committed memory effects and the program&#x27;s instruction sequence. <strong>Pipeline state</strong> is temporary bookkeeping: a fetched packet, operands waiting in dispatch, a load waiting for its response. A computed result is not automatically an architectural update.</p>
+<p><code>regfile.sv</code> holds committed integer registers. Only <code>commit.sv</code> supplies its write events. EX computes values; MEM completes loads; WB holds completed packets; C decides which effects become visible. Stores are sent externally from C, after older instructions have completed. This separation is why an instruction that eventually faults cannot accidentally write a register just because its ALU calculated something.</p>
+<p>Every sequential module follows your requested style:</p>
+<pre><code>always_comb begin
+  d = q;                 // Keep existing state unless an event changes it.
+  if (event) d = update; // Decide the next state using current inputs/state.
+  if (rst_i) d = &#x27;0;     // Reset has final priority.
+end
+always_ff @(posedge clk_i) begin
+  q &lt;= d;               // Only assignments belong in this block.
+end</code></pre>
+<p><code>q</code> means the state currently stored in flip-flops. <code>d</code> means the state that those flip-flops will receive at the next rising edge. A structure can hold many fields and still use one <code>q &lt;= d</code> assignment. These are synchronous resets: the reset decision changes D immediately, but stored Q changes on the clock edge. Ports are also gated during reset to prevent transactions.</p>
+<p>Several files use separate <code>always_comb</code> blocks for readiness, output data and next-state updates. This makes dependencies explicit. For example, a stage&#x27;s output-valid depends on its resident valid bit; it should not accidentally appear to depend on the next packet&#x27;s input-valid merely because both calculations were put in one large block. Strict lint checks the resulting combinational dependency graph.</p>
+<h3 id="implementation-2-the-connecting-wires-and-the-meaning-of-a-packet">2. The connecting wires and the meaning of a packet</h3>
+<pre><code>instruction memory
+       |
+       v
+ IF --&gt; D --&gt; R --&gt; DP --&gt; EX --&gt; MEM --&gt; WB --&gt; C
+             |      ^      |       |       |      |
+           regfile  |      +-------+-------+------+
+             ^      |             forwarding producers
+             |      +---- scoreboard / commit bypass
+             +------------------------------ C writes
+                                  MEM loads ---+
+                                    C stores --+--&gt; memory_adapter --&gt; data memory
+                                    C traps/branches --&gt; recovery --&gt; IF redirect</code></pre>
+<p>A stage-to-stage channel carries <code>packet_valid</code>, <code>packet_ready</code> and a <code>packet_t</code> payload. Transfer occurs only on a rising edge with both valid and ready high. Ready means the receiver can take ownership; valid means the sender is offering something real. Neither signal alone is a transfer.</p>
+<p>A packet contains four lanes. Lane 0 is oldest. Valid lanes always form a prefix: <code>0,1,2</code> may be valid with lane 3 unused; a hole at lane 1 with lane 2 valid is not a legal packet. Outer packet-valid says the whole storage slot is occupied; each lane-valid says which of its entries are real instructions.</p>
+<p>Most stages can consume A and accept B on the same edge. DP accepts a new packet only when its retained packet is empty. C similarly accepts only when empty. These two deliberate bubbles simplify ownership and are a future performance optimization, not an ISA limitation.</p>
+<p>A held packet&#x27;s payload stays unchanged until transfer or an authorized flush. R has a separate live operand sideband that may change while its control packet remains held. DP samples those values on acceptance, then refreshes snapshots when matching registers commit. Do not treat that live sideband as a stable packet field.</p>
+<h3 id="implementation-3-rv32-pkg-sv-the-shared-vocabulary">3. rv32_pkg.sv: the shared vocabulary</h3>
+<p><a href="#source-rv32_pkg">Open rv32_pkg.sv</a>. A package defines types and pure helper functions; it does not allocate flip-flops by itself.</p>
+<p><code>word_t</code> is 32 bits. <code>reg_idx_t</code> is five bits, enough to select registers x0 through x31. <code>op_t</code> is our internal operation enumeration: it is easier for EX to receive <code>OP_SRAI</code> than to decode the instruction encoding again. Its numeric values are implementation details, not instruction opcodes.</p>
+<p><code>decoded_t</code> carries the operation, source/destination indices, source-use flags, destination-write flag, immediate, serialization flag and decode fault. A source index is meaningful only when its use flag says the instruction reads that source. <code>writes_rd</code> is false for x0 and for instructions without a register result.</p>
+<p><code>lane_t</code> accumulates information as an instruction travels. IF provides PC and instruction. D provides decoded control. DP resolves <code>src1/src2</code>. EX computes result, effective address, positioned store data, byte mask, next PC and alignment faults. MEM replaces a load&#x27;s result with returned data. WB preserves it. C consumes it. Fields that have not reached their owning stage are not yet meaningful.</p>
+<p><code>fault_t</code> holds valid, symbolic kind and an associated address or instruction value. These kinds are <strong>not privileged mcause numbers</strong>. <code>trap_t</code> adds the instruction and its PC so an external environment can decide what to do. <code>retire_t</code> describes a successful retirement event; <code>commit_writes_t</code> describes accepted register updates. Retirement has no ready input: a monitor must sample every cycle.</p>
+<p><code>if_response_t</code> contains four words and four per-word access-error bits. <code>mem_request_t</code> carries a read/write bit, aligned word address, positioned write data and byte enables. <code>mem_response_t</code> carries read data and an error bit. <code>is_load</code>, <code>is_store</code>, <code>is_control</code> and <code>memory_mask</code> classify operations without storing state. <code>make_producer</code> converts a resident lane into the smaller forwarding record and qualifies it with occupied/ready status.</p>
+<h3 id="implementation-4-hazard-pkg-sv-describe-a-consumer-and-a-producer">4. hazard_pkg.sv: describe a consumer and a producer</h3>
+<p><a href="#source-hazard_pkg">Open hazard_pkg.sv</a>. Eight source records correspond to two sources for each of four lanes. A source says whether it is used, which register it wants, whether the scoreboard marks that register busy, and what value to use if the committed snapshot is sufficient.</p>
+<p>Sixteen producer records describe four lanes in each of EX, MEM, WB and C. Each says whether it is valid, writes a destination, is killed or faulting, has its value ready, and what destination/value it carries. Keeping these records smaller than a full pipeline lane makes the forwarding interface easier to understand.</p>
+<h3 id="implementation-5-fetch-sv-acquire-instructions-and-remember-memory-ownership">5. fetch.sv: acquire instructions and remember memory ownership</h3>
+<p><a href="#source-fetch">Open fetch.sv</a>. State <code>q.pc</code> is the next desired instruction PC. <code>q.request_pc</code> remembers the PC associated with an offered memory transaction. These must be separate: a redirect can change the next PC while an old request is still outstanding.</p>
+<p><code>phase</code> has three meanings: 0 idle, 1 holding a request until accepted, and 2 waiting for its response. <code>valid/packet</code> hold one completed fetch packet. <code>stale</code> says that the current transaction belongs to a discarded path. <code>outstanding_o</code> is true in both request and response phases, because even an unaccepted offered request must remain stable.</p>
+<p>An instruction request addresses a 16-byte aligned block. If the desired PC is 0x104, fetch requests 0x100 but uses response words 1, 2 and 3 as packet lanes 0, 1 and 2. The next sequential block begins at 0x110. This explains why fetch packets are sometimes narrower than four instructions.</p>
+<p>Fetch advances to the wait-response phase only on request valid-and-ready. It creates a packet only when response valid-and-ready occurs. Access errors attach to their individual instruction lanes. A misaligned requested PC generates a fault packet without issuing a memory request.</p>
+<p>A redirect accepts ownership of a replacement PC immediately outside reset. It discards any buffered old packet and marks outstanding old work stale. It <strong>does not withdraw a stalled memory request</strong>. Fetch drains the old transaction, ignores its response, then requests the new path. <code>stop_fetch_i</code> prevents starting new sequential work but does not prevent completing an already owned transaction. This is the difference between stopping instruction production and abandoning a bus transaction.</p>
+<h3 id="implementation-6-rv32-decode-sv-identify-what-each-word-means">6. rv32_decode.sv: identify what each word means</h3>
+<p><a href="#source-rv32_decode">Open rv32_decode.sv</a>. This existing combinational module examines opcode, funct3 and funct7, reconstructs immediates, and produces a decoded record. It has no clock or retained state. Its default is illegal; a recognized encoding replaces that default.</p>
+<p>The intermediate opcode/function fields select the instruction family and operation. I/S/B/U/J immediates rearrange different bit positions; negative immediates are sign-extended. Shift-immediate operations carry the five-bit shift amount rather than treating their function bits as part of an arithmetic immediate.</p>
+<p>The use/write flags prevent false dependencies. ADD reads two registers and writes one. ADDI reads only rs1. A store reads its base and data but writes no register. JAL writes a link and uses a PC-relative immediate. Memory/control/FENCE/system/illegal operations set <code>serial</code> for the conservative scheduler. ECALL and EBREAK become fault records for the EEI. Existing decoder tests check complete records, including unused-field conventions and illegal encodings.</p>
+<h3 id="implementation-7-decode-stage-sv-turn-four-decoders-into-a-pipeline-stage">7. decode_stage.sv: turn four decoders into a pipeline stage</h3>
+<p><a href="#source-decode_stage">Open decode_stage.sv</a>. The decoder is a calculator; the stage is a storage boundary around four calculators. <code>g_decode</code> creates one decoder per incoming lane. <code>decoded_packet</code> copies the incoming packet and attaches each decoder&#x27;s result.</p>
+<p>An earlier fetch fault takes priority over a decode fault. An unreadable instruction must be reported as an instruction access error, even if its supplied bits happen to look illegal. Such a lane is also marked serialized.</p>
+<p><code>packet_q/valid_q</code> hold the accepted decoded packet. <code>packet_d/valid_d</code> hold its next state. <code>packet_ready_o</code> is high when the slot is empty or the old packet will leave. If input-valid is low on such an edge, valid clears; if input-valid is high, the new decoded packet replaces the old one. Flush clears occupancy and suppresses transfer.</p>
+<h3 id="implementation-8-regfile-sv-store-only-committed-register-values">8. regfile.sv: store only committed register values</h3>
+<p><a href="#source-regfile">Open regfile.sv</a>. <code>regs_q</code> is 32 words of storage; <code>regs_d</code> is the proposed next array. Eight combinational read ports allow four instructions to ask for two source registers each.</p>
+<p>The next-state block starts with retention, applies up to four commit writes in lane order, then forces x0 to zero. Reset clears the array. If multiple writes targeted one register, the later lane&#x27;s assignment would win; dispatch&#x27;s WAW rule normally prevents that situation. Read outputs reflect current committed state. Same-edge commit visibility is supplied explicitly by R&#x27;s bypass, rather than relying on a vendor RAM&#x27;s read-during-write behavior.</p>
+<p>This multiport array is readable RTL, but it is not automatically an FPGA block RAM. Eight reads and four writes may map to a significant amount of registers and multiplexers. Determine the actual mapping through synthesis when you choose a device.</p>
+<h3 id="implementation-9-scoreboard-sv-remember-unfinished-writers">9. scoreboard.sv: remember unfinished writers</h3>
+<p><a href="#source-scoreboard">Open scoreboard.sv</a>. A 32-bit bitmap has one bit per architectural register. <code>busy_q[5]=1</code> means an already dispatched instruction still owns a future write to x5. It does not say the value is ready; forwarding provides that separate fact.</p>
+<p>Commit clears completed destinations. Dispatch&#x27;s accepted allocation mask sets new destinations. Allocation wins if both happen on the same edge, then bit zero is forced clear. Reset or backend flush clears all ownership. Because WAW dispatch is blocked, at most one unfinished writer owns each register: one bit is enough. Supporting multiple writers would require tags or counts and a different recovery design.</p>
+<h3 id="implementation-10-register-stage-sv-hold-control-and-read-current-operands">10. register_stage.sv: hold control and read current operands</h3>
+<p><a href="#source-register_stage">Open register_stage.sv</a>. <code>packet_q/valid_q</code> hold the control packet. <code>read_indices_o</code> uses each lane&#x27;s source-use flags to ask the register file for meaningful sources, choosing x0 for unused sources.</p>
+<p><code>live_operands_o</code> starts from <code>read_values_i</code>. For each read port it checks accepted commit writes and substitutes a matching newly committed value, then forces x0 reads to zero. Example: C writes x5=9 on the same edge that R transfers an ADD using x5 to DP. The register file still exposes old Q before the edge; this explicit bypass supplies 9 to DP at that edge.</p>
+<p>The packet itself does not continually change to include those values. This avoids breaking the stable-payload rule while R is stalled. DP captures the live operand sideband when R-to-DP transfers.</p>
+<h3 id="implementation-11-forwarding-unit-sv-find-the-correct-newest-older-value">11. forwarding_unit.sv: find the correct newest older value</h3>
+<p><a href="#source-forwarding_unit">Open forwarding_unit.sv</a>. This is combinational. For every used source it searches producers in youngest-to-oldest order. In this in-order pipeline, EX is younger than MEM, which is younger than WB, which is younger than C. Within a packet, higher lane numbers are younger. <code>core.sv</code> constructs precisely this ordering.</p>
+<p>The first eligible matching writer owns the answer. If it is ready and nonfaulting, forward its result. If it is unready or faulting, block the consumer; do not fall through to an older value. If there is no matching producer, the fallback is usable only when the scoreboard says the register is not busy. x0 always resolves to zero, and unused sources never stall an instruction.</p>
+<h3 id="implementation-12-dispatch-sv-choose-an-ordered-prefix-and-keep-the-rest">12. dispatch.sv: choose an ordered prefix and keep the rest</h3>
+<p><a href="#source-dispatch">Open dispatch.sv</a>. This is the central scheduling module. Its state includes an occupied <code>packet</code>, a <code>frozen</code> bit, a saved <code>offer</code>, and the number of lanes in that offer. It never skips a blocked older instruction to run a younger one.</p>
+<p><code>refreshed</code> starts with saved operands and incorporates accepted commit writes. This matters when a suffix waits long enough for a producer to leave the pipeline: its newest value must not disappear with the producer. <code>sources</code> describes the eight operand queries; the forwarding unit returns readiness and resolved <code>values</code>.</p>
+<p>The selection loop walks lanes 0 through 3. <code>selected_writers</code> records destinations already selected in this group. <code>stopped</code> remembers the first obstacle. A lane stops selection when a source is unavailable, its source depends on an earlier selected writer, its destination is already busy, or its destination duplicates an earlier selected destination. Selection also stops before a later serialized instruction. <code>count</code> is the number of lanes accepted into the proposed prefix.</p>
+<p>For example, lane 0 <code>ADDI x5,x0,7</code> can dispatch, but lane 1 <code>ADD x6,x5,x5</code> cannot execute beside it: this design has no same-cycle cross-ALU result path. Lane 1 remains as the new lane 0 in the retained suffix. When x5 appears as a ready older producer, that ADD can dispatch using forwarding.</p>
+<p><code>singleton</code> means the oldest lane is serialized or faulting. It can transfer only when the controller grants serialization after the backend empties. The serial handshake is constructed independently of <code>block_younger_i</code>: starting a singleton itself raises that block signal, and using it to suppress the same handshake would create a combinational loop.</p>
+<p>When EX stalls a normal offered packet, DP saves the complete selected payload and count into <code>offer/count</code>, setting <code>frozen</code>. It must not expand that offer when additional sources become ready. On acceptance, the allocation mask marks only real nonfaulting writers, and exactly the accepted prefix is removed. The suffix shifts down without changing program order.</p>
+<h3 id="implementation-13-alu-sv-calculate-one-integer-result">13. alu.sv: calculate one integer result</h3>
+<p><a href="#source-alu">Open alu.sv</a>. Four instances serve EX. Inputs are operation, A and B; output is a 32-bit result. There is no clock, register file, branch redirect or memory operation inside the ALU.</p>
+<p>ADD/SUB wrap to 32 bits. Logical operations work bitwise. SLT treats operands as signed two&#x27;s-complement values; SLTU compares their unsigned magnitudes. Shifts use B&#x27;s low five bits. SRA/SRAI explicitly interpret A as signed so right shifting propagates its sign bit. With A=0x80000000 and a shift of one, SRL produces 0x40000000 while SRA produces 0xc0000000. The independent test oracle uses integer arithmetic/division for shifts to avoid repeating the RTL expression.</p>
+<h3 id="implementation-14-execute-sv-choose-operands-calculate-addresses-and-resolve-control">14. execute.sv: choose operands, calculate addresses and resolve control</h3>
+<p><a href="#source-execute">Open execute.sv</a>. <code>q/valid_q</code> store the resident dispatched packet. Arrays <code>a</code>, <code>b</code> and <code>result</code> connect four ALUs. Register arithmetic uses saved src1/src2. Immediate arithmetic replaces B with the decoded immediate. AUIPC uses the lane PC as A. LUI passes its upper immediate through the ALU operation.</p>
+<p>EX starts <code>packet_o</code> as a copy of Q, then adds calculated fields. Effective address is rs1 plus immediate. Store data shifts into the correct little-endian byte position. The mask is 1, 3 or 15 for byte, halfword or word, shifted by address low bits.</p>
+<p><code>taken</code> records the branch comparison result, using signed comparisons for BLT/BGE and unsigned ones for BLTU/BGEU. Default next PC is PC+4. A taken branch or JAL chooses PC+immediate. JALR chooses <code>(rs1+immediate)</code> with bit 0 cleared. Jumps also produce PC+4 as their link-register result.</p>
+<p>A taken misaligned target adds an instruction-alignment fault. Misaligned halfword/word memory addresses add load/store-alignment faults. Existing faults win. A not-taken branch does not fault merely because its encoded target would have been misaligned. Control transfers are resolved here, but C owns the later redirect event.</p>
+<p>Producer records expose arithmetic results immediately from the resident EX packet. Loads advertise a writer whose value is not yet ready. A faulted result cannot be forwarded as successful data.</p>
+<h3 id="implementation-15-memory-stage-sv-complete-a-load-exactly-once">15. memory_stage.sv: complete a load exactly once</h3>
+<p><a href="#source-memory_stage">Open memory_stage.sv</a>. State holds packet, occupied-valid, <code>sent</code> and <code>done</code>. <code>load_pending</code> means lane 0 is a nonfaulting load that has not completed. The singleton contract guarantees that a load is never hidden in a later lane beside another instruction.</p>
+<p>While pending and not sent, MEM offers a read request to the adapter. Acceptance sets sent, preventing duplicates. While sent, it waits for a response. Acceptance sets done and records either the returned result or a load-access fault. A load to x0 still performs the access and can fault; suppressing its register write must not suppress the instruction&#x27;s memory behavior.</p>
+<p><code>shifted</code> moves the addressed byte/halfword to the bottom of the response word. LB/LH sign-extend it; LBU/LHU zero-extend it; LW retains all 32 bits. Packet-valid stays low until the load completes. Once completed, the result and any fault remain in Q until WB accepts them.</p>
+<p>Stores pass through MEM as descriptors. They have not yet modified external memory. Nonmemory packets also pass through. Flush is safe here because integration only allows the singleton&#x27;s backend cancellation after owned data work has settled; this module is not a generic speculative load-cancellation engine.</p>
+<h3 id="implementation-16-writeback-sv-hold-completion-not-architectural-state">16. writeback.sv: hold completion, not architectural state</h3>
+<p><a href="#source-writeback">Open writeback.sv</a>. <code>packet_q/valid_q</code> hold a completed packet. It uses the ordinary fill, hold, replace and drain rule. It preserves every fault and provides ready producer records for forwarding.</p>
+<p>Despite its name, WB does not write the architectural register file. In this design WB is completion buffering; C performs the visible write. That distinction keeps retirement ordered and prevents faults from leaking results into architectural state.</p>
+<h3 id="implementation-17-commit-sv-make-effects-visible-in-order">17. commit.sv: make effects visible in order</h3>
+<p><a href="#source-commit">Open commit.sv</a>. State contains the oldest completion packet, its occupancy, and store <code>sent/done</code> bits. A combinational loop visits lanes in program order. <code>stop</code> prevents retiring anything after the first blocking event; <code>count</code> records the retired prefix length; <code>retire_lane</code> is the decision for the currently examined lane.</p>
+<p>Ordinary successful arithmetic can retire in all four lanes. Each retirement emits a passive trace and, when applicable, an accepted register-write event. A retired prefix is removed and the remaining suffix compacted.</p>
+<p>A fault first waits until it is at lane 0. C offers <code>trap_valid_o</code> with a stable PC/instruction/fault record until recovery accepts it. It does not emit a normal retirement or register write for that instruction. Although dispatch normally isolates faults already known there, C still handles an older successful prefix correctly.</p>
+<p>A control instruction offers its resolved next PC to recovery and retires only when that request is accepted. This applies to both taken and not-taken branches. A successful store offers one request, remembers acceptance, waits for its response, then retires. An error response instead attaches a store-access fault; no successful store retirement occurs. The external memory contract must ensure an error response means the store did not perform an irreversible write.</p>
+<p>FENCE waits for the data adapter to be idle. Since earlier memory operations already execute alone and complete before younger memory begins, this is a conservative ordering point. Successful non-control singletons pulse <code>serial_done_o</code> to release dispatch. Branches release through redirect acceptance; faults release through the EEI resume path.</p>
+<h3 id="implementation-18-memory-adapter-sv-remember-which-client-owns-the-response">18. memory_adapter.sv: remember which client owns the response</h3>
+<p><a href="#source-memory_adapter">Open memory_adapter.sv</a>. MEM loads and C stores share one external data port. State holds phase, a store-owner bit, a buffered request and a buffered response.</p>
+<p>Phase 0 accepts a client request; stores have defensive priority. Phase 1 holds the external request stable until ready. Phase 2 waits for one response. Phase 3 holds that response for the original client until it consumes it. The adapter then returns to idle. The owner bit prevents a load response from being interpreted as a store acknowledgement.</p>
+<p>Only one transaction can be outstanding. There is no ID allocation, burst protocol or AXI logic here. A request remains valid while stalled, and a returned response remains buffered while its client stalls. Reset must be coordinated with the external memory endpoint so a pre-reset response is not mistaken for a new transaction.</p>
+<h3 id="implementation-19-control-hazard-unit-sv-enforce-the-singleton-interval">19. control_hazard_unit.sv: enforce the singleton interval</h3>
+<p><a href="#source-control_hazard_unit">Open control_hazard_unit.sv</a>. Its state stores <code>serial_busy</code>, <code>redirect_valid</code> and <code>redirect_pc</code>. <code>start_fire</code> means DP&#x27;s singleton request was accepted. Acceptance requires the backend and data adapter to be empty and no pending serial or redirect work.</p>
+<p>Starting a singleton blocks younger dispatch immediately and stops new sequential fetch work. <code>serial_done_i</code> clears that block after a successful non-control singleton. Accepted branch/trap redirect requests latch the new PC and flush the required pipeline region. A pending redirect remains unchanged until fetch accepts it; that acceptance clears redirect ownership and serial-busy.</p>
+<p><code>branch_fire</code> and <code>trap_fire</code> are accepted events, not merely high input-valid signals. Trap wins arbitration. A branch flushes the frontend; an EEI restart also clears backend ownership. This conservative controller has no branch predictor or age-selective speculative recovery.</p>
+<h3 id="implementation-20-recovery-sv-report-the-fault-before-choosing-a-new-pc">20. recovery.sv: report the fault before choosing a new PC</h3>
+<p><a href="#source-recovery">Open recovery.sv</a>. Recovery wraps the control unit with four phases: IDLE, REPORT, RESUME and REDIRECT. It stores the accepted trap separately from C so C can release the faulting instruction without losing its report.</p>
+<p>IDLE accepts a commit trap and cancels younger frontend/backend work. REPORT holds the external EEI trap message until the environment accepts it. RESUME waits for the environment&#x27;s chosen replacement PC. REDIRECT waits until fetch accepts that replacement, then returns to IDLE.</p>
+<p>The CPU does <strong>not</strong> assume every fault should skip four bytes. The simulation environment uses that policy to continue its directed tests; a real environment might terminate the program, emulate an instruction, retry an access or enter a handler. The EEI chooses the resume address. No privileged trap CSRs are silently invented by this interface.</p>
+<h3 id="implementation-21-core-sv-the-wiring-diagram-made-executable">21. core.sv: the wiring diagram made executable</h3>
+<p><a href="#source-core">Open core.sv</a>. Core adds no architectural storage of its own. Seven packet channels connect IF→D through WB→C. Their valid signals flow forward; readiness flows backward. The external instruction interface connects directly to fetch. The data interface connects through the adapter.</p>
+<p><code>read_indices/read_values/live_operands</code> connect R and the register file. <code>writes</code> fans out from C to the register file, scoreboard, R bypass and DP snapshot refresh. <code>allocate</code> goes from accepted DP issue to the scoreboard. The producer array is ordered EX, MEM, WB, C, with lanes reversed within each stage so forwarding searches youngest first.</p>
+<p><code>occupied</code> includes EX, MEM, WB and C. <code>backend_empty</code> additionally requires <code>memory_idle</code>. A singleton cannot begin merely because EX is empty while an older store is waiting in C. <code>front_flush</code> goes to IF/D/R/DP. <code>back_flush</code> goes to EX/MEM/WB and clears scoreboard ownership. The register file preserves committed values across a trap; C hands its fault to recovery rather than being blindly erased by its own flush.</p>
+<h3 id="implementation-22-examples-superscalar-pipe-reg-sv-the-storage-lesson">22. examples/superscalar/pipe_reg.sv: the storage lesson</h3>
+<p><a href="#source-pipe_reg">Open pipe_reg.sv</a>. This standalone teaching example is not instantiated by core. It demonstrates the elastic one-slot rule in isolation: accept when empty or when the current occupant is leaving; hold occupied data under backpressure; replace on simultaneous consume/accept; clear occupancy after consume without replacement. Reset and kill clear validity. It does not manage outstanding memory transactions, so fetch and the adapter need richer state machines.</p>
+<h3 id="implementation-23-walk-one-dependency-through-the-connected-design">23. Walk one dependency through the connected design</h3>
+<p>Consider <code>ADDI x5,x0,7</code> followed by <code>ADD x6,x5,x5</code>. Fetch supplies their words/PCs. D identifies operations and source/destination fields. R reads committed state; x5 might still be zero. DP sees the within-packet dependency and sends only ADDI. The scoreboard marks x5 busy, and ADD remains in the retained suffix.</p>
+<p>EX computes seven and advertises a ready x5 producer. DP resolves both ADD operands to seven through forwarding, even before ADDI commits. ADD later computes fourteen. C retires ADDI before ADD, so architectural state changes in program order. If ADD waits longer, C&#x27;s write refreshes DP&#x27;s snapshot before the producer disappears. Both paths preserve the same architectural result.</p>
+<p>Now consider a load. DP waits for all older backend work to finish, starts its singleton interval, and blocks younger issue. EX calculates/checks the address. MEM sends one request and waits. The adapter buffers ownership and response. MEM records the value. WB holds it. C writes its destination and signals serial-done. Only then can younger work issue. This is intentionally conservative and easy to audit.</p>
+<h3 id="implementation-24-test-files-build-files-and-what-the-evidence-means">24. Test files, build files and what the evidence means</h3>
+<p><code>rtl/superscalar/skeleton.f</code> retains its historical filename but is now the complete active CPU manifest. Its order places packages before consumers. <code>rtl/superscalar/files.f</code> remains the smaller hazard-only manifest. <code>rtl/files.f</code> describes the separate historical OoO experiment; never combine the two designs&#x27; ALU/core sources in one build.</p>
+<p><code>tests/superscalar/core_vectors.py</code> constructs a deterministic binary program and executes it with an independent sequential Python interpreter. It decodes instruction bits independently of the RTL enums/helpers. It writes instruction memory, expected retirement/trap events, expected final data memory and a small test configuration under ignored <code>build/core-vectors/</code>.</p>
+<p><code>tests/superscalar/core_tb.sv</code> instantiates the real core plus minimal simulation memory and EEI endpoints. It varies request acceptance and response latency, observes every retired lane, compares register and memory trace results with the oracle, checks faults and final memory, and checks held requests/traps for stability. No processor stage is replaced with a fake. The EEI resumes after directed faults and stops on the final breakpoint.</p>
+<p><code>check_core.sh</code> regenerates vectors, runs strict full-core lint, builds the simulator and runs multiple deterministic timing schedules. <code>check_skeleton.sh</code> now runs strict integration lint without empty-shell warning suppressions. <code>check_decode.sh</code>, <code>check_alu.sh</code> and <code>check_hazards.sh</code> keep the focused tests. Their <code>.sv</code> testbenches drive inputs and compare outputs; the decoder/ALU Python vector files provide reference records. <code>validation.md</code> records scope and reproducible commands. CI runs these checks on changes.</p>
+<pre><code>wsl -d Ubuntu -- bash scripts/check_core.sh
+wsl -d Ubuntu -- bash scripts/check_decode.sh
+wsl -d Ubuntu -- bash scripts/check_alu.sh
+wsl -d Ubuntu -- bash scripts/check_hazards.sh
+python scripts/build_superscalar_docs.py --check</code></pre>
+<p>Run commands from the repository root. On Linux, omit the <code>wsl -d Ubuntu --</code> prefix. Test generation uses Python&#x27;s standard library; simulation uses Verilator, a C++ compiler and make. Quartus is for the later FPGA synthesis/integration step; simulation should be your first correctness check.</p>
+<p><code>docs/superscalar/implementation.md</code> is this explanation. Other Markdown chapters provide foundations, architecture alternatives, exercises, contracts and the build order. <code>scripts/build_superscalar_docs.py</code> embeds those chapters plus current RTL into the offline HTML and validates its links/anchors. Edit Markdown or RTL, regenerate HTML, then run <code>--check</code>; do not manually patch the generated HTML.</p>
+<p>Simulation is evidence for the exercised programs and handshakes, not an exhaustive ISA certification or a timing/area result. Formal proof, additional independent architectural suites, synthesis, FPGA memory integration and hardware testing remain separate validation tasks. For normative instruction semantics, consult the <a href="https://docs.riscv.org/reference/isa/v20260120/unpriv/rv32.html">official RV32I specification</a>; pipeline timing and EEI choices in this chapter are repository design decisions.</p>
+</section>
+<section id="beginner" class="part" aria-label="Start here: first principles">
 <p class="label">Start here: first principles</p>
 <h2 class="part-title" id="beginner-your-first-complete-mental-model-of-this-processor">Your first complete mental model of this processor</h2>
+<p><strong>Implementation update:</strong> the eight-stage baseline is now implemented. Read <a href="#implementation">the actual RTL walkthrough</a> for current state/signals and connections. Instructions to build missing stages below can now be followed as reimplementation exercises. Advanced alternatives remain future extensions.</p>
 <p>Read this guided introduction before the detailed design reference. You do not need to know what a scoreboard, retirement packet or handshake is yet. We will define each one, show why it exists, and connect it to the actual files.</p>
 <p><strong>Project status:</strong> the decoder, ALU, forwarding and control-hazard units have working RTL and standalone tests. The rest of the new processor is a set of typed, deliberately unfinished skeletons. This guide describes the machine you are going to build; its worked cycle examples are design illustrations, not recorded CPU simulations. The documentation expansion does not fill in the unfinished hardware for you.</p>
 <h3 id="beginner-a1-what-a-processor-actually-does">A1. What a processor actually does</h3>
@@ -187,6 +329,7 @@ D: xor  x8, x9, x10</code></pre>
 <section id="course" class="part" aria-label="Course: CPU architectures">
 <p class="label">Course: CPU architectures</p>
 <h2 class="part-title" id="course-course-from-a-four-wide-pipeline-to-modern-cpu-design">Course: from a four-wide pipeline to modern CPU design</h2>
+<p><strong>Implementation update:</strong> the eight-stage baseline is now implemented. Read <a href="#implementation">the actual RTL walkthrough</a> for current state/signals and connections. Instructions to build missing stages below can now be followed as reimplementation exercises. Advanced alternatives remain future extensions.</p>
 <p>This course extends the beginner guide and module walkthroughs. Its practical project is still the eight-stage, four-wide, in-order RV32I processor. The advanced lessons are architectural study and optional future projects; they do not change the current RTL contract or complete any skeleton for you.</p>
 <p>“Modern” is not a checklist that every processor must implement. Different processors trade performance, energy, area, latency and verification cost differently. This course covers the major relevant design families and their interfaces; it does not claim exhaustive coverage of every research algorithm or undocumented commercial implementation. Public documentation is used as evidence for named examples, not as proof that every configuration uses them.</p>
 <h3 id="course-c1-your-syllabus-and-what-completion-means">C1. Your syllabus and what completion means</h3>
@@ -369,7 +512,7 @@ retain and compact the unaccepted suffix</code></pre>
 <p>Synthesis interprets RTL and maps it into implementation resources. Place/route adds physical wiring; timing analysis evaluates constrained paths. A simulator&#x27;s zero-delay combinational calculation does not demonstrate that a design meets a clock period. Select a target technology and constraints before making frequency, area or power claims.</p>
 <p>For this project, inspect likely long paths: EX forwarding through DP selection, multiport RF/bypass logic, packet-wide prefix checks and ready propagation. An optimization that breaks a path with storage changes cycle ownership and may add latency. Update diagrams, forwarding tables and tests alongside that edit.</p>
 <p>Clock enables express when state need not update; physical clock gating requires appropriate technology support and a glitch-safe flow. Do not construct a gated clock with arbitrary combinational logic. Reset distribution, clock-domain crossings and endpoint reset ownership need separate review if a future bus or memory controller uses another clock. The current simple synchronous shell is not evidence that those system concerns are already solved.</p>
-<p>Keep tool versions, source revision, target, constraints, commands and reports with measured results. Use independent manifests for the historical OoO experiment and active superscalar design. The permissive skeleton elaboration command is only for shells; completed modules need strict checks and behavioral evidence.</p>
+<p>Keep tool versions, source revision, target, constraints, commands and reports with measured results. Use independent manifests for the historical OoO experiment and active superscalar design. The historical skeleton command now checks the full core with strict lint; behavioral evidence comes from check_core.sh and the focused module tests.</p>
 <h3 id="course-c30-your-two-capstones-and-advancement-gates">C30. Your two capstones and advancement gates</h3>
 <p><strong>Baseline capstone:</strong> complete one lane through all eight stages, then add serialized control/memory/traps, then widen arithmetic and test every prefix length. Integrate the existing hazard units under their contracts. Deliver the RTL, supported-instruction matrix, environment specification, reproducible tests, waveform explanations and honest limitations. Passing source elaboration alone does not finish any behavioral milestone.</p>
 <p><strong>Advanced capstone:</strong> choose one extension based on a measured bottleneck. Examples are a fetch queue, a blocking cache, a predictor with recovery, or a separate renamed OoO experiment. Describe the old and new contracts before coding. A new mechanism must preserve architectural results while adding its own recovery and resource-accounting tests.</p>
@@ -379,6 +522,7 @@ retain and compact the unaccepted suffix</code></pre>
 <section id="labs" class="part" aria-label="Labs: build and verify">
 <p class="label">Labs: build and verify</p>
 <h2 class="part-title" id="labs-laboratory-workbook-build-observe-explain">Laboratory workbook: build, observe, explain</h2>
+<p><strong>Implementation update:</strong> the eight-stage baseline is now implemented. Read <a href="#implementation">the actual RTL walkthrough</a> for current state/signals and connections. Instructions to build missing stages below can now be followed as reimplementation exercises. Advanced alternatives remain future extensions.</p>
 <p>These assignments guide you through completing the skeleton yourself. They are not claims that the modules or tests already exist. Each lab names a task, an expected reasoning checkpoint, and a bug your evidence should catch. Keep decisions in always_comb and only state assignments in always_ff.</p>
 <h3 id="labs-l1-establish-an-engineering-notebook">L1. Establish an engineering notebook</h3>
 <p>Create your own ownership diagram, memory/EEI assumptions, supported-instruction matrix and unfinished-behavior list. Record Git revision and actual tool versions with results. Keep illustrative calculations separate from measured traces.</p>
@@ -454,6 +598,7 @@ wsl -d Ubuntu -- bash scripts/check_hazards.sh</code></pre>
 <section id="tutorial" class="part" aria-label="Architecture reference">
 <p class="label">Architecture reference</p>
 <h2 class="part-title" id="tutorial-building-a-four-wide-eight-stage-rv32i-processor">Building a four-wide, eight-stage RV32I processor</h2>
+<p><strong>Implementation update:</strong> the eight-stage baseline is now implemented. Read <a href="#implementation">the actual RTL walkthrough</a> for current state/signals and connections. Instructions to build missing stages below can now be followed as reimplementation exercises. Advanced alternatives remain future extensions.</p>
 <p>Design revision: 2026-09-27. This is the active design tutorial. The target is a four-wide <strong>in-order superscalar</strong> processor. The previous OoO backend remains historical work; it does not implement this architecture.</p>
 <h3 id="tutorial-1-define-the-machine-before-writing-rtl">1. Define the machine before writing RTL</h3>
 <p>The pipeline has exactly these eight logical stages:</p>
@@ -584,7 +729,7 @@ end</code></pre>
 <p>Each packet may contain four independent operations. Once filled, the target is four retirement events per cycle if fetch, ports and every ready signal support that rate. If B reads A&#x27;s destination, B waits in DP until a valid older result is available through forwarding and EX can accept it. Following packets queue behind it if the operand remains unready. Same-packet dependencies still split.</p>
 <p>This table is a design target, not measured performance. Measure IPC as accepted retirement events divided by cycles over a defined program interval. Memory serialization, branches, dependencies and insufficient instruction bandwidth all reduce achieved IPC.</p>
 <h3 id="tutorial-17-module-layout-and-how-to-start">17. Module layout and how to start</h3>
-<p>The following is the target layout. The hazard package and two hazard modules are implemented. The remaining stage/helper interfaces now exist as deliberately empty shells. Use the <a href="#skeleton">skeleton specification</a> for complete port contracts, ownership rules, TODOs and acceptance tests. CPU behavior and its integration remain your implementation work:</p>
+<p>The following is the active layout. All stages and helpers are implemented. Use the <a href="#implementation">implementation walkthrough</a> for actual state and signals, and the <a href="#skeleton">skeleton specification</a> for the original contracts. The development sequence below remains useful for reimplementation practice:</p>
 <pre><code>rtl/superscalar/
   hazard_pkg.sv        implemented source/producer types
   forwarding_unit.sv  implemented eight-source operand resolver
@@ -605,7 +750,7 @@ end</code></pre>
   core.sv              eight-stage wiring and recovery</code></pre>
 <p>First specify packet fields, then implement the decoder and ALU with directed tests. Reuse arithmetic knowledge from the earlier work, not its renaming and oldest-ready scheduler. Connect all eight stages with one enabled lane and an independent retirement checker. Add serialized branches and memory before widening; this exposes stage-control bugs without four-lane interactions.</p>
 <p>Next enable four independent ALU lanes. Implement prefix dispatch and retained suffixes, then add scoreboard hazards and commit refresh. Finally test special operations mixed with ALU prefixes. Keep a working regression after every step. Do not create dozens of empty modules and count them as hardware progress.</p>
-<p>The <a href="roadmap.md">roadmap</a> gives the milestone gates. The storage example, standalone hazard units and unfinished module shells exist; the complete superscalar processor does not yet.</p>
+<p>The <a href="roadmap.md">roadmap</a> gives the milestone gates. The full baseline now runs architectural simulation; see <a href="validation.md">validation</a> for its evidence and limits.</p>
 <h3 id="tutorial-18-verification-and-acceptance-tests">18. Verification and acceptance tests</h3>
 <p>Compare retirement order, PCs, destination writes, memory effects and traps against an independent architectural model. EX results alone are insufficient: the architectural machine exists at commit. Full RV32I claims also need the selected execution environment and appropriate architectural test coverage.</p>
 <div class="table" tabindex="0" role="region" aria-label="Scrollable reference table"><table><thead><tr><th scope="col">Area</th><th scope="col">Directed test</th></tr></thead><tbody><tr><td>Width</td><td>Four independent instructions dispatch and retire per cycle after filling</td></tr><tr><td>Prefixes</td><td>Admit 0, 1, 2, 3, 4 lanes and preserve every suffix exactly</td></tr><tr><td>RAW</td><td>All earlier/later lane pairs, both source positions, across packets</td></tr><tr><td>WAW</td><td>Same name within a packet and across pipeline stages</td></tr><tr><td>WAR</td><td>Older captured reader with younger writer; blocked-reader case</td></tr><tr><td>x0</td><td>No register changes; loads to x0 still access and fault</td></tr><tr><td>Stale sources</td><td>Commit during R/DP stalls and during R-to-DP transfer</td></tr><tr><td>Handshakes</td><td>Stall every boundary; no lost, duplicated or changing payload</td></tr><tr><td>Memory</td><td>All widths, masks, signed loads, delayed responses and errors</td></tr><tr><td>Store precision</td><td>One authorized request; older fault prevents younger store</td></tr><tr><td>Fetch</td><td>Every word offset in a block; stale response after redirect</td></tr><tr><td>Control</td><td>Taken/not-taken, links, target masking and alignment</td></tr><tr><td>Exceptions</td><td>Retire older valid prefix only; no younger architectural effect</td></tr><tr><td>Fence</td><td>Earlier effects ordered before later accesses through the actual adapter</td></tr><tr><td>Reset</td><td>Coordinated endpoint/core reset and outstanding-response handling</td></tr></tbody></table></div>
@@ -655,19 +800,18 @@ ports 12..15 = C   lanes 3, 2, 1, 0</code></pre>
 <section id="skeleton" class="part" aria-label="Implementation workbook">
 <p class="label">Implementation workbook</p>
 <h2 class="part-title" id="skeleton-superscalar-implementation-backbone">Superscalar implementation backbone</h2>
-<p>Start in <a href="#source-core">core.sv</a>. <strong>It is deliberately unfinished.</strong> The new stage modules have real interface declarations and numbered TODOs, but no assignments, state transitions, functional tie-offs or instantiated CPU. Undriven outputs are intentional. Do not run these shells as a processor or interpret successful interface elaboration as functional verification.</p>
+<p>The original skeleton is now implemented. Start in <a href="#source-core">core.sv</a> and read <a href="#implementation">the current implementation walkthrough</a>. The contracts below remain the design checklist; the completion column describes responsibilities now implemented in RTL, not missing module bodies.</p>
 <p>The <a href="#tutorial">architecture tutorial</a> remains the design explanation. This document is the implementation contract/checklist. Types and interfaces are a proposed repository ABI: change related producers/consumers together if you discover a better contract while implementing.</p>
 <h3 id="skeleton-1-what-exists-and-what-you-must-implement">1. What exists and what you must implement</h3>
-<div class="table" tabindex="0" role="region" aria-label="Scrollable reference table"><table><thead><tr><th scope="col">File</th><th scope="col">Present now</th><th scope="col">Your completion responsibility</th></tr></thead><tbody><tr><td><code>hazard_pkg.sv</code></td><td>Implemented hazard types</td><td>Preserve compatibility or update its real tests</td></tr><tr><td><code>forwarding_unit.sv</code></td><td>Implemented/tested resolver</td><td>Wire only older producers in prescribed age order</td></tr><tr><td><code>control_hazard_unit.sv</code></td><td>Implemented/tested singleton/redirect controller</td><td>Integrate with commit/EEI and fetch transaction ownership</td></tr><tr><td><code>rv32_pkg.sv</code></td><td>New shared type declarations only</td><td>Review field ownership and EEI/bus choices</td></tr><tr><td><code>rv32_decode.sv</code></td><td>Implemented/tested combinational decoder</td><td>Integrate four instances; preserve earlier fetch faults in D</td></tr><tr><td><code>alu.sv</code></td><td>Implemented/tested combinational ALU</td><td>Wire resolved register/immediate/PC operands from EX</td></tr><tr><td><code>fetch.sv</code></td><td>Empty sequential shell</td><td>PC, requests, response buffering, stale response drain</td></tr><tr><td><code>decode_stage.sv</code></td><td>Empty sequential shell</td><td>Four decoder instances and stable ordered packet</td></tr><tr><td><code>regfile.sv</code></td><td>Empty sequential shell</td><td>Eight read ports, four commit writes, x0 semantics</td></tr><tr><td><code>scoreboard.sv</code></td><td>Empty sequential shell</td><td>Writer allocation/release, x0 invariant and flush cleanup</td></tr><tr><td><code>register_stage.sv</code></td><td>Empty sequential shell</td><td>Held control packet, live operand sideband, commit bypass</td></tr><tr><td><code>dispatch.sv</code></td><td>Empty sequential shell</td><td>Forwarding hookup, oldest prefix, suffix retention, frozen offer</td></tr><tr><td><code>execute.sv</code></td><td>Empty sequential shell</td><td>Four ALUs, singleton target/address, exceptions and producers</td></tr><tr><td><code>memory_stage.sv</code></td><td>Empty sequential shell</td><td>Loads and data formatting; store descriptors only</td></tr><tr><td><code>writeback.sv</code></td><td>Empty sequential shell</td><td>Result holding, no architectural writes</td></tr><tr><td><code>commit.sv</code></td><td>Empty sequential shell</td><td>Ordered retirement, register writes, stores, traps and redirects</td></tr><tr><td><code>memory_adapter.sv</code></td><td>Empty sequential shell</td><td>One outstanding data request, owner and response routing</td></tr><tr><td><code>recovery.sv</code></td><td>Empty sequential shell</td><td>EEI trap/report/resume state around existing control unit</td></tr><tr><td><code>core.sv</code></td><td>Empty integration shell</td><td>Instantiate, wire and verify all contracts below</td></tr></tbody></table></div>
+<div class="table" tabindex="0" role="region" aria-label="Scrollable reference table"><table><thead><tr><th scope="col">File</th><th scope="col">Present now</th><th scope="col">Your completion responsibility</th></tr></thead><tbody><tr><td><code>hazard_pkg.sv</code></td><td>Implemented hazard types</td><td>Preserve compatibility or update its real tests</td></tr><tr><td><code>forwarding_unit.sv</code></td><td>Implemented/tested resolver</td><td>Wire only older producers in prescribed age order</td></tr><tr><td><code>control_hazard_unit.sv</code></td><td>Implemented/tested singleton/redirect controller</td><td>Integrate with commit/EEI and fetch transaction ownership</td></tr><tr><td><code>rv32_pkg.sv</code></td><td>Types and combinational helpers</td><td>Review field ownership and EEI/bus choices</td></tr><tr><td><code>rv32_decode.sv</code></td><td>Implemented/tested combinational decoder</td><td>Integrate four instances; preserve earlier fetch faults in D</td></tr><tr><td><code>alu.sv</code></td><td>Implemented/tested combinational ALU</td><td>Wire resolved register/immediate/PC operands from EX</td></tr><tr><td><code>fetch.sv</code></td><td>Implemented stage/storage</td><td>PC, requests, response buffering, stale response drain</td></tr><tr><td><code>decode_stage.sv</code></td><td>Implemented stage/storage</td><td>Four decoder instances and stable ordered packet</td></tr><tr><td><code>regfile.sv</code></td><td>Implemented stage/storage</td><td>Eight read ports, four commit writes, x0 semantics</td></tr><tr><td><code>scoreboard.sv</code></td><td>Implemented stage/storage</td><td>Writer allocation/release, x0 invariant and flush cleanup</td></tr><tr><td><code>register_stage.sv</code></td><td>Implemented stage/storage</td><td>Held control packet, live operand sideband, commit bypass</td></tr><tr><td><code>dispatch.sv</code></td><td>Implemented stage/storage</td><td>Forwarding hookup, oldest prefix, suffix retention, frozen offer</td></tr><tr><td><code>execute.sv</code></td><td>Implemented stage/storage</td><td>Four ALUs, singleton target/address, exceptions and producers</td></tr><tr><td><code>memory_stage.sv</code></td><td>Implemented stage/storage</td><td>Loads and data formatting; store descriptors only</td></tr><tr><td><code>writeback.sv</code></td><td>Implemented stage/storage</td><td>Result holding, no architectural writes</td></tr><tr><td><code>commit.sv</code></td><td>Implemented stage/storage</td><td>Ordered retirement, register writes, stores, traps and redirects</td></tr><tr><td><code>memory_adapter.sv</code></td><td>Implemented stage/storage</td><td>One outstanding data request, owner and response routing</td></tr><tr><td><code>recovery.sv</code></td><td>Implemented stage/storage</td><td>EEI trap/report/resume state around existing control unit</td></tr><tr><td><code>core.sv</code></td><td>Implemented integration</td><td>Instantiate, wire and verify all contracts below</td></tr></tbody></table></div>
 <p>The old OoO <code>rtl/alu.sv</code> and new skeleton <code>rtl/superscalar/alu.sv</code> use the same module name intentionally in separate designs. <strong>Never concatenate their file lists into one compilation.</strong> The manifests keep them separate. A future combined build should rename or namespace the modules first.</p>
 <h3 id="skeleton-2-compile-sets-and-honest-status">2. Compile sets and honest status</h3>
-<ul><li><code>rtl/files.f</code>: historical OoO experiment only.</li><li><code>rtl/superscalar/files.f</code>: existing implemented hazard modules only.</li><li><code>rtl/superscalar/skeleton.f</code>: shared types, existing hazards and all new shells.</li></ul>
+<ul><li><code>rtl/files.f</code>: historical OoO experiment only.</li><li><code>rtl/superscalar/files.f</code>: existing implemented hazard modules only.</li><li><code>rtl/superscalar/skeleton.f</code>: shared types, existing hazards and the complete pipeline.</li></ul>
 <p>Run the following from the repository root:</p>
 <pre><code>wsl -d Ubuntu -- bash scripts/check_skeleton.sh
 wsl -d Ubuntu -- bash scripts/check_hazards.sh
 python scripts/build_superscalar_docs.py --check</code></pre>
-<p>The first command only parses/elaborates each declared interface. It suppresses undriven/unused warnings <strong>only for this intentionally empty skeleton build</strong>. All other warnings remain fatal. The hazard test script still uses strict lint and actual simulation. No placeholder tests or fake passing CPU are supplied.</p>
-<p>As you implement each module, give it a strict lint target without those suppressions and real behavioral tests. Remove its UNIMPLEMENTED banner only when its documented responsibilities and relevant tests pass. An elaboration pass cannot establish reset behavior, handshake stability or ISA correctness.</p>
+<p>The first command runs strict full-core lint without empty-shell suppressions. Run <code>wsl -d Ubuntu -- bash scripts/check_core.sh</code> for architectural simulation. A lint pass alone cannot establish reset behavior, handshake stability or ISA correctness.</p>
 <h3 id="skeleton-3-stage-ownership-and-record-validity">3. Stage ownership and record validity</h3>
 <p>The package uses a superset <code>packet_t</code> to avoid dozens of premature per-stage types. Lane 0 is oldest, and valid lanes form a compact prefix. Both outer packet-valid and inner lane-valid must be meaningful; prohibit an outer-valid packet with no valid lanes. Unowned fields are not architectural evidence.</p>
 <div class="table" tabindex="0" role="region" aria-label="Scrollable reference table"><table><thead><tr><th scope="col">Field</th><th scope="col">Owner that establishes meaning</th><th scope="col">Consumer</th></tr></thead><tbody><tr><td>lane valid, PC, instruction, fetch fault</td><td>IF</td><td>All later stages</td></tr><tr><td>decoded fields, illegal fault</td><td>D</td><td>R/DP/EX/C</td></tr><tr><td>live RF read values</td><td>R sideband</td><td>DP on accepted input transfer</td></tr><tr><td>src1/src2 snapshots</td><td>DP</td><td>EX; refresh retained suffix from commit</td></tr><tr><td>result/address/store data/mask/next PC</td><td>EX</td><td>MEM/WB/C</td></tr><tr><td>load result/access fault</td><td>MEM</td><td>Forwarding/WB/C</td></tr><tr><td>held completion packet</td><td>WB</td><td>C</td></tr><tr><td>architectural write and retirement events</td><td>C</td><td>RF/scoreboard/trace/refresh</td></tr><tr><td>accepted trap and restart ownership</td><td>Recovery</td><td>EEI and IF</td></tr></tbody></table></div>
@@ -714,6 +858,7 @@ end</code></pre>
 <section id="modules" class="part" aria-label="Every module explained">
 <p class="label">Every module explained</p>
 <h2 class="part-title" id="modules-a-guided-tour-of-the-actual-files">A guided tour of the actual files</h2>
+<p><strong>Implementation update:</strong> the eight-stage baseline is now implemented. Read <a href="#implementation">the actual RTL walkthrough</a> for current state/signals and connections. Instructions to build missing stages below can now be followed as reimplementation exercises. Advanced alternatives remain future extensions.</p>
 <p>Read a module as a contract: what question it answers, which information it owns, what event changes its state, and what must remain true when it stalls. The source appendix below embeds the current repository files verbatim. These listings are regenerated from the files, so declarations are not hand-copied.</p>
 <h3 id="modules-m1-shared-types-rv32-pkg-and-hazard-pkg">M1. Shared types: rv32_pkg and hazard_pkg</h3>
 <p><a href="#source-rv32_pkg">rv32_pkg.sv</a> defines the language spoken by the stage interfaces. It is a package, not an instantiated hardware stage. An enum such as OP_ADD gives a bit pattern a readable internal name. A packed struct gathers related bits; an array repeats that record for multiple lanes. Changing a field changes every connected module&#x27;s contract.</p>
@@ -781,11 +926,11 @@ end</code></pre>
 <p>An accepted branch or trap event flushes the appropriate younger state and stores a redirect. The redirect is then held until IF accepts responsibility. Trap wins simultaneous new requests when the redirect slot is empty. An already pending redirect is not overwritten; the integration must not present a newly discovered older fault that should have preceded an already committed branch.</p>
 <p>This controller&#x27;s trap input is a restart PC. It has no full trap-record port and cannot report an exception to the environment or wait for a later response by itself. Those missing duties belong to recovery, described next.</p>
 <h3 id="modules-m17-recovery-report-wait-then-restart">M17. recovery: report, wait, then restart</h3>
-<p><a href="#source-recovery">recovery.sv</a> must wrap the control unit and own the longer trap lifecycle. A useful planning sequence is: accept the commit trap, hold an EEI report, wait for report acceptance, wait for resume, offer the chosen restart PC, and wait for IF to accept that redirect. These are proposed state responsibilities, not implemented state encodings.</p>
+<p><a href="#source-recovery">recovery.sv</a> must wrap the control unit and own the longer trap lifecycle. A useful planning sequence is: accept the commit trap, hold an EEI report, wait for report acceptance, wait for resume, offer the chosen restart PC, and wait for IF to accept that redirect. The implementation groups these responsibilities into IDLE, REPORT, RESUME and REDIRECT states; see the implementation walkthrough.</p>
 <p>Keep younger dispatch/fetch blocked throughout, including the interval after C has handed off the trap but the environment has not supplied a resume PC. <code>eei_trap_ready_i</code> only acknowledges the report. It does not select a handler or authorize resumption. Accept <code>resume_pc_i</code> only at the defined resume handshake.</p>
 <p>Older effects must already be settled before removing backend ownership. If cleanup is deferred until the control unit accepts the eventual trap redirect, the retained work must remain blocked meanwhile. Never use a flush to abandon an accepted memory transaction. Tests must delay report, resume and redirect acceptance independently to expose gaps in this ownership chain.</p>
 <h3 id="modules-m18-core-integration-is-a-correctness-task">M18. core: integration is a correctness task</h3>
-<p><a href="#source-core">core.sv</a> must instantiate and connect all of these blocks. It currently contains ports and TODOs only. The external instruction, data, trap, resume and retirement interfaces are the proposed system boundary. They do not provide a reset vector, memory map or privileged environment.</p>
+<p><a href="#source-core">core.sv</a> must instantiate and connect all of these blocks. These connections now exist in the implemented core. The external instruction, data, trap, resume and retirement interfaces form the system boundary. The platform supplies reset_pc_i and defines the memory map and EEI behavior.</p>
 <p>Wire ordinary packet channels forward and capacity information backward. Send accepted commit writes to RF, scoreboard, R bypass and DP refresh. Pack the forwarding array as EX[3..0], MEM[3..0], WB[3..0], C[3..0]. Compute backend_empty from actual ownership in EX/MEM/WB/C and adapter idle; DP itself is excluded.</p>
 <p>Review every feedback path for a combinational cycle. Drawing arrows is not enough: mark which arrows pass through stored state. Finally, run an instruction stream and compare accepted architectural effects with an independent reference. Module-level arithmetic tests alone cannot detect a wrongly wired commit path.</p>
 <h3 id="modules-m19-pipe-reg-learn-the-storage-pattern">M19. pipe_reg: learn the storage pattern</h3>
@@ -794,7 +939,7 @@ end</code></pre>
 <h3 id="modules-m20-read-a-cycle-table-correctly">M20. Read a cycle table correctly</h3>
 <p>This illustrative table uses “cycle” to mean the interval when an instruction resides in a named stage. Transfers happen at the following rising edge. Assume fetch supplies the required words, all four lanes are independent ALU operations, and all consumers accept without stalls. A–D name instructions, not stages.</p>
 <div class="table" tabindex="0" role="region" aria-label="Scrollable reference table"><table><thead><tr><th scope="col">Cycle</th><th scope="col">IF</th><th scope="col">D</th><th scope="col">R</th><th scope="col">DP</th><th scope="col">EX</th><th scope="col">MEM</th><th scope="col">WB</th><th scope="col">C</th></tr></thead><tbody><tr><td>1</td><td>A–D</td><td>empty</td><td>empty</td><td>empty</td><td>empty</td><td>empty</td><td>empty</td><td>empty</td></tr><tr><td>2</td><td>E–H</td><td>A–D</td><td>empty</td><td>empty</td><td>empty</td><td>empty</td><td>empty</td><td>empty</td></tr><tr><td>3</td><td>I–L</td><td>E–H</td><td>A–D</td><td>empty</td><td>empty</td><td>empty</td><td>empty</td><td>empty</td></tr><tr><td>4</td><td>M–P</td><td>I–L</td><td>E–H</td><td>A–D</td><td>empty</td><td>empty</td><td>empty</td><td>empty</td></tr><tr><td>5</td><td>Q–T</td><td>M–P</td><td>I–L</td><td>E–H</td><td>A–D</td><td>empty</td><td>empty</td><td>empty</td></tr><tr><td>6</td><td>U–X</td><td>Q–T</td><td>M–P</td><td>I–L</td><td>E–H</td><td>A–D</td><td>empty</td><td>empty</td></tr><tr><td>7</td><td>Y–AB</td><td>U–X</td><td>Q–T</td><td>M–P</td><td>I–L</td><td>E–H</td><td>A–D</td><td>empty</td></tr><tr><td>8</td><td>AC–AF</td><td>Y–AB</td><td>U–X</td><td>Q–T</td><td>M–P</td><td>I–L</td><td>E–H</td><td>A–D</td></tr></tbody></table></div>
-<p>The edge after cycle 8 can retire A–D under these assumptions. This is a pipeline illustration, not a throughput claim for the unimplemented fetch port. Request/response latency can leave IF empty and change the table immediately. Do not include memory wait time implicitly in a claimed fixed eight-cycle latency.</p>
+<p>The edge after cycle 8 can retire A–D under these assumptions. This is a pipeline illustration, not a throughput claim for the conservative fetch port. Request/response latency can leave IF empty and change the table immediately. Do not include memory wait time implicitly in a claimed fixed eight-cycle latency.</p>
 <p>If C stops accepting, WB first retains its work. Occupied buffers then propagate backpressure toward IF. It need not halt every stage on the very first cycle: empty intermediate slots can still fill. A global stall wire is simpler to draw but is a different control scheme that must preserve all the same ownership.</p>
 <h3 id="modules-m21-critical-paths-and-physical-cost">M21. Critical paths and physical cost</h3>
 <p>A cycle is long enough only if data can propagate through its combinational logic before the next edge&#x27;s setup requirement. A critical path is the slowest such path under the chosen implementation. More stages do not automatically make a CPU faster if one stage contains nearly all of the difficult decisions.</p>
@@ -804,7 +949,7 @@ end</code></pre>
 <div class="table" tabindex="0" role="region" aria-label="Scrollable reference table"><table><thead><tr><th scope="col">Term</th><th scope="col">Meaning in this project</th></tr></thead><tbody><tr><td>Architectural</td><td>Visible in the program&#x27;s committed register/memory behavior</td></tr><tr><td>Microarchitecture</td><td>The internal stages, storage and scheduling implementing that behavior</td></tr><tr><td>Resident</td><td>Currently owned by a particular stage&#x27;s storage</td></tr><tr><td>Offer</td><td>Valid payload waiting for the receiving side to accept</td></tr><tr><td>Fire / acceptance</td><td>valid AND ready at the relevant clock edge</td></tr><tr><td>Backpressure</td><td>A receiver&#x27;s lack of capacity prevents its sender from transferring</td></tr><tr><td>Prefix</td><td>Consecutive oldest lanes up to the first excluded lane</td></tr><tr><td>Suffix</td><td>Remaining younger lanes after removing a prefix</td></tr><tr><td>RAW</td><td>A reader needs an older writer&#x27;s result</td></tr><tr><td>WAW</td><td>Two instructions want to write the same register name</td></tr><tr><td>WAR</td><td>A younger write must not change an older instruction&#x27;s required input</td></tr><tr><td>Structural hazard</td><td>Two operations need a resource that cannot serve both</td></tr><tr><td>Serialize</td><td>Drain older backend work, run one operation, block younger dispatch until completion/recovery</td></tr><tr><td>Retire / commit</td><td>Accept the instruction&#x27;s permanent architectural effects in order</td></tr><tr><td>Precise trap</td><td>Older effects are complete and faulting/younger normal effects are absent</td></tr><tr><td>EEI</td><td>Execution environment interface: platform rules outside the base instruction semantics</td></tr><tr><td>Elaboration</td><td>Resolve modules, parameters and types; not evidence of correct execution</td></tr></tbody></table></div>
 <p>When debugging, write down a specific instruction PC, its current owner, its validity and the edge event you expect. This turns “the pipeline is broken” into a checkable question such as “why did PC 0x108 allocate x7 twice while EX was stalled?” Keep a separate list of observed results and design intentions.</p>
 </section>
-<section class="part" id="sources"><h2>Current source, not pseudocode</h2><p>Expand a file to inspect its exact declarations and comments. These listings are embedded at documentation build time and work offline. Thirteen processor modules remain unfinished. Successful interface checks are not CPU simulation results.</p><details id="source-hazard_pkg"><summary>rtl/superscalar/hazard_pkg.sv</summary><p class="status">Shared type declarations</p><pre><code>package hazard_pkg;
+<section class="part" id="sources"><h2>Current source, not pseudocode</h2><p>Expand a file to inspect its exact declarations and comments. These listings are embedded at documentation build time and work offline. All eight stages are implemented. See validation.md for simulation scope and reproducible commands.</p><details id="source-hazard_pkg"><summary>rtl/superscalar/hazard_pkg.sv</summary><p class="status">Shared type declarations</p><pre><code>package hazard_pkg;
   localparam int SOURCES = 8;    // Four lanes, two architectural sources each.
   localparam int PRODUCERS = 16; // Four lanes in EX, MEM, WB and C.
   typedef struct packed {
@@ -818,7 +963,9 @@ end</code></pre>
     logic [4:0] rd;
     logic [31:0] value;
   } producer_t;
-endpackage</code></pre></details><details id="source-rv32_pkg"><summary>rtl/superscalar/rv32_pkg.sv</summary><p class="status">Shared type declarations</p><pre><code>// Interface specification only. This package implements no processor behavior.
+  typedef source_t [SOURCES-1:0] sources_t;
+  typedef producer_t [PRODUCERS-1:0] producers_t;
+endpackage</code></pre></details><details id="source-rv32_pkg"><summary>rtl/superscalar/rv32_pkg.sv</summary><p class="status">Shared type declarations</p><pre><code>// Shared interface types and combinational classification/forwarding helpers.
 package rv32_pkg;
   localparam int LANES = 4;
   localparam int XLEN = 32;
@@ -910,7 +1057,32 @@ package rv32_pkg;
     word_t read_data;
     logic error;
   } mem_response_t;
-endpackage</code></pre></details><details id="source-forwarding_unit"><summary>rtl/superscalar/forwarding_unit.sv</summary><p class="status">Implemented hazard unit; see standalone validation report</p><pre><code>// Combinational DP operand resolver. Does NOT perform packet-prefix selection.
+  // Shared classification keeps EX/MEM/C consistent. These functions are purely
+  // combinational; packages do not introduce pipeline storage.
+  function automatic logic is_load(input op_t op);
+    return op inside {OP_LB,OP_LH,OP_LW,OP_LBU,OP_LHU};
+  endfunction
+  function automatic logic is_store(input op_t op);
+    return op inside {OP_SB,OP_SH,OP_SW};
+  endfunction
+  function automatic logic is_control(input op_t op);
+    return op inside {OP_BEQ,OP_BNE,OP_BLT,OP_BGE,OP_BLTU,OP_BGEU,OP_JAL,OP_JALR};
+  endfunction
+  function automatic logic [3:0] memory_mask(input op_t op);
+    case (op)
+      OP_LB,OP_LBU,OP_SB: return 4&#x27;b0001;
+      OP_LH,OP_LHU,OP_SH: return 4&#x27;b0011;
+      OP_LW,OP_SW: return 4&#x27;b1111;
+      default: return 4&#x27;b0000;
+    endcase
+  endfunction
+  function automatic hazard_pkg::producer_t make_producer(
+    input lane_t unused_lane, input logic occupied, input logic ready);
+    return &#x27;{valid:occupied &amp;&amp; unused_lane.valid,writes_rd:unused_lane.decoded.writes_rd,
+             killed:1&#x27;b0,fault:unused_lane.fault.valid,ready:ready,
+             rd:unused_lane.decoded.rd,value:unused_lane.result};
+  endfunction
+endpackage</code></pre></details><details id="source-forwarding_unit"><summary>rtl/superscalar/forwarding_unit.sv</summary><p class="status">Implemented pipeline/hazard module; see implementation walkthrough</p><pre><code>// Combinational DP operand resolver. Does NOT perform packet-prefix selection.
 // Producers MUST be older than every DP consumer and ordered youngest first:
 // EX lane 3..0, MEM lane 3..0, WB lane 3..0, C lane 3..0.
 // Keep a writer visible while its result is unready or faulted. Otherwise an
@@ -949,7 +1121,7 @@ module forwarding_unit (
       end
     end
   end
-endmodule</code></pre></details><details id="source-control_hazard_unit"><summary>rtl/superscalar/control_hazard_unit.sv</summary><p class="status">Implemented hazard unit; see standalone validation report</p><pre><code>// Conservative singleton controller. No prediction or selective age recovery.
+endmodule</code></pre></details><details id="source-control_hazard_unit"><summary>rtl/superscalar/control_hazard_unit.sv</summary><p class="status">Implemented pipeline/hazard module; see implementation walkthrough</p><pre><code>// Conservative singleton controller. No prediction or selective age recovery.
 // DP may dispatch a serialized instruction only on serial_valid &amp;&amp; serial_ready.
 // backend_empty must include EX/MEM/WB/C and outstanding architectural data work.
 // Commit supplies trap/branch requests, holding valid + PC until ready. Branch
@@ -982,22 +1154,47 @@ module control_hazard_unit (
   state_t state_q, state_d;
   logic start_fire, branch_fire, trap_fire;
   always_comb begin
-    state_d = state_q;
     trap_ready_o = !rst_i &amp;&amp; !state_q.redirect_valid;
+  end
+  always_comb begin
     branch_ready_o = trap_ready_o &amp;&amp; !trap_valid_i;
+  end
+  always_comb begin
     trap_fire = trap_valid_i &amp;&amp; trap_ready_o;
+  end
+  always_comb begin
     branch_fire = branch_valid_i &amp;&amp; branch_ready_o;
+  end
+  always_comb begin
     serial_ready_o = !rst_i &amp;&amp; backend_empty_i &amp;&amp; !state_q.serial_busy &amp;&amp;
                      !state_q.redirect_valid &amp;&amp; !branch_valid_i &amp;&amp; !trap_valid_i;
+  end
+  always_comb begin
     start_fire = serial_valid_i &amp;&amp; serial_ready_o;
+  end
+  always_comb begin
     redirect_valid_o = state_q.redirect_valid &amp;&amp; !rst_i;
+  end
+  always_comb begin
     redirect_pc_o = state_q.redirect_pc;
-    // These are same-cycle cancellation controls, sampled at the accepting edge.
+  end
+  always_comb begin
+    // Same-cycle cancellation, sampled at the accepting edge.
     flush_frontend_o = trap_fire || branch_fire;
-    flush_backend_o = trap_fire; // Commit already retired all older effects.
+  end
+  always_comb begin
+    flush_backend_o = trap_fire; // Older effects have already committed.
+  end
+  always_comb begin
     block_younger_o = rst_i || state_q.serial_busy || state_q.redirect_valid ||
                       start_fire || branch_valid_i || trap_valid_i;
+  end
+  always_comb begin
     stop_fetch_o = block_younger_o;
+  end
+  always_comb begin
+    state_d = state_q;
+
     if (serial_done_i) state_d.serial_busy = 1&#x27;b0;
     if (redirect_valid_o &amp;&amp; redirect_ready_i) begin
       state_d.redirect_valid = 1&#x27;b0;
@@ -1233,14 +1430,7 @@ module alu (
       default: begin end // EX must not consume this as a non-ALU completion.
     endcase
   end
-endmodule</code></pre></details><details id="source-fetch"><summary>rtl/superscalar/fetch.sv</summary><p class="status">Unimplemented shell: outputs intentionally undriven</p><pre><code>// UNIMPLEMENTED SKELETON: interface contract only; outputs intentionally undriven.
-// See docs/superscalar/skeleton.md. This file must not be used as working RTL.
-// No tie-offs, behavioral substitutes, or inferred test results are provided.
-// TODO IF-01: Own PC, aligned block request, response buffer and next-word offset.
-// TODO IF-02: Hold accepted request ownership; drain stale responses after redirect.
-// TODO IF-03: stop_fetch blocks new sequential requests, not response/redirect acceptance.
-// TODO IF-04: Emit compact prefixes with per-word PCs and access faults; reset PC is sampled on reset.
-// TODO STATE: PC; request accepted/pending; buffered response; discard-on-return; pending redirect.
+endmodule</code></pre></details><details id="source-fetch"><summary>rtl/superscalar/fetch.sv</summary><p class="status">Implemented pipeline/hazard module; see implementation walkthrough</p><pre><code>// One instruction-block transaction; redirect retains stale request ownership.
 module fetch (
   input logic clk_i, rst_i,
   input rv32_pkg::word_t reset_pc_i,
@@ -1260,17 +1450,84 @@ module fetch (
   output logic outstanding_o
 );
   import rv32_pkg::*;
-  // TODO Declare module-specific state_q/state_d, if this block owns state.
-  // TODO Implement next-state/defaults/reset/flush in always_comb.
-  // TODO Use always_ff only for nonblocking state assignments.
-  // TODO Add meaningful directed tests before declaring this block complete.
-endmodule</code></pre></details><details id="source-decode_stage"><summary>rtl/superscalar/decode_stage.sv</summary><p class="status">Unimplemented shell: outputs intentionally undriven</p><pre><code>// UNIMPLEMENTED SKELETON: interface contract only; outputs intentionally undriven.
-// See docs/superscalar/skeleton.md. This file must not be used as working RTL.
-// No tie-offs, behavioral substitutes, or inferred test results are provided.
-// TODO D-01: Instantiate four rv32_decode blocks and one ordered output holding register.
-// TODO D-02: Retain earlier fetch fault; do not replace it with decode of meaningless bytes.
-// TODO D-03: Preserve PC/order and every unowned field; no architectural effects.
-// TODO STATE: output packet and valid; reset/flush invalidate the packet.
+  typedef struct packed {
+    word_t pc, request_pc;
+    logic [1:0] phase; // 0 idle, 1 held request, 2 awaiting response.
+    logic stale, valid;
+    packet_t packet;
+  } state_t;
+  state_t q, d;
+  always_comb begin
+    request_valid_o = q.phase == 1 &amp;&amp; !rst_i;
+  end
+  always_comb begin
+    request_address_o = {q.request_pc[31:4],4&#x27;b0};
+  end
+  always_comb begin
+    response_ready_o = q.phase == 2 &amp;&amp; !rst_i;
+  end
+  always_comb begin
+    // Taking redirect ownership does not require memory idle.
+    redirect_ready_o = !rst_i;
+  end
+  always_comb begin
+    packet_valid_o = q.valid &amp;&amp; !rst_i &amp;&amp; !flush_i &amp;&amp; !redirect_valid_i;
+  end
+  always_comb begin
+    packet_o = q.packet;
+  end
+  always_comb begin
+    outstanding_o = q.phase != 0;
+  end
+  always_comb begin
+    d=q;
+
+    if (packet_valid_o &amp;&amp; packet_ready_i) d.valid=0;
+    if (q.phase == 0 &amp;&amp; !q.valid &amp;&amp; !stop_fetch_i &amp;&amp; !flush_i &amp;&amp; !redirect_valid_i) begin
+      if (q.pc[1:0] != 0) begin
+        d.packet=&#x27;0;
+        d.packet[0].valid=1;
+        d.packet[0].pc=q.pc;
+        d.packet[0].fault=&#x27;{valid:1, kind:FAULT_INSN_ALIGN, address:q.pc};
+        d.valid=1;
+      end else begin
+        d.request_pc=q.pc;
+        d.phase=1;
+        d.stale=0;
+        d.pc={q.pc[31:4],4&#x27;b0}+32&#x27;d16;
+      end
+    end
+    if (request_valid_o &amp;&amp; request_ready_i) d.phase=2;
+    if (response_valid_i &amp;&amp; response_ready_o) begin
+      d.phase=0;
+      d.stale=0;
+      if (!q.stale) begin
+        d.packet=&#x27;0;
+        for (int i=0; i&lt;4; i++) begin
+          if (i + int&#x27;(q.request_pc[3:2]) &lt; 4) begin
+            d.packet[i].valid=1;
+            d.packet[i].pc=q.request_pc+32&#x27;(i*4);
+            d.packet[i].instruction=response_i.words[i+int&#x27;(q.request_pc[3:2])];
+            if (response_i.access_error[i+int&#x27;(q.request_pc[3:2])])
+              d.packet[i].fault=&#x27;{valid:1, kind:FAULT_INSN_ACCESS, address:d.packet[i].pc};
+          end
+        end
+        d.valid=1;
+      end
+    end
+    // Never withdraw an offered/accepted external transaction on redirect.
+    // Drain its response, discard it, and then issue from the replacement PC.
+    if (flush_i || redirect_valid_i) begin
+      d.valid=0;
+      if (d.phase != 0) d.stale=1;
+    end
+    if (redirect_valid_i &amp;&amp; redirect_ready_o) d.pc=redirect_pc_i;
+    if (rst_i) begin d=&#x27;0; d.pc=reset_pc_i; end
+  end
+  always_ff @(posedge clk_i) begin
+    q &lt;= d;
+  end
+endmodule</code></pre></details><details id="source-decode_stage"><summary>rtl/superscalar/decode_stage.sv</summary><p class="status">Implemented pipeline/hazard module; see implementation walkthrough</p><pre><code>// Four combinational decoders feeding one D-stage register; earlier faults win.
 module decode_stage (
   input logic clk_i, rst_i, flush_i,
   input logic packet_valid_i,
@@ -1281,18 +1538,42 @@ module decode_stage (
   input logic packet_ready_i
 );
   import rv32_pkg::*;
-  // TODO Declare module-specific state_q/state_d, if this block owns state.
-  // TODO Implement next-state/defaults/reset/flush in always_comb.
-  // TODO Use always_ff only for nonblocking state assignments.
-  // TODO Add meaningful directed tests before declaring this block complete.
-endmodule</code></pre></details><details id="source-regfile"><summary>rtl/superscalar/regfile.sv</summary><p class="status">Unimplemented shell: outputs intentionally undriven</p><pre><code>// UNIMPLEMENTED SKELETON: interface contract only; outputs intentionally undriven.
-// See docs/superscalar/skeleton.md. This file must not be used as working RTL.
-// No tie-offs, behavioral substitutes, or inferred test results are provided.
-// TODO RF-01: Provide eight combinational reads and four accepted commit writes.
-// TODO RF-02: x0 reads zero and ignores writes; choose/reset all other registers explicitly.
-// TODO RF-03: Define simultaneous read/write behavior with explicit commit bypass at R/DP.
-// TODO RF-04: Assert no two accepted nonzero writes target the same rd under one-writer policy.
-// TODO STATE: committed registers only; no flush input because committed state survives recovery.
+  packet_t packet_q, packet_d, decoded_packet;
+  decoded_t [3:0] decoded;
+  logic valid_q, valid_d;
+  for (genvar i=0; i&lt;4; i++) begin : g_decode
+    rv32_decode u_decode (.instruction_i(packet_i[i].instruction), .decoded_o(decoded[i]));
+  end
+  always_comb begin
+    packet_ready_o = (!valid_q || packet_ready_i) &amp;&amp; !rst_i &amp;&amp; !flush_i;
+  end
+  always_comb begin
+    packet_valid_o = valid_q &amp;&amp; !rst_i &amp;&amp; !flush_i;
+  end
+  always_comb begin
+    packet_o = packet_q;
+  end
+  always_comb begin
+    decoded_packet = packet_i;
+    for (int i=0; i&lt;4; i++) begin
+      decoded_packet[i].decoded = decoded[i];
+      if (packet_i[i].fault.valid) decoded_packet[i].decoded.serial = 1&#x27;b1;
+      else decoded_packet[i].fault = decoded[i].fault;
+    end
+
+    packet_d = packet_q;
+    valid_d = valid_q;
+    if (packet_ready_o) begin
+      valid_d = packet_valid_i;
+      if (packet_valid_i) packet_d = decoded_packet;
+    end
+    if (rst_i || flush_i) begin valid_d=0; packet_d=&#x27;0; end
+  end
+  always_ff @(posedge clk_i) begin
+    packet_q &lt;= packet_d;
+    valid_q &lt;= valid_d;
+  end
+endmodule</code></pre></details><details id="source-regfile"><summary>rtl/superscalar/regfile.sv</summary><p class="status">Implemented pipeline/hazard module; see implementation walkthrough</p><pre><code>// Committed 32x32 register file. R provides explicit same-edge commit bypass.
 module regfile (
   input logic clk_i, rst_i,
   input rv32_pkg::read_indices_t read_indices_i,
@@ -1300,18 +1581,21 @@ module regfile (
   input rv32_pkg::commit_writes_t commit_writes_i
 );
   import rv32_pkg::*;
-  // TODO Declare module-specific state_q/state_d, if this block owns state.
-  // TODO Implement next-state/defaults/reset/flush in always_comb.
-  // TODO Use always_ff only for nonblocking state assignments.
-  // TODO Add meaningful directed tests before declaring this block complete.
-endmodule</code></pre></details><details id="source-scoreboard"><summary>rtl/superscalar/scoreboard.sv</summary><p class="status">Unimplemented shell: outputs intentionally undriven</p><pre><code>// UNIMPLEMENTED SKELETON: interface contract only; outputs intentionally undriven.
-// See docs/superscalar/skeleton.md. This file must not be used as working RTL.
-// No tie-offs, behavioral substitutes, or inferred test results are provided.
-// TODO SB-01: Set bits only on accepted dispatch; clear only accepted commit writes.
-// TODO SB-02: Keep bit zero clear. Allocation wins same-bit clear if reuse is enabled.
-// TODO SB-03: flush means ALL remaining writers are killed after older effects settle.
-// TODO SB-04: Assert at most one live writer per nonzero register; forwarding never clears busy.
-// TODO STATE: 32-bit busy bitmap.
+  word_t [31:0] regs_q, regs_d;
+  always_comb begin
+    regs_d = regs_q;
+    for (int i=0; i&lt;4; i++)
+      if (commit_writes_i[i].valid &amp;&amp; commit_writes_i[i].rd != 0)
+        regs_d[commit_writes_i[i].rd] = commit_writes_i[i].value;
+    regs_d[0] = &#x27;0;
+    if (rst_i) regs_d = &#x27;0; // Teaching-platform reset policy: all registers zero.
+    for (int i=0; i&lt;8; i++)
+      read_values_o[i] = read_indices_i[i] == 0 ? &#x27;0 : regs_q[read_indices_i[i]];
+  end
+  always_ff @(posedge clk_i) begin
+    regs_q &lt;= regs_d;
+  end
+endmodule</code></pre></details><details id="source-scoreboard"><summary>rtl/superscalar/scoreboard.sv</summary><p class="status">Implemented pipeline/hazard module; see implementation walkthrough</p><pre><code>// Writer ownership: commit releases, accepted dispatch allocates; allocation wins.
 module scoreboard (
   input logic clk_i, rst_i, flush_i,
   input logic [31:0] allocate_mask_i,
@@ -1319,18 +1603,20 @@ module scoreboard (
   output logic [31:0] busy_o
 );
   import rv32_pkg::*;
-  // TODO Declare module-specific state_q/state_d, if this block owns state.
-  // TODO Implement next-state/defaults/reset/flush in always_comb.
-  // TODO Use always_ff only for nonblocking state assignments.
-  // TODO Add meaningful directed tests before declaring this block complete.
-endmodule</code></pre></details><details id="source-register_stage"><summary>rtl/superscalar/register_stage.sv</summary><p class="status">Unimplemented shell: outputs intentionally undriven</p><pre><code>// UNIMPLEMENTED SKELETON: interface contract only; outputs intentionally undriven.
-// See docs/superscalar/skeleton.md. This file must not be used as working RTL.
-// No tie-offs, behavioral substitutes, or inferred test results are provided.
-// TODO R-01: Hold a stable index/control packet and continuously read its RF indices.
-// TODO R-02: live_operands is a separate changing sideband sampled only on R-to-DP acceptance.
-// TODO R-03: Bypass simultaneous accepted commit writes into live reads; x0 always zero.
-// TODO R-04: packet_o src1/src2 are not authoritative; dispatch samples live_operands instead.
-// TODO STATE: ordered control packet and valid; no early register writes.
+  logic [31:0] busy_q, busy_d;
+  always_comb begin
+    busy_o = busy_q;
+    busy_d = busy_q;
+    for (int i=0; i&lt;4; i++)
+      if (commit_writes_i[i].valid) busy_d[commit_writes_i[i].rd] = 1&#x27;b0;
+    busy_d = busy_d | allocate_mask_i;
+    busy_d[0] = 1&#x27;b0;
+    if (rst_i || flush_i) busy_d = &#x27;0;
+  end
+  always_ff @(posedge clk_i) begin
+    busy_q &lt;= busy_d;
+  end
+endmodule</code></pre></details><details id="source-register_stage"><summary>rtl/superscalar/register_stage.sv</summary><p class="status">Implemented pipeline/hazard module; see implementation walkthrough</p><pre><code>// Stable R control packet; live register values are sampled separately by DP.
 module register_stage (
   input logic clk_i, rst_i, flush_i,
   input logic packet_valid_i,
@@ -1345,21 +1631,45 @@ module register_stage (
   input logic packet_ready_i
 );
   import rv32_pkg::*;
-  // TODO Declare module-specific state_q/state_d, if this block owns state.
-  // TODO Implement next-state/defaults/reset/flush in always_comb.
-  // TODO Use always_ff only for nonblocking state assignments.
-  // TODO Add meaningful directed tests before declaring this block complete.
-endmodule</code></pre></details><details id="source-dispatch"><summary>rtl/superscalar/dispatch.sv</summary><p class="status">Unimplemented shell: outputs intentionally undriven</p><pre><code>// UNIMPLEMENTED SKELETON: interface contract only; outputs intentionally undriven.
-// See docs/superscalar/skeleton.md. This file must not be used as working RTL.
-// No tie-offs, behavioral substitutes, or inferred test results are provided.
-// TODO DP-01: Own remaining packet suffix and operand snapshots; refresh on every commit.
-// TODO DP-02: Instantiate forwarding_unit; sources = 2*lane + operand (rs1=0, rs2=1).
-// TODO DP-03: Select oldest executable prefix; enforce source readiness, WAW and same-packet RAW.
-// TODO DP-04: Freeze offered bundle under EX backpressure; no duplicate dispatch after compaction.
-// TODO DP-05: Atomic singleton transfer requires serial_ready AND EX acceptance; avoid combinational loop
-// TODO        with block_younger (which rises on serial handshake); it gates ordinary lanes only.
-// TODO DP-06: allocate_mask pulses on actual EX transfer; do not allocate for a held offer.
-// TODO STATE: retained suffix, snapshots and frozen offered prefix/values; no rename tags.
+  packet_t packet_q, packet_d;
+  logic valid_q, valid_d;
+  always_comb begin
+    packet_ready_o = (!valid_q || packet_ready_i) &amp;&amp; !rst_i &amp;&amp; !flush_i;
+  end
+  always_comb begin
+    packet_valid_o = valid_q &amp;&amp; !rst_i &amp;&amp; !flush_i;
+  end
+  always_comb begin
+    packet_o = packet_q;
+  end
+  always_comb begin
+    for (int i=0; i&lt;4; i++) begin
+      read_indices_o[2*i] = packet_q[i].decoded.uses_rs1 ? packet_q[i].decoded.rs1 : 5&#x27;d0;
+      read_indices_o[2*i+1] = packet_q[i].decoded.uses_rs2 ? packet_q[i].decoded.rs2 : 5&#x27;d0;
+    end
+  end
+  always_comb begin
+    live_operands_o = read_values_i;
+    for (int s=0; s&lt;8; s++) begin
+      for (int c=0; c&lt;4; c++)
+        if (commit_writes_i[c].valid &amp;&amp; commit_writes_i[c].rd == read_indices_o[s])
+          live_operands_o[s] = commit_writes_i[c].value;
+      if (read_indices_o[s] == 0) live_operands_o[s] = &#x27;0;
+    end
+
+    packet_d = packet_q;
+    valid_d = valid_q;
+    if (packet_ready_o) begin
+      valid_d = packet_valid_i;
+      if (packet_valid_i) packet_d = packet_i;
+    end
+    if (rst_i || flush_i) begin valid_d=0; packet_d=&#x27;0; end
+  end
+  always_ff @(posedge clk_i) begin
+    packet_q &lt;= packet_d;
+    valid_q &lt;= valid_d;
+  end
+endmodule</code></pre></details><details id="source-dispatch"><summary>rtl/superscalar/dispatch.sv</summary><p class="status">Implemented pipeline/hazard module; see implementation walkthrough</p><pre><code>// Oldest-prefix in-order dispatch with retained suffix and frozen stalled offer.
 module dispatch (
   input logic clk_i, rst_i, flush_i,
   input logic packet_valid_i,
@@ -1378,20 +1688,114 @@ module dispatch (
   input logic packet_ready_i
 );
   import rv32_pkg::*;
-  // TODO Declare module-specific state_q/state_d, if this block owns state.
-  // TODO Implement next-state/defaults/reset/flush in always_comb.
-  // TODO Use always_ff only for nonblocking state assignments.
-  // TODO Add meaningful directed tests before declaring this block complete.
-endmodule</code></pre></details><details id="source-execute"><summary>rtl/superscalar/execute.sv</summary><p class="status">Unimplemented shell: outputs intentionally undriven</p><pre><code>// UNIMPLEMENTED SKELETON: interface contract only; outputs intentionally undriven.
-// See docs/superscalar/skeleton.md. This file must not be used as working RTL.
-// No tie-offs, behavioral substitutes, or inferred test results are provided.
-// TODO EX-01: Four ALUs; select register/immediate/PC operands and compute results.
-// TODO EX-02: Singleton address/branch path computes target/link/effective address, not side effects.
-// TODO EX-03: Check taken-target alignment and data alignment; retain earlier faults.
-// TODO EX-04: producers_o[lane] describes resident operation; never mark a load address as ready data.
-// TODO EX-05: Define the resident EX packet and its combinational result path exactly once; no extra
-// TODO        hidden ninth stage or dependence on new DP selection to validate current EX results.
-// TODO STATE: resident EX packet; output valid/data hold across downstream backpressure.
+  typedef struct packed {
+    logic valid, frozen;
+    packet_t packet, offer;
+    logic [2:0] count;
+  } state_t;
+  state_t q,d;
+  packet_t refreshed, selected;
+  hazard_pkg::source_t [7:0] sources;
+  logic [7:0] ready, unused_forwarded;
+  logic [7:0][31:0] values;
+  logic [31:0] selected_writers;
+  logic stopped, singleton;
+  logic [2:0] count;
+  forwarding_unit u_forward (.sources_i(sources), .producers_i(producers_i),
+    .ready_o(ready), .forwarded_o(unused_forwarded), .values_o(values));
+  always_comb begin
+    packet_valid_o=q.frozen || (count!=0 &amp;&amp; !block_younger_i);
+    if (singleton) packet_valid_o=serial_valid_o &amp;&amp; serial_ready_i;
+    if (rst_i || flush_i) packet_valid_o=0;
+  end
+  always_comb begin
+    packet_ready_o=!q.valid &amp;&amp; !rst_i &amp;&amp; !flush_i;
+  end
+  always_comb begin
+    packet_o=q.frozen ? q.offer : selected;
+  end
+  always_comb begin
+    // Refresh a waiting suffix before a committed producer disappears.
+    refreshed=q.packet;
+    for (int i=0; i&lt;4; i++) begin
+      for (int c=0; c&lt;4; c++) begin
+        if (commit_writes_i[c].valid &amp;&amp; commit_writes_i[c].rd != 0) begin
+          if (q.packet[i].decoded.rs1 == commit_writes_i[c].rd) refreshed[i].src1=commit_writes_i[c].value;
+          if (q.packet[i].decoded.rs2 == commit_writes_i[c].rd) refreshed[i].src2=commit_writes_i[c].value;
+        end
+      end
+      sources[2*i]=&#x27;{used:q.packet[i].decoded.uses_rs1, rs:q.packet[i].decoded.rs1,
+        busy:busy_i[q.packet[i].decoded.rs1], fallback_value:refreshed[i].src1};
+      sources[2*i+1]=&#x27;{used:q.packet[i].decoded.uses_rs2, rs:q.packet[i].decoded.rs2,
+        busy:busy_i[q.packet[i].decoded.rs2], fallback_value:refreshed[i].src2};
+    end
+  end
+  always_comb begin
+    selected=&#x27;0;
+    count=0;
+    selected_writers=&#x27;0;
+    stopped=!q.valid;
+    singleton=q.valid &amp;&amp; (q.packet[0].decoded.serial || q.packet[0].fault.valid);
+    for (int i=0; i&lt;4; i++) begin
+      if (!q.packet[i].valid) stopped=1;
+      if (i&gt;0 &amp;&amp; (q.packet[i].decoded.serial || q.packet[i].fault.valid || singleton)) stopped=1;
+      if (!q.packet[i].fault.valid) begin
+        if (!ready[2*i] || !ready[2*i+1]) stopped=1;
+        if (q.packet[i].decoded.uses_rs1 &amp;&amp; selected_writers[q.packet[i].decoded.rs1]) stopped=1;
+        if (q.packet[i].decoded.uses_rs2 &amp;&amp; selected_writers[q.packet[i].decoded.rs2]) stopped=1;
+        if (q.packet[i].decoded.writes_rd &amp;&amp;
+            (busy_i[q.packet[i].decoded.rd] || selected_writers[q.packet[i].decoded.rd])) stopped=1;
+      end
+      if (!stopped) begin
+        selected[i]=refreshed[i];
+        selected[i].src1=values[2*i];
+        selected[i].src2=values[2*i+1];
+        if (q.packet[i].decoded.writes_rd &amp;&amp; !q.packet[i].fault.valid)
+          selected_writers[q.packet[i].decoded.rd]=1;
+        count=count+1&#x27;b1;
+      end
+    end
+  end
+  // Singleton valid is independent of block_younger: the controller raises
+  // block_younger during this very handshake. EX ready depends only on capacity.
+  always_comb begin
+    serial_valid_o=singleton &amp;&amp; count!=0 &amp;&amp; packet_ready_i &amp;&amp; !rst_i &amp;&amp; !flush_i;
+  end
+  always_comb begin
+    d=q;
+    d.packet=refreshed;
+
+    allocate_mask_o=&#x27;0;
+    if (packet_valid_o &amp;&amp; !packet_ready_i &amp;&amp; !q.frozen) begin
+      d.frozen=1;
+      d.offer=selected;
+      d.count=count;
+    end
+    if (packet_valid_o &amp;&amp; packet_ready_i) begin
+      for (int i=0; i&lt;4; i++)
+        if (packet_o[i].valid &amp;&amp; packet_o[i].decoded.writes_rd &amp;&amp; !packet_o[i].fault.valid)
+          allocate_mask_o[packet_o[i].decoded.rd]=1;
+      d.packet=&#x27;0;
+      for (int i=0; i&lt;4; i++)
+        if (i+(q.frozen ? int&#x27;(q.count) : int&#x27;(count))&lt;4)
+          d.packet[i]=refreshed[i+(q.frozen ? int&#x27;(q.count) : int&#x27;(count))];
+      d.valid=d.packet[0].valid;
+      d.frozen=0;
+    end
+    if (packet_valid_i &amp;&amp; packet_ready_o) begin
+      d.valid=1;
+      d.packet=packet_i;
+      for (int i=0; i&lt;4; i++) begin
+        d.packet[i].src1=live_operands_i[2*i];
+        d.packet[i].src2=live_operands_i[2*i+1];
+      end
+    end
+    if (rst_i || flush_i) begin d=&#x27;0; allocate_mask_o=&#x27;0; end
+  end
+  always_ff @(posedge clk_i) begin
+    q &lt;= d;
+  end
+endmodule</code></pre></details><details id="source-execute"><summary>rtl/superscalar/execute.sv</summary><p class="status">Implemented pipeline/hazard module; see implementation walkthrough</p><pre><code>// Resident EX packet drives four ALUs and singleton control/address calculations.
 module execute (
   input logic clk_i, rst_i, flush_i,
   input logic packet_valid_i,
@@ -1404,19 +1808,81 @@ module execute (
   output logic occupied_o
 );
   import rv32_pkg::*;
-  // TODO Declare module-specific state_q/state_d, if this block owns state.
-  // TODO Implement next-state/defaults/reset/flush in always_comb.
-  // TODO Use always_ff only for nonblocking state assignments.
-  // TODO Add meaningful directed tests before declaring this block complete.
-endmodule</code></pre></details><details id="source-memory_stage"><summary>rtl/superscalar/memory_stage.sv</summary><p class="status">Unimplemented shell: outputs intentionally undriven</p><pre><code>// UNIMPLEMENTED SKELETON: interface contract only; outputs intentionally undriven.
-// See docs/superscalar/skeleton.md. This file must not be used as working RTL.
-// No tie-offs, behavioral substitutes, or inferred test results are provided.
-// TODO MEM-01: Pass ALU results in order; issue a singleton load exactly once and wait for response.
-// TODO MEM-02: Extract little-endian bytes and sign/zero extend; preserve original fault address.
-// TODO MEM-03: Package stores only, never issue them; commit owns store requests.
-// TODO MEM-04: A load is a live unready producer until actual data arrives; fault blocks forwarding.
-// TODO MEM-05: Coordinate flush with adapter ownership; accepted external requests still need draining.
-// TODO STATE: resident packet; request-sent flag; load response/result holding.
+  packet_t q,d;
+  logic valid_q, valid_d;
+  word_t [3:0] a,b,result;
+  logic [3:0] taken;
+  for (genvar i=0; i&lt;4; i++) begin : g_alu
+    alu u_alu (.op_i(q[i].decoded.op), .a_i(a[i]), .b_i(b[i]), .result_o(result[i]));
+  end
+  always_comb begin
+    occupied_o=valid_q;
+  end
+  always_comb begin
+    packet_valid_o=valid_q &amp;&amp; !rst_i &amp;&amp; !flush_i;
+  end
+  always_comb begin
+    packet_ready_o=(!valid_q || packet_ready_i) &amp;&amp; !rst_i &amp;&amp; !flush_i;
+  end
+  always_comb begin
+    for (int i=0; i&lt;4; i++) begin
+      a[i]=q[i].src1;
+      b[i]=q[i].src2;
+      case (q[i].decoded.op)
+        OP_ADDI,OP_SLTI,OP_SLTIU,OP_XORI,OP_ORI,OP_ANDI,OP_SLLI,OP_SRLI,OP_SRAI,OP_LUI:
+          b[i]=q[i].decoded.imm;
+        OP_AUIPC: begin a[i]=q[i].pc; b[i]=q[i].decoded.imm; end
+        default: begin end
+      endcase
+    end
+  end
+  always_comb begin
+    packet_o=q;
+    taken=&#x27;0;
+    for (int i=0; i&lt;4; i++) begin
+      packet_o[i].result=result[i];
+      packet_o[i].address=q[i].src1+q[i].decoded.imm;
+      packet_o[i].next_pc=q[i].pc+32&#x27;d4;
+      packet_o[i].next_pc_valid=is_control(q[i].decoded.op);
+      case (q[i].decoded.op)
+        OP_BEQ: taken[i]=q[i].src1==q[i].src2;
+        OP_BNE: taken[i]=q[i].src1!=q[i].src2;
+        OP_BLT: taken[i]=$signed(q[i].src1)&lt;$signed(q[i].src2);
+        OP_BGE: taken[i]=$signed(q[i].src1)&gt;=$signed(q[i].src2);
+        OP_BLTU: taken[i]=q[i].src1&lt;q[i].src2;
+        OP_BGEU: taken[i]=q[i].src1&gt;=q[i].src2;
+        OP_JAL,OP_JALR: begin taken[i]=1; packet_o[i].result=q[i].pc+32&#x27;d4; end
+        default: begin end
+      endcase
+      if (taken[i]) packet_o[i].next_pc=q[i].pc+q[i].decoded.imm;
+      if (q[i].decoded.op==OP_JALR)
+        packet_o[i].next_pc=(q[i].src1+q[i].decoded.imm)&amp;32&#x27;hfffffffe;
+      packet_o[i].byte_mask=memory_mask(q[i].decoded.op) &lt;&lt; packet_o[i].address[1:0];
+      packet_o[i].store_data=q[i].src2 &lt;&lt; {packet_o[i].address[1:0],3&#x27;b0};
+      if (!q[i].fault.valid) begin
+        if (taken[i] &amp;&amp; packet_o[i].next_pc[1:0]!=0)
+          packet_o[i].fault=&#x27;{valid:1,kind:FAULT_INSN_ALIGN,address:packet_o[i].next_pc};
+        if ((is_load(q[i].decoded.op) || is_store(q[i].decoded.op)) &amp;&amp;
+            ((memory_mask(q[i].decoded.op)==4&#x27;b1111 &amp;&amp; packet_o[i].address[1:0]!=0) ||
+             (memory_mask(q[i].decoded.op)==4&#x27;b0011 &amp;&amp; packet_o[i].address[0])))
+          packet_o[i].fault=&#x27;{valid:1,kind:is_load(q[i].decoded.op)?FAULT_LOAD_ALIGN:FAULT_STORE_ALIGN,
+                              address:packet_o[i].address};
+      end
+      producers_o[i]=make_producer(packet_o[i],valid_q &amp;&amp; !rst_i &amp;&amp; !flush_i,
+                                   !is_load(q[i].decoded.op));
+    end
+
+  end
+  always_comb begin
+    d=q; valid_d=valid_q;
+    if (packet_ready_o) begin valid_d=packet_valid_i; if (packet_valid_i) d=packet_i; end
+    if (rst_i || flush_i) begin d=&#x27;0; valid_d=0; end
+  end
+  always_ff @(posedge clk_i) begin
+    q &lt;= d;
+    valid_q &lt;= valid_d;
+  end
+endmodule</code></pre></details><details id="source-memory_stage"><summary>rtl/superscalar/memory_stage.sv</summary><p class="status">Implemented pipeline/hazard module; see implementation walkthrough</p><pre><code>// Serialized load completion and formatting; stores remain descriptors until C.
 module memory_stage (
   input logic clk_i, rst_i, flush_i,
   input logic packet_valid_i,
@@ -1435,17 +1901,72 @@ module memory_stage (
   output logic occupied_o
 );
   import rv32_pkg::*;
-  // TODO Declare module-specific state_q/state_d, if this block owns state.
-  // TODO Implement next-state/defaults/reset/flush in always_comb.
-  // TODO Use always_ff only for nonblocking state assignments.
-  // TODO Add meaningful directed tests before declaring this block complete.
-endmodule</code></pre></details><details id="source-writeback"><summary>rtl/superscalar/writeback.sv</summary><p class="status">Unimplemented shell: outputs intentionally undriven</p><pre><code>// UNIMPLEMENTED SKELETON: interface contract only; outputs intentionally undriven.
-// See docs/superscalar/skeleton.md. This file must not be used as working RTL.
-// No tie-offs, behavioral substitutes, or inferred test results are provided.
-// TODO WB-01: Hold completed result/exception packet for C; no architectural write ports.
-// TODO WB-02: Transfer whole packet; C owns any partial retirement suffix.
-// TODO WB-03: Expose resident live writers including faulted entries until recovery.
-// TODO STATE: packet holding register and valid.
+  typedef struct packed { packet_t packet; logic valid,sent,done; } state_t;
+  state_t q,d;
+  logic load_pending;
+  word_t shifted;
+  always_comb begin
+    for (int i=0; i&lt;4; i++)
+      producers_o[i]=make_producer(q.packet[i],q.valid &amp;&amp; !rst_i &amp;&amp; !flush_i,!load_pending);
+  end
+  always_comb begin
+    load_pending=q.valid &amp;&amp; is_load(q.packet[0].decoded.op) &amp;&amp; !q.packet[0].fault.valid &amp;&amp; !q.done;
+  end
+  always_comb begin
+    shifted=load_response_i.read_data &gt;&gt; {q.packet[0].address[1:0],3&#x27;b0};
+  end
+  always_comb begin
+    packet_valid_o=q.valid &amp;&amp; !load_pending &amp;&amp; !rst_i &amp;&amp; !flush_i;
+  end
+  always_comb begin
+    packet_o=q.packet;
+  end
+  always_comb begin
+    packet_ready_o=(!q.valid || (packet_valid_o &amp;&amp; packet_ready_i)) &amp;&amp; !rst_i &amp;&amp; !flush_i;
+  end
+  always_comb begin
+    occupied_o=q.valid;
+  end
+  always_comb begin
+    load_request_valid_o=load_pending &amp;&amp; !q.sent &amp;&amp; !rst_i &amp;&amp; !flush_i;
+  end
+  always_comb begin
+    load_request_o=&#x27;{write:0,aligned_address:{q.packet[0].address[31:2],2&#x27;b0},
+                     write_data:32&#x27;b0,byte_mask:q.packet[0].byte_mask};
+  end
+  always_comb begin
+    load_response_ready_o=load_pending &amp;&amp; q.sent &amp;&amp; !rst_i;
+  end
+  always_comb begin
+    d=q;
+
+    if (load_request_valid_o &amp;&amp; load_request_ready_i) d.sent=1;
+    if (load_response_valid_i &amp;&amp; load_response_ready_o) begin
+      d.done=1;
+      d.packet[0].result=shifted;
+      case (q.packet[0].decoded.op)
+        OP_LB: d.packet[0].result={{24{shifted[7]}},shifted[7:0]};
+        OP_LBU: d.packet[0].result={24&#x27;b0,shifted[7:0]};
+        OP_LH: d.packet[0].result={{16{shifted[15]}},shifted[15:0]};
+        OP_LHU: d.packet[0].result={16&#x27;b0,shifted[15:0]};
+        default: begin end
+      endcase
+      if (load_response_i.error)
+        d.packet[0].fault=&#x27;{valid:1,kind:FAULT_LOAD_ACCESS,address:q.packet[0].address};
+    end
+
+    if (packet_ready_o) begin
+      d.valid=packet_valid_i;
+      d.sent=0; d.done=0;
+      if (packet_valid_i) d.packet=packet_i;
+    end
+    // Integration only flushes after older data ownership has settled.
+    if (rst_i || flush_i) d=&#x27;0;
+  end
+  always_ff @(posedge clk_i) begin
+    q &lt;= d;
+  end
+endmodule</code></pre></details><details id="source-writeback"><summary>rtl/superscalar/writeback.sv</summary><p class="status">Implemented pipeline/hazard module; see implementation walkthrough</p><pre><code>// WB completion holding only: architectural writes belong exclusively to C.
 module writeback (
   input logic clk_i, rst_i, flush_i,
   input logic packet_valid_i,
@@ -1458,22 +1979,39 @@ module writeback (
   output logic occupied_o
 );
   import rv32_pkg::*;
-  // TODO Declare module-specific state_q/state_d, if this block owns state.
-  // TODO Implement next-state/defaults/reset/flush in always_comb.
-  // TODO Use always_ff only for nonblocking state assignments.
-  // TODO Add meaningful directed tests before declaring this block complete.
-endmodule</code></pre></details><details id="source-commit"><summary>rtl/superscalar/commit.sv</summary><p class="status">Unimplemented shell: outputs intentionally undriven</p><pre><code>// UNIMPLEMENTED SKELETON: interface contract only; outputs intentionally undriven.
-// See docs/superscalar/skeleton.md. This file must not be used as working RTL.
-// No tie-offs, behavioral substitutes, or inferred test results are provided.
-// TODO C-01: Retire oldest legal prefix; commit_writes and passive trace occur exactly once.
-// TODO C-02: Hold trap report stable until recovery accepts it; no faulting/younger retirement.
-// TODO C-03: Branch link write/retirement and branch handshake are one atomic accepted event.
-// TODO C-04: Issue authorized store once, hold until response, then retire or report error.
-// TODO C-05: serial_done only on successful non-control serial completion; fence requires memory idle.
-// TODO C-06: Trap report acceptance retires NO faulting instruction; clear its C ownership only after
-// TODO       recovery owns the report. Recovery still blocks all younger work until resume.
-// TODO STATE: current packet/cursor; store-sent/response ownership; trap/branch event holding.
-// TODO No external flush port: this is the architectural ordering owner, not a younger stage.
+  packet_t packet_q, packet_d;
+  logic valid_q, valid_d;
+  always_comb begin
+    for (int i=0; i&lt;4; i++)
+      producers_o[i] = make_producer(packet_q[i], packet_valid_o, 1&#x27;b1);
+  end
+  always_comb begin
+    packet_ready_o = (!valid_q || packet_ready_i) &amp;&amp; !rst_i &amp;&amp; !flush_i;
+  end
+  always_comb begin
+    packet_valid_o = valid_q &amp;&amp; !rst_i &amp;&amp; !flush_i;
+  end
+  always_comb begin
+    packet_o = packet_q;
+  end
+  always_comb begin
+    occupied_o = valid_q;
+  end
+  always_comb begin
+
+    packet_d = packet_q;
+    valid_d = valid_q;
+    if (packet_ready_o) begin
+      valid_d = packet_valid_i;
+      if (packet_valid_i) packet_d = packet_i;
+    end
+    if (rst_i || flush_i) begin valid_d=0; packet_d=&#x27;0; end
+  end
+  always_ff @(posedge clk_i) begin
+    packet_q &lt;= packet_d;
+    valid_q &lt;= valid_d;
+  end
+endmodule</code></pre></details><details id="source-commit"><summary>rtl/superscalar/commit.sv</summary><p class="status">Implemented pipeline/hazard module; see implementation walkthrough</p><pre><code>// Ordered architectural effects. Store, branch and trap events retain ownership.
 module commit (
   input logic clk_i, rst_i,
   input logic packet_valid_i,
@@ -1499,20 +2037,103 @@ module commit (
   output logic occupied_o
 );
   import rv32_pkg::*;
-  // TODO Declare module-specific state_q/state_d, if this block owns state.
-  // TODO Implement next-state/defaults/reset/flush in always_comb.
-  // TODO Use always_ff only for nonblocking state assignments.
-  // TODO Add meaningful directed tests before declaring this block complete.
-endmodule</code></pre></details><details id="source-memory_adapter"><summary>rtl/superscalar/memory_adapter.sv</summary><p class="status">Unimplemented shell: outputs intentionally undriven</p><pre><code>// UNIMPLEMENTED SKELETON: interface contract only; outputs intentionally undriven.
-// See docs/superscalar/skeleton.md. This file must not be used as working RTL.
-// No tie-offs, behavioral substitutes, or inferred test results are provided.
-// TODO BUS-01: Route serialized MEM loads and C stores to one abstract data port.
-// TODO BUS-02: Track owner through response consumption; never route response to new owner.
-// TODO BUS-03: Assert loads/stores do not compete under serialization; document arbitration defensively.
-// TODO BUS-04: idle means no offered/accepted/buffered data transaction remains, not just bus-ready.
-// TODO BUS-05: Failed store has no visible effects; ack meets EEI ordering. No silent posted-write model.
-// TODO STATE: request owner, request/response holding, acceptance state. Reset coordinated with endpoint.
-// TODO This is an abstract bridge, NOT an unfinished AXI implementation with invented signals.
+  typedef struct packed { packet_t packet; logic valid,sent,done; } state_t;
+  state_t q,d;
+  logic stop,retire_lane;
+  int count;
+  logic [31:0] unused_store_read_data;
+  always_comb begin
+    for (int i=0; i&lt;4; i++) producers_o[i]=make_producer(q.packet[i],q.valid &amp;&amp; !rst_i,1&#x27;b1);
+  end
+  always_comb begin
+    occupied_o=q.valid;
+  end
+  always_comb begin
+    // Deliberate bubble between commit packets.
+    packet_ready_o=!q.valid &amp;&amp; !rst_i;
+  end
+  always_comb begin
+    store_request_o=&#x27;{write:1,aligned_address:{q.packet[0].address[31:2],2&#x27;b0},
+                      write_data:q.packet[0].store_data,byte_mask:q.packet[0].byte_mask};
+  end
+  always_comb begin
+    store_response_ready_o=q.valid &amp;&amp; q.sent &amp;&amp; !q.done &amp;&amp; !rst_i;
+  end
+  always_comb begin
+    unused_store_read_data=store_response_i.read_data;
+    trap_valid_o=q.valid &amp;&amp; q.packet[0].valid &amp;&amp; q.packet[0].fault.valid &amp;&amp; !rst_i;
+    trap_o=&#x27;{pc:q.packet[0].pc,instruction:q.packet[0].instruction,fault:q.packet[0].fault};
+    branch_valid_o=q.valid &amp;&amp; q.packet[0].valid &amp;&amp; !q.packet[0].fault.valid &amp;&amp; is_control(q.packet[0].decoded.op) &amp;&amp; !rst_i;
+    branch_pc_o=q.packet[0].next_pc;
+    store_request_valid_o=q.valid &amp;&amp; q.packet[0].valid &amp;&amp; !q.packet[0].fault.valid &amp;&amp; is_store(q.packet[0].decoded.op) &amp;&amp; !q.sent &amp;&amp; !rst_i;
+  end
+  always_comb begin
+    d=q;
+
+    commit_writes_o=&#x27;0; retire_o=&#x27;0;
+
+    serial_done_o=0;
+
+    if (store_response_valid_i &amp;&amp; store_response_ready_o) begin
+      d.done=1;
+      if (store_response_i.error)
+        d.packet[0].fault=&#x27;{valid:1,kind:FAULT_STORE_ACCESS,address:q.packet[0].address};
+    end
+    stop=!q.valid || rst_i;
+    count=0;
+    retire_lane=0;
+    for (int i=0; i&lt;4; i++) begin
+
+      retire_lane=0;
+      if (!q.packet[i].valid) stop=1;
+      if (!stop) begin
+        if (q.packet[i].fault.valid) begin
+          // First retire any older prefix. Present a stable trap only at lane 0.
+          if (i==0) begin
+
+            if (trap_ready_i) d=&#x27;0;
+          end
+          stop=1;
+        end else if (is_control(q.packet[i].decoded.op)) begin
+          if (i==0) begin retire_lane=branch_ready_i; end
+          stop=1;
+        end else if (is_store(q.packet[i].decoded.op)) begin
+          if (i==0) begin
+
+            if (store_request_valid_o &amp;&amp; store_request_ready_i) d.sent=1;
+            retire_lane=q.done;
+          end
+          stop=1;
+        end else if (q.packet[i].decoded.op==OP_FENCE) begin
+          retire_lane=memory_idle_i;
+          stop=1;
+        end else retire_lane=1;
+        if (retire_lane) begin
+          count++;
+          commit_writes_o[i]=&#x27;{valid:q.packet[i].decoded.writes_rd,
+                               rd:q.packet[i].decoded.rd,value:q.packet[i].result};
+          retire_o[i]=&#x27;{valid:1,pc:q.packet[i].pc,instruction:q.packet[i].instruction,
+            writes_rd:q.packet[i].decoded.writes_rd,rd:q.packet[i].decoded.rd,value:q.packet[i].result,
+            memory:is_load(q.packet[i].decoded.op)||is_store(q.packet[i].decoded.op),
+            memory_write:is_store(q.packet[i].decoded.op),address:q.packet[i].address,
+            memory_data:is_store(q.packet[i].decoded.op)?q.packet[i].store_data:q.packet[i].result,
+            byte_mask:q.packet[i].byte_mask};
+          if (q.packet[i].decoded.serial &amp;&amp; !is_control(q.packet[i].decoded.op)) serial_done_o=1;
+        end
+      end
+    end
+    if (count!=0) begin
+      d.packet=&#x27;0; d.sent=0; d.done=0;
+      for (int i=0; i&lt;4; i++) if (i+count&lt;4) d.packet[i]=q.packet[i+count];
+      d.valid=d.packet[0].valid;
+    end
+    if (packet_valid_i &amp;&amp; packet_ready_o) begin d=&#x27;0; d.valid=1; d.packet=packet_i; end
+    if (rst_i) d=&#x27;0;
+  end
+  always_ff @(posedge clk_i) begin
+    q &lt;= d;
+  end
+endmodule</code></pre></details><details id="source-memory_adapter"><summary>rtl/superscalar/memory_adapter.sv</summary><p class="status">Implemented pipeline/hazard module; see implementation walkthrough</p><pre><code>// Buffered single-owner data bridge; owner persists through response consumption.
 module memory_adapter (
   input logic clk_i, rst_i,
   input logic load_request_valid_i,
@@ -1536,19 +2157,63 @@ module memory_adapter (
   output logic idle_o
 );
   import rv32_pkg::*;
-  // TODO Declare module-specific state_q/state_d, if this block owns state.
-  // TODO Implement next-state/defaults/reset/flush in always_comb.
-  // TODO Use always_ff only for nonblocking state assignments.
-  // TODO Add meaningful directed tests before declaring this block complete.
-endmodule</code></pre></details><details id="source-recovery"><summary>rtl/superscalar/recovery.sv</summary><p class="status">Unimplemented shell: outputs intentionally undriven</p><pre><code>// UNIMPLEMENTED SKELETON: interface contract only; outputs intentionally undriven.
-// See docs/superscalar/skeleton.md. This file must not be used as working RTL.
-// No tie-offs, behavioral substitutes, or inferred test results are provided.
-// TODO REC-01: Instantiate existing control_hazard_unit; translate accepted commit trap to EEI report.
-// TODO REC-02: Retain trap metadata across EEI stalls; wait for report acceptance before accepting resume.
-// TODO REC-03: Gate younger work throughout trap-report/resume wait, even after C releases its packet.
-// TODO REC-04: resume PC becomes controller trap_pc; never substitute faulting PC or invented vector.
-// TODO REC-05: Flush only after older effects settle; trap wins branch and losing branch is canceled.
-// TODO STATE: trap report holding; report-accepted/wait-resume; controller pending redirect state.
+  typedef struct packed {
+    logic [1:0] phase; // idle, held external request, wait response, held response
+    logic store;
+    mem_request_t request;
+    mem_response_t response;
+  } state_t;
+  state_t q,d;
+  always_comb begin
+    idle_o=q.phase==0;
+  end
+  always_comb begin
+    store_request_ready_o=q.phase==0 &amp;&amp; !rst_i;
+  end
+  always_comb begin
+    load_request_ready_o=q.phase==0 &amp;&amp; !store_request_valid_i &amp;&amp; !rst_i;
+  end
+  always_comb begin
+    request_valid_o=q.phase==1 &amp;&amp; !rst_i;
+  end
+  always_comb begin
+    request_o=q.request;
+  end
+  always_comb begin
+    response_ready_o=q.phase==2 &amp;&amp; !rst_i;
+  end
+  always_comb begin
+    store_response_valid_o=q.phase==3 &amp;&amp; q.store &amp;&amp; !rst_i;
+  end
+  always_comb begin
+    load_response_valid_o=q.phase==3 &amp;&amp; !q.store &amp;&amp; !rst_i;
+  end
+  always_comb begin
+    store_response_o=q.response;
+  end
+  always_comb begin
+    load_response_o=q.response;
+  end
+  always_comb begin
+    d=q;
+
+    // Store priority is defensive; serialized integration must not have both.
+
+    if (store_request_valid_i &amp;&amp; store_request_ready_o) begin
+      d.request=store_request_i; d.store=1; d.phase=1;
+    end else if (load_request_valid_i &amp;&amp; load_request_ready_o) begin
+      d.request=load_request_i; d.store=0; d.phase=1;
+    end
+    if (request_valid_o &amp;&amp; request_ready_i) d.phase=2;
+    if (response_valid_i &amp;&amp; response_ready_o) begin d.response=response_i; d.phase=3; end
+    if ((store_response_valid_o &amp;&amp; store_response_ready_i) ||
+        (load_response_valid_o &amp;&amp; load_response_ready_i)) d.phase=0;
+    if (rst_i) d=&#x27;0; // External endpoint must participate in reset.
+  end
+  always_ff @(posedge clk_i) begin
+    q &lt;= d;
+  end
+endmodule</code></pre></details><details id="source-recovery"><summary>rtl/superscalar/recovery.sv</summary><p class="status">Implemented pipeline/hazard module; see implementation walkthrough</p><pre><code>// Trap report and resume ownership around the tested singleton/redirect controller.
 module recovery (
   input logic clk_i, rst_i,
   input logic serial_valid_i, backend_empty_i,
@@ -1573,21 +2238,71 @@ module recovery (
   output logic flush_frontend_o, flush_backend_o
 );
   import rv32_pkg::*;
-  // TODO Declare module-specific state_q/state_d, if this block owns state.
-  // TODO Implement next-state/defaults/reset/flush in always_comb.
-  // TODO Use always_ff only for nonblocking state assignments.
-  // TODO Add meaningful directed tests before declaring this block complete.
-endmodule</code></pre></details><details id="source-core"><summary>rtl/superscalar/core.sv</summary><p class="status">Unimplemented shell: outputs intentionally undriven</p><pre><code>// UNIMPLEMENTED SKELETON: interface contract only; outputs intentionally undriven.
-// See docs/superscalar/skeleton.md. This file must not be used as working RTL.
-// No tie-offs, behavioral substitutes, or inferred test results are provided.
-// TODO TOP-01: Wire IF/D/R/DP/EX/MEM/WB/C, RF, scoreboard, adapter and recovery.
-// TODO TOP-02: Pack producer ports youngest first: EX[3..0], MEM[3..0], WB[3..0], C[3..0].
-// TODO TOP-03: Broadcast accepted commit writes to RF, scoreboard, R and DP.
-// TODO TOP-04: backend_empty = no EX/MEM/WB/C owner and memory_adapter idle.
-// TODO TOP-05: Frontend flush covers IF/D/R/DP; backend trap flush covers EX/MEM/WB and scoreboard.
-// TODO TOP-06: C and committed RF are NOT indiscriminately reset on a branch redirect.
-// TODO TOP-07: Prove packet-stage ownership, singleton handshake, no ready/data loops and no extra stages.
-// TODO TOP-08: Keep all top outputs deliberately undriven until actual submodules are wired.
+  typedef enum logic [1:0] {IDLE,REPORT,RESUME,REDIRECT} phase_t;
+  typedef struct packed { phase_t phase; trap_t trap; } state_t;
+  state_t q,d;
+  logic ctrl_serial_ready,ctrl_branch_ready,ctrl_trap_ready;
+  logic ctrl_block,ctrl_stop,ctrl_front,ctrl_back;
+  logic trap_start, resume_offer;
+  always_comb begin
+    commit_trap_ready_o=q.phase==IDLE &amp;&amp; !rst_i;
+  end
+  always_comb begin
+    trap_start=commit_trap_valid_i &amp;&amp; commit_trap_ready_o;
+  end
+  always_comb begin
+    resume_offer=q.phase==RESUME &amp;&amp; resume_valid_i;
+  end
+  always_comb begin
+    serial_ready_o=ctrl_serial_ready &amp;&amp; q.phase==IDLE &amp;&amp; !commit_trap_valid_i;
+  end
+  always_comb begin
+    branch_ready_o=ctrl_branch_ready &amp;&amp; q.phase==IDLE &amp;&amp; !commit_trap_valid_i;
+  end
+  always_comb begin
+    eei_trap_valid_o=q.phase==REPORT &amp;&amp; !rst_i;
+  end
+  always_comb begin
+    eei_trap_o=q.trap;
+  end
+  always_comb begin
+    resume_ready_o=q.phase==RESUME &amp;&amp; ctrl_trap_ready &amp;&amp; !rst_i;
+  end
+  always_comb begin
+    block_younger_o=ctrl_block || q.phase!=IDLE || commit_trap_valid_i;
+  end
+  always_comb begin
+    stop_fetch_o=ctrl_stop || q.phase!=IDLE || commit_trap_valid_i;
+  end
+  always_comb begin
+    flush_frontend_o=ctrl_front || trap_start;
+  end
+  always_comb begin
+    flush_backend_o=ctrl_back || trap_start;
+  end
+  always_comb begin
+
+    d=q;
+    if (trap_start) begin d.phase=REPORT; d.trap=commit_trap_i; end
+    if (eei_trap_valid_o &amp;&amp; eei_trap_ready_i) d.phase=RESUME;
+    if (resume_valid_i &amp;&amp; resume_ready_o) d.phase=REDIRECT;
+    if (q.phase==REDIRECT &amp;&amp; redirect_valid_o &amp;&amp; redirect_ready_i) d.phase=IDLE;
+    if (rst_i) d=&#x27;0;
+  end
+  control_hazard_unit u_control (
+    .clk_i(clk_i),.rst_i(rst_i),
+    .serial_valid_i(serial_valid_i &amp;&amp; q.phase==IDLE &amp;&amp; !commit_trap_valid_i),
+    .backend_empty_i(backend_empty_i),.serial_ready_o(ctrl_serial_ready),.serial_done_i(serial_done_i),
+    .branch_valid_i(branch_valid_i &amp;&amp; q.phase==IDLE &amp;&amp; !commit_trap_valid_i),
+    .branch_pc_i(branch_pc_i),.branch_ready_o(ctrl_branch_ready),
+    .trap_valid_i(resume_offer),.trap_pc_i(resume_pc_i),.trap_ready_o(ctrl_trap_ready),
+    .redirect_valid_o(redirect_valid_o),.redirect_pc_o(redirect_pc_o),.redirect_ready_i(redirect_ready_i),
+    .block_younger_o(ctrl_block),.stop_fetch_o(ctrl_stop),
+    .flush_frontend_o(ctrl_front),.flush_backend_o(ctrl_back));
+  always_ff @(posedge clk_i) begin
+    q &lt;= d;
+  end
+endmodule</code></pre></details><details id="source-core"><summary>rtl/superscalar/core.sv</summary><p class="status">Implemented pipeline/hazard module; see implementation walkthrough</p><pre><code>// Eight-stage four-wide in-order RV32I core; abstract memory and EEI ports.
 module core (
   input logic clk_i, rst_i,
   input rv32_pkg::word_t reset_pc_i,
@@ -1612,10 +2327,94 @@ module core (
   output logic resume_ready_o
 );
   import rv32_pkg::*;
-  // TODO Declare module-specific state_q/state_d, if this block owns state.
-  // TODO Implement next-state/defaults/reset/flush in always_comb.
-  // TODO Use always_ff only for nonblocking state assignments.
-  // TODO Add meaningful directed tests before declaring this block complete.
+  packet_t packets [7];
+  logic valid [7], ready [7];
+  logic stop_fetch,front_flush,back_flush,redirect_valid,redirect_ready;
+  word_t redirect_pc;
+  logic unused_fetch_outstanding;
+  read_indices_t read_indices;
+  read_values_t read_values,live_operands;
+  commit_writes_t writes;
+  logic [31:0] busy,allocate;
+  logic [3:0] occupied;
+  hazard_pkg::producer_t [3:0] stage_producers [4];
+  hazard_pkg::producer_t [15:0] producers;
+  logic serial_valid,serial_ready,serial_done,block_younger;
+  logic branch_valid,branch_ready,commit_trap_valid,commit_trap_ready;
+  word_t branch_pc;
+  trap_t commit_trap;
+  logic load_req_valid,load_req_ready,load_rsp_valid,load_rsp_ready;
+  logic store_req_valid,store_req_ready,store_rsp_valid,store_rsp_ready,memory_idle;
+  mem_request_t load_req,store_req;
+  mem_response_t load_rsp,store_rsp;
+  always_comb begin
+    for (int stage=0; stage&lt;4; stage++)
+      for (int lane=0; lane&lt;4; lane++)
+        producers[4*stage+lane]=stage_producers[stage][3-lane];
+  end
+  fetch u_fetch (.clk_i(clk_i),.rst_i(rst_i),.reset_pc_i(reset_pc_i),
+    .stop_fetch_i(stop_fetch),.flush_i(front_flush),.redirect_valid_i(redirect_valid),
+    .redirect_pc_i(redirect_pc),.redirect_ready_o(redirect_ready),
+    .request_valid_o(instruction_request_valid_o),.request_address_o(instruction_request_address_o),
+    .request_ready_i(instruction_request_ready_i),.response_valid_i(instruction_response_valid_i),
+    .response_i(instruction_response_i),.response_ready_o(instruction_response_ready_o),
+    .packet_valid_o(valid[0]),.packet_o(packets[0]),.packet_ready_i(ready[0]),
+    .outstanding_o(unused_fetch_outstanding));
+  decode_stage u_decode (.clk_i(clk_i),.rst_i(rst_i),.flush_i(front_flush),
+    .packet_valid_i(valid[0]),.packet_i(packets[0]),.packet_ready_o(ready[0]),
+    .packet_valid_o(valid[1]),.packet_o(packets[1]),.packet_ready_i(ready[1]));
+  regfile u_regfile (.clk_i(clk_i),.rst_i(rst_i),.read_indices_i(read_indices),
+    .read_values_o(read_values),.commit_writes_i(writes));
+  register_stage u_register (.clk_i(clk_i),.rst_i(rst_i),.flush_i(front_flush),
+    .packet_valid_i(valid[1]),.packet_i(packets[1]),.packet_ready_o(ready[1]),
+    .read_indices_o(read_indices),.read_values_i(read_values),.commit_writes_i(writes),
+    .packet_valid_o(valid[2]),.packet_o(packets[2]),.live_operands_o(live_operands),.packet_ready_i(ready[2]));
+  scoreboard u_scoreboard (.clk_i(clk_i),.rst_i(rst_i),.flush_i(back_flush),
+    .allocate_mask_i(allocate),.commit_writes_i(writes),.busy_o(busy));
+  dispatch u_dispatch (.clk_i(clk_i),.rst_i(rst_i),.flush_i(front_flush),
+    .packet_valid_i(valid[2]),.packet_i(packets[2]),.live_operands_i(live_operands),
+    .packet_ready_o(ready[2]),.commit_writes_i(writes),.busy_i(busy),.producers_i(producers),
+    .block_younger_i(block_younger),.serial_valid_o(serial_valid),.serial_ready_i(serial_ready),
+    .allocate_mask_o(allocate),.packet_valid_o(valid[3]),.packet_o(packets[3]),.packet_ready_i(ready[3]));
+  execute u_execute (.clk_i(clk_i),.rst_i(rst_i),.flush_i(back_flush),
+    .packet_valid_i(valid[3]),.packet_i(packets[3]),.packet_ready_o(ready[3]),
+    .packet_valid_o(valid[4]),.packet_o(packets[4]),.packet_ready_i(ready[4]),
+    .producers_o(stage_producers[0]),.occupied_o(occupied[0]));
+  memory_stage u_memory (.clk_i(clk_i),.rst_i(rst_i),.flush_i(back_flush),
+    .packet_valid_i(valid[4]),.packet_i(packets[4]),.packet_ready_o(ready[4]),
+    .load_request_valid_o(load_req_valid),.load_request_o(load_req),.load_request_ready_i(load_req_ready),
+    .load_response_valid_i(load_rsp_valid),.load_response_i(load_rsp),.load_response_ready_o(load_rsp_ready),
+    .packet_valid_o(valid[5]),.packet_o(packets[5]),.packet_ready_i(ready[5]),
+    .producers_o(stage_producers[1]),.occupied_o(occupied[1]));
+  writeback u_writeback (.clk_i(clk_i),.rst_i(rst_i),.flush_i(back_flush),
+    .packet_valid_i(valid[5]),.packet_i(packets[5]),.packet_ready_o(ready[5]),
+    .packet_valid_o(valid[6]),.packet_o(packets[6]),.packet_ready_i(ready[6]),
+    .producers_o(stage_producers[2]),.occupied_o(occupied[2]));
+  commit u_commit (.clk_i(clk_i),.rst_i(rst_i),
+    .packet_valid_i(valid[6]),.packet_i(packets[6]),.packet_ready_o(ready[6]),
+    .commit_writes_o(writes),.retire_o(retire_o),.trap_valid_o(commit_trap_valid),
+    .trap_o(commit_trap),.trap_ready_i(commit_trap_ready),.branch_valid_o(branch_valid),
+    .branch_pc_o(branch_pc),.branch_ready_i(branch_ready),.serial_done_o(serial_done),
+    .store_request_valid_o(store_req_valid),.store_request_o(store_req),.store_request_ready_i(store_req_ready),
+    .store_response_valid_i(store_rsp_valid),.store_response_i(store_rsp),.store_response_ready_o(store_rsp_ready),
+    .memory_idle_i(memory_idle),.producers_o(stage_producers[3]),.occupied_o(occupied[3]));
+  memory_adapter u_adapter (.clk_i(clk_i),.rst_i(rst_i),
+    .load_request_valid_i(load_req_valid),.load_request_i(load_req),.load_request_ready_o(load_req_ready),
+    .load_response_valid_o(load_rsp_valid),.load_response_o(load_rsp),.load_response_ready_i(load_rsp_ready),
+    .store_request_valid_i(store_req_valid),.store_request_i(store_req),.store_request_ready_o(store_req_ready),
+    .store_response_valid_o(store_rsp_valid),.store_response_o(store_rsp),.store_response_ready_i(store_rsp_ready),
+    .request_valid_o(data_request_valid_o),.request_o(data_request_o),.request_ready_i(data_request_ready_i),
+    .response_valid_i(data_response_valid_i),.response_i(data_response_i),.response_ready_o(data_response_ready_o),
+    .idle_o(memory_idle));
+  recovery u_recovery (.clk_i(clk_i),.rst_i(rst_i),.serial_valid_i(serial_valid),
+    .backend_empty_i(occupied==&#x27;0 &amp;&amp; memory_idle),.serial_ready_o(serial_ready),.serial_done_i(serial_done),
+    .branch_valid_i(branch_valid),.branch_pc_i(branch_pc),.branch_ready_o(branch_ready),
+    .commit_trap_valid_i(commit_trap_valid),.commit_trap_i(commit_trap),.commit_trap_ready_o(commit_trap_ready),
+    .eei_trap_valid_o(trap_valid_o),.eei_trap_o(trap_o),.eei_trap_ready_i(trap_ready_i),
+    .resume_valid_i(resume_valid_i),.resume_pc_i(resume_pc_i),.resume_ready_o(resume_ready_o),
+    .redirect_valid_o(redirect_valid),.redirect_pc_o(redirect_pc),.redirect_ready_i(redirect_ready),
+    .block_younger_o(block_younger),.stop_fetch_o(stop_fetch),
+    .flush_frontend_o(front_flush),.flush_backend_o(back_flush));
 endmodule</code></pre></details><details id="source-pipe_reg"><summary>examples/superscalar/pipe_reg.sv</summary><p class="status">Generic storage example</p><pre><code>// One-entry elastic register, NOT a CPU stage implementation.
 // Synchronous active-high reset; transfer on valid &amp;&amp; ready at an edge.
 // kill_i suppresses both interfaces and clears state at the next edge.
@@ -1657,8 +2456,9 @@ endmodule</code></pre></details></section>
 <section id="build-guide" class="part" aria-label="Start building: step-by-step RTL">
 <p class="label">Start building: step-by-step RTL</p>
 <h2 class="part-title" id="build-guide-start-building-your-step-by-step-rtl-implementation-guide">Start building: your step-by-step RTL implementation guide</h2>
+<p><strong>Implementation update:</strong> the eight-stage baseline is now implemented. Read <a href="#implementation">the actual RTL walkthrough</a> for current state/signals and connections. Instructions to build missing stages below can now be followed as reimplementation exercises. Advanced alternatives remain future extensions.</p>
 <p>Start with the decoder and ALU, then build one functioning lane through all eight stages before enabling four-lane dispatch. Keep the existing four-lane interfaces throughout; initially only lane 0 carries valid instructions. This final section is your practical route through the course, from the first edit to integration.</p>
-<p>Thirteen processor modules remain intentionally unfinished. The decoder, ALU, forwarding and control-hazard units now contain implementations. The decoder steps below remain useful as a guided reading/reimplementation exercise; you can inspect the completed rv32_decode.sv and run check_decode.sh. The code below illustrates structure and leaves the assignment logic for you; it does not complete the RTL.</p>
+<p>All pipeline modules now contain implementations. Follow these steps as a reading or reimplementation exercise, comparing your version with the completed RTL and its regression. Code fragments below deliberately leave decisions for you to work through; the actual sources are in the preceding source appendix.</p>
 <p>Your first milestone is: <strong>decode ADDI, calculate its result, and verify both independently before introducing clocked pipeline behavior.</strong></p>
 <h3 id="build-guide-b1-open-these-files-and-understand-the-vocabulary">B1. Open these files and understand the vocabulary</h3>
 <div class="table" tabindex="0" role="region" aria-label="Scrollable reference table"><table><thead><tr><th scope="col">File</th><th scope="col">Why you need it now</th></tr></thead><tbody><tr><td><a href="#source-rv32_pkg">rv32_pkg.sv</a></td><td>Shared types and field meanings</td></tr><tr><td><a href="#source-rv32_decode">rv32_decode.sv</a></td><td>First implementation task</td></tr><tr><td><a href="#source-alu">alu.sv</a></td><td>Second implementation task</td></tr><tr><td><a href="#source-pipe_reg">pipe_reg.sv</a></td><td>Working example of the sequential coding style</td></tr><tr><td><a href="#labs">Lab workbook</a></td><td>L2–L4 support your first sessions</td></tr></tbody></table></div>
@@ -1699,8 +2499,8 @@ end</code></pre>
 <div class="table" tabindex="0" role="region" aria-label="Scrollable reference table"><table><thead><tr><th scope="col">Test</th><th scope="col">What it checks</th></tr></thead><tbody><tr><td>ADDI with immediate 7</td><td>Basic field extraction</td></tr><tr><td>ADDI with immediate −1</td><td>Sign extension</td></tr><tr><td>ADDI with nonzero rs1</td><td>Register index extraction</td></tr><tr><td>ADDI with rd=x0</td><td>Destination suppression policy without deleting the instruction</td></tr><tr><td>Unsupported word at this milestone</td><td>Illegal default</td></tr><tr><td>Different words applied consecutively</td><td>No accidental carryover of fields</td></tr></tbody></table></div>
 <p>A useful bug to catch is uses_rs2=1 for ADDI. That creates a false dependency on bits belonging to the immediate. Specify your writes_rd convention for x0 consistently; downstream allocation and architectural writes must always exclude x0.</p>
 <p>After implementing the module, run this focused lint command from the repo root:</p>
-<pre><code>wsl -d Ubuntu -- verilator --lint-only -Wall --top-module rv32_decode rtl/superscalar/rv32_pkg.sv rtl/superscalar/rv32_decode.sv</code></pre>
-<p>This is a validation command to run, not a recorded pass for your future RTL. Investigate diagnostics. The skeleton script suppresses expected undriven/unused warnings for shells; those suppressions are not the acceptance criteria for a completed module. Lint also does not replace behavioral simulation.</p>
+<pre><code>wsl -d Ubuntu -- verilator --lint-only -Wall --top-module rv32_decode rtl/superscalar/hazard_pkg.sv rtl/superscalar/rv32_pkg.sv rtl/superscalar/rv32_decode.sv</code></pre>
+<p>This is a validation command to run, not a recorded pass for your future RTL. Investigate diagnostics. The historical skeleton script now runs strict full-core lint without undriven/unused warning suppressions. Lint also does not replace behavioral simulation.</p>
 <h3 id="build-guide-b5-implement-the-matching-alu-behavior">B5. Implement the matching ALU behavior</h3>
 <p>The existing ALU receives op_i, a_i and b_i and computes result_o. EX will eventually select a resolved register value and an immediate for ADDI, or two resolved register values for ADD. Operand selection belongs to EX.</p>
 <p>Choose whether ALU accepts OP_ADD and OP_ADDI directly or EX normalizes both to OP_ADD. Accepting both in the ALU is a straightforward initial convention for this package. Document that choice and use it consistently in EX and tests.</p>

@@ -1,5 +1,11 @@
 # Laboratory workbook: build, observe, explain
 
+**Implementation update:** the eight-stage baseline is now implemented. Read
+[the actual RTL walkthrough](implementation.md) for current state/signals and
+connections. Instructions to build missing stages below can now be followed as
+reimplementation exercises. Advanced alternatives remain future extensions.
+
+
 These assignments guide you through completing the skeleton yourself. They
 are not claims that the modules or tests already exist. Each lab names a task,
 an expected reasoning checkpoint, and a bug your evidence should catch. Keep

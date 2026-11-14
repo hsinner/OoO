@@ -1,4 +1,4 @@
-# Superscalar hazard validation
+# Superscalar validation
 
 Command: `wsl -d Ubuntu -- bash scripts/check_hazards.sh` from the repository.
 The script runs warning-fatal Verilator lint for each module, builds the real
@@ -29,7 +29,7 @@ These are standalone module tests, not full-core simulation, instruction
 compliance, synthesis or timing closure. Dispatch prefix freezing, same-cycle
 commit refresh, scoreboard flush wiring, actual branch semantics, fetch response
 draining, and externally visible store ordering still require integration tests.
-No complete superscalar CPU is claimed.
+The subsequent full-core section records the implemented pipeline integration.
 
 ## Decoder validation — 2026-11-11
 
@@ -80,3 +80,51 @@ integer arithmetic with explicit truncation and division-based right shifts.
 This is standalone functional evidence, not exhaustive proof, integrated EX
 verification, FPGA synthesis or timing closure. The host/WSL build emitted a
 timestamp clock-skew warning; compilation and execution completed successfully.
+
+
+## Full-core integration — 2026-11-14
+
+All nineteen RTL files in `rtl/superscalar/skeleton.f` now form the functional
+baseline. The historical manifest name is retained for compatibility. Strict
+lint has no suppressed unused/undriven/combinational-loop warnings.
+
+Run from the repository root:
+
+```powershell
+wsl -d Ubuntu -- bash scripts/check_core.sh
+python scripts/check_repo.py
+python scripts/build_superscalar_docs.py --check
+```
+
+The program generator creates 499 words and an independent sequential Python
+oracle produces 495 expected retirement/trap events. It covers all forty RV32I
+operations, both outcomes of each branch, forwarding/dependencies, destination
+conflicts, jump/link behavior, byte/halfword/word memory operations, signed and
+unsigned loads, loads to x0, FENCE, ECALL/EBREAK, illegal instructions, alignment
+and access faults, and EEI resume. Four hundred arithmetic instructions use a
+fixed random seed so failures can be reproduced. This is directed plus randomized
+integration testing, not an official architectural certification suite.
+
+Observed runs (same program, different deterministic bus/EEI timing schedules):
+
+| Timing seed | Cycles | Architectural events | Four-wide retirement cycles | Request/trap stalled cycles | Pipeline stalled channels/cycles | Redirects with outstanding fetch |
+| --- | --- | --- | --- | --- | --- | --- |
+| 1 | 1924 | 495 | 66 | 90 | 546 | 6 |
+| 7 | 1918 | 495 | 66 | 88 | 546 | 6 |
+| 19 | 1906 | 495 | 66 | 85 | 543 | 2 |
+
+The test checks ordered PC/instruction events, accepted register results,
+memory trace fields, fault kind/address, and every final data-memory byte.
+It also checks stable held pipeline packets/requests/trap reports, compact lane
+prefixes, and x0 register/scoreboard invariants. The memory and EEI endpoints
+are explicitly simulation-only environments; the processor stages are real RTL.
+
+The host/WSL build can report timestamp clock-skew warnings. These are distinct
+from RTL warnings; the simulator executable must still finish with PASS.
+No synthesis, FPGA resource use, timing closure, physical implementation, or
+exhaustive formal/ISA compliance result is claimed. The external platform must
+honor one outstanding transaction per port, stable valid/ready handshakes,
+coordinated reset and failed-store-without-side-effect semantics.
+
+For the entire active regression on Linux/WSL, run `make check-superscalar`.
+The older `make check` still checks only the historical OoO experiment.

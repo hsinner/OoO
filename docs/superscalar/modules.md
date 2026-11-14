@@ -1,5 +1,11 @@
 # A guided tour of the actual files
 
+**Implementation update:** the eight-stage baseline is now implemented. Read
+[the actual RTL walkthrough](implementation.md) for current state/signals and
+connections. Instructions to build missing stages below can now be followed as
+reimplementation exercises. Advanced alternatives remain future extensions.
+
+
 Read a module as a contract: what question it answers, which information it
 owns, what event changes its state, and what must remain true when it stalls.
 The source appendix below embeds the current repository files verbatim. These
@@ -305,8 +311,8 @@ by itself. Those missing duties belong to recovery, described next.
 [recovery.sv](../../rtl/superscalar/recovery.sv) must wrap the control unit and
 own the longer trap lifecycle. A useful planning sequence is: accept the commit
 trap, hold an EEI report, wait for report acceptance, wait for resume, offer the
-chosen restart PC, and wait for IF to accept that redirect. These are proposed
-state responsibilities, not implemented state encodings.
+chosen restart PC, and wait for IF to accept that redirect. The implementation groups these responsibilities into IDLE, REPORT, RESUME
+and REDIRECT states; see the implementation walkthrough.
 
 Keep younger dispatch/fetch blocked throughout, including the interval after C
 has handed off the trap but the environment has not supplied a resume PC.
@@ -322,9 +328,9 @@ acceptance independently to expose gaps in this ownership chain.
 ## M18. core: integration is a correctness task
 
 [core.sv](../../rtl/superscalar/core.sv) must instantiate and connect all of these
-blocks. It currently contains ports and TODOs only. The external instruction,
-data, trap, resume and retirement interfaces are the proposed system boundary.
-They do not provide a reset vector, memory map or privileged environment.
+blocks. These connections now exist in the implemented core. The external instruction,
+data, trap, resume and retirement interfaces form the system boundary.
+The platform supplies reset_pc_i and defines the memory map and EEI behavior.
 
 Wire ordinary packet channels forward and capacity information backward. Send
 accepted commit writes to RF, scoreboard, R bypass and DP refresh. Pack the
@@ -368,7 +374,7 @@ and all consumers accept without stalls. A–D name instructions, not stages.
 | 8 | AC–AF | Y–AB | U–X | Q–T | M–P | I–L | E–H | A–D |
 
 The edge after cycle 8 can retire A–D under these assumptions. This is a
-pipeline illustration, not a throughput claim for the unimplemented fetch port.
+pipeline illustration, not a throughput claim for the conservative fetch port.
 Request/response latency can leave IF empty and change the table immediately.
 Do not include memory wait time implicitly in a claimed fixed eight-cycle latency.
 

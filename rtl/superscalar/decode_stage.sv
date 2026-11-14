@@ -1,10 +1,4 @@
-// UNIMPLEMENTED SKELETON: interface contract only; outputs intentionally undriven.
-// See docs/superscalar/skeleton.md. This file must not be used as working RTL.
-// No tie-offs, behavioral substitutes, or inferred test results are provided.
-// TODO D-01: Instantiate four rv32_decode blocks and one ordered output holding register.
-// TODO D-02: Retain earlier fetch fault; do not replace it with decode of meaningless bytes.
-// TODO D-03: Preserve PC/order and every unowned field; no architectural effects.
-// TODO STATE: output packet and valid; reset/flush invalidate the packet.
+// Four combinational decoders feeding one D-stage register; earlier faults win.
 module decode_stage (
   input logic clk_i, rst_i, flush_i,
   input logic packet_valid_i,
@@ -15,8 +9,39 @@ module decode_stage (
   input logic packet_ready_i
 );
   import rv32_pkg::*;
-  // TODO Declare module-specific state_q/state_d, if this block owns state.
-  // TODO Implement next-state/defaults/reset/flush in always_comb.
-  // TODO Use always_ff only for nonblocking state assignments.
-  // TODO Add meaningful directed tests before declaring this block complete.
+  packet_t packet_q, packet_d, decoded_packet;
+  decoded_t [3:0] decoded;
+  logic valid_q, valid_d;
+  for (genvar i=0; i<4; i++) begin : g_decode
+    rv32_decode u_decode (.instruction_i(packet_i[i].instruction), .decoded_o(decoded[i]));
+  end
+  always_comb begin
+    packet_ready_o = (!valid_q || packet_ready_i) && !rst_i && !flush_i;
+  end
+  always_comb begin
+    packet_valid_o = valid_q && !rst_i && !flush_i;
+  end
+  always_comb begin
+    packet_o = packet_q;
+  end
+  always_comb begin
+    decoded_packet = packet_i;
+    for (int i=0; i<4; i++) begin
+      decoded_packet[i].decoded = decoded[i];
+      if (packet_i[i].fault.valid) decoded_packet[i].decoded.serial = 1'b1;
+      else decoded_packet[i].fault = decoded[i].fault;
+    end
+
+    packet_d = packet_q;
+    valid_d = valid_q;
+    if (packet_ready_o) begin
+      valid_d = packet_valid_i;
+      if (packet_valid_i) packet_d = decoded_packet;
+    end
+    if (rst_i || flush_i) begin valid_d=0; packet_d='0; end
+  end
+  always_ff @(posedge clk_i) begin
+    packet_q <= packet_d;
+    valid_q <= valid_d;
+  end
 endmodule

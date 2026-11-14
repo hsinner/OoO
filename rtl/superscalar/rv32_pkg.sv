@@ -1,4 +1,4 @@
-// Interface specification only. This package implements no processor behavior.
+// Shared interface types and combinational classification/forwarding helpers.
 package rv32_pkg;
   localparam int LANES = 4;
   localparam int XLEN = 32;
@@ -90,4 +90,29 @@ package rv32_pkg;
     word_t read_data;
     logic error;
   } mem_response_t;
+  // Shared classification keeps EX/MEM/C consistent. These functions are purely
+  // combinational; packages do not introduce pipeline storage.
+  function automatic logic is_load(input op_t op);
+    return op inside {OP_LB,OP_LH,OP_LW,OP_LBU,OP_LHU};
+  endfunction
+  function automatic logic is_store(input op_t op);
+    return op inside {OP_SB,OP_SH,OP_SW};
+  endfunction
+  function automatic logic is_control(input op_t op);
+    return op inside {OP_BEQ,OP_BNE,OP_BLT,OP_BGE,OP_BLTU,OP_BGEU,OP_JAL,OP_JALR};
+  endfunction
+  function automatic logic [3:0] memory_mask(input op_t op);
+    case (op)
+      OP_LB,OP_LBU,OP_SB: return 4'b0001;
+      OP_LH,OP_LHU,OP_SH: return 4'b0011;
+      OP_LW,OP_SW: return 4'b1111;
+      default: return 4'b0000;
+    endcase
+  endfunction
+  function automatic hazard_pkg::producer_t make_producer(
+    input lane_t unused_lane, input logic occupied, input logic ready);
+    return '{valid:occupied && unused_lane.valid,writes_rd:unused_lane.decoded.writes_rd,
+             killed:1'b0,fault:unused_lane.fault.valid,ready:ready,
+             rd:unused_lane.decoded.rd,value:unused_lane.result};
+  endfunction
 endpackage

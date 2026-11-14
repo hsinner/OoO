@@ -1,5 +1,11 @@
 # Building a four-wide, eight-stage RV32I processor
 
+**Implementation update:** the eight-stage baseline is now implemented. Read
+[the actual RTL walkthrough](implementation.md) for current state/signals and
+connections. Instructions to build missing stages below can now be followed as
+reimplementation exercises. Advanced alternatives remain future extensions.
+
+
 Design revision: 2026-09-27. This is the active design tutorial. The target is a
 four-wide **in-order superscalar** processor. The previous OoO backend remains
 historical work; it does not implement this architecture.
@@ -458,11 +464,10 @@ all reduce achieved IPC.
 
 ## 17. Module layout and how to start
 
-The following is the target layout. The hazard package and two hazard modules
-are implemented. The remaining stage/helper interfaces now exist as deliberately
-empty shells. Use the [skeleton specification](skeleton.md) for complete port
-contracts, ownership rules, TODOs and acceptance tests. CPU behavior and its
-integration remain your implementation work:
+The following is the active layout. All stages and helpers are implemented.
+Use the [implementation walkthrough](implementation.md) for actual state and
+signals, and the [skeleton specification](skeleton.md) for the original contracts.
+The development sequence below remains useful for reimplementation practice:
 
 ```text
 rtl/superscalar/
@@ -496,9 +501,8 @@ suffixes, then add scoreboard hazards and commit refresh. Finally test special
 operations mixed with ALU prefixes. Keep a working regression after every step.
 Do not create dozens of empty modules and count them as hardware progress.
 
-The [roadmap](roadmap.md) gives the milestone gates. The storage example,
-standalone hazard units and unfinished module shells exist; the complete
-superscalar processor does not yet.
+The [roadmap](roadmap.md) gives the milestone gates. The full baseline now runs
+architectural simulation; see [validation](validation.md) for its evidence and limits.
 
 ## 18. Verification and acceptance tests
 

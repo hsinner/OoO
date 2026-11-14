@@ -1,12 +1,4 @@
-// UNIMPLEMENTED SKELETON: interface contract only; outputs intentionally undriven.
-// See docs/superscalar/skeleton.md. This file must not be used as working RTL.
-// No tie-offs, behavioral substitutes, or inferred test results are provided.
-// TODO MEM-01: Pass ALU results in order; issue a singleton load exactly once and wait for response.
-// TODO MEM-02: Extract little-endian bytes and sign/zero extend; preserve original fault address.
-// TODO MEM-03: Package stores only, never issue them; commit owns store requests.
-// TODO MEM-04: A load is a live unready producer until actual data arrives; fault blocks forwarding.
-// TODO MEM-05: Coordinate flush with adapter ownership; accepted external requests still need draining.
-// TODO STATE: resident packet; request-sent flag; load response/result holding.
+// Serialized load completion and formatting; stores remain descriptors until C.
 module memory_stage (
   input logic clk_i, rst_i, flush_i,
   input logic packet_valid_i,
@@ -25,8 +17,69 @@ module memory_stage (
   output logic occupied_o
 );
   import rv32_pkg::*;
-  // TODO Declare module-specific state_q/state_d, if this block owns state.
-  // TODO Implement next-state/defaults/reset/flush in always_comb.
-  // TODO Use always_ff only for nonblocking state assignments.
-  // TODO Add meaningful directed tests before declaring this block complete.
+  typedef struct packed { packet_t packet; logic valid,sent,done; } state_t;
+  state_t q,d;
+  logic load_pending;
+  word_t shifted;
+  always_comb begin
+    for (int i=0; i<4; i++)
+      producers_o[i]=make_producer(q.packet[i],q.valid && !rst_i && !flush_i,!load_pending);
+  end
+  always_comb begin
+    load_pending=q.valid && is_load(q.packet[0].decoded.op) && !q.packet[0].fault.valid && !q.done;
+  end
+  always_comb begin
+    shifted=load_response_i.read_data >> {q.packet[0].address[1:0],3'b0};
+  end
+  always_comb begin
+    packet_valid_o=q.valid && !load_pending && !rst_i && !flush_i;
+  end
+  always_comb begin
+    packet_o=q.packet;
+  end
+  always_comb begin
+    packet_ready_o=(!q.valid || (packet_valid_o && packet_ready_i)) && !rst_i && !flush_i;
+  end
+  always_comb begin
+    occupied_o=q.valid;
+  end
+  always_comb begin
+    load_request_valid_o=load_pending && !q.sent && !rst_i && !flush_i;
+  end
+  always_comb begin
+    load_request_o='{write:0,aligned_address:{q.packet[0].address[31:2],2'b0},
+                     write_data:32'b0,byte_mask:q.packet[0].byte_mask};
+  end
+  always_comb begin
+    load_response_ready_o=load_pending && q.sent && !rst_i;
+  end
+  always_comb begin
+    d=q;
+
+    if (load_request_valid_o && load_request_ready_i) d.sent=1;
+    if (load_response_valid_i && load_response_ready_o) begin
+      d.done=1;
+      d.packet[0].result=shifted;
+      case (q.packet[0].decoded.op)
+        OP_LB: d.packet[0].result={{24{shifted[7]}},shifted[7:0]};
+        OP_LBU: d.packet[0].result={24'b0,shifted[7:0]};
+        OP_LH: d.packet[0].result={{16{shifted[15]}},shifted[15:0]};
+        OP_LHU: d.packet[0].result={16'b0,shifted[15:0]};
+        default: begin end
+      endcase
+      if (load_response_i.error)
+        d.packet[0].fault='{valid:1,kind:FAULT_LOAD_ACCESS,address:q.packet[0].address};
+    end
+
+    if (packet_ready_o) begin
+      d.valid=packet_valid_i;
+      d.sent=0; d.done=0;
+      if (packet_valid_i) d.packet=packet_i;
+    end
+    // Integration only flushes after older data ownership has settled.
+    if (rst_i || flush_i) d='0;
+  end
+  always_ff @(posedge clk_i) begin
+    q <= d;
+  end
 endmodule

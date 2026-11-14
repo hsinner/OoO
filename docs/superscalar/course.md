@@ -1,5 +1,11 @@
 # Course: from a four-wide pipeline to modern CPU design
 
+**Implementation update:** the eight-stage baseline is now implemented. Read
+[the actual RTL walkthrough](implementation.md) for current state/signals and
+connections. Instructions to build missing stages below can now be followed as
+reimplementation exercises. Advanced alternatives remain future extensions.
+
+
 This course extends the beginner guide and module walkthroughs. Its practical
 project is still the eight-stage, four-wide, in-order RV32I processor. The
 advanced lessons are architectural study and optional future projects; they
@@ -833,8 +839,8 @@ not evidence that those system concerns are already solved.
 
 Keep tool versions, source revision, target, constraints, commands and reports
 with measured results. Use independent manifests for the historical OoO experiment
-and active superscalar design. The permissive skeleton elaboration command is
-only for shells; completed modules need strict checks and behavioral evidence.
+and active superscalar design. The historical skeleton command now checks the full core with strict lint;
+behavioral evidence comes from check_core.sh and the focused module tests.
 
 ## C30. Your two capstones and advancement gates
 

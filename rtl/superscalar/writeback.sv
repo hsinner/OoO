@@ -1,10 +1,4 @@
-// UNIMPLEMENTED SKELETON: interface contract only; outputs intentionally undriven.
-// See docs/superscalar/skeleton.md. This file must not be used as working RTL.
-// No tie-offs, behavioral substitutes, or inferred test results are provided.
-// TODO WB-01: Hold completed result/exception packet for C; no architectural write ports.
-// TODO WB-02: Transfer whole packet; C owns any partial retirement suffix.
-// TODO WB-03: Expose resident live writers including faulted entries until recovery.
-// TODO STATE: packet holding register and valid.
+// WB completion holding only: architectural writes belong exclusively to C.
 module writeback (
   input logic clk_i, rst_i, flush_i,
   input logic packet_valid_i,
@@ -17,8 +11,36 @@ module writeback (
   output logic occupied_o
 );
   import rv32_pkg::*;
-  // TODO Declare module-specific state_q/state_d, if this block owns state.
-  // TODO Implement next-state/defaults/reset/flush in always_comb.
-  // TODO Use always_ff only for nonblocking state assignments.
-  // TODO Add meaningful directed tests before declaring this block complete.
+  packet_t packet_q, packet_d;
+  logic valid_q, valid_d;
+  always_comb begin
+    for (int i=0; i<4; i++)
+      producers_o[i] = make_producer(packet_q[i], packet_valid_o, 1'b1);
+  end
+  always_comb begin
+    packet_ready_o = (!valid_q || packet_ready_i) && !rst_i && !flush_i;
+  end
+  always_comb begin
+    packet_valid_o = valid_q && !rst_i && !flush_i;
+  end
+  always_comb begin
+    packet_o = packet_q;
+  end
+  always_comb begin
+    occupied_o = valid_q;
+  end
+  always_comb begin
+
+    packet_d = packet_q;
+    valid_d = valid_q;
+    if (packet_ready_o) begin
+      valid_d = packet_valid_i;
+      if (packet_valid_i) packet_d = packet_i;
+    end
+    if (rst_i || flush_i) begin valid_d=0; packet_d='0; end
+  end
+  always_ff @(posedge clk_i) begin
+    packet_q <= packet_d;
+    valid_q <= valid_d;
+  end
 endmodule

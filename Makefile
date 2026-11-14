@@ -9,3 +9,12 @@ test:
 check: lint test
 clean:
 	$(RM) -r build/obj
+
+.PHONY: check-superscalar
+check-superscalar:
+	python3 scripts/check_repo.py
+	python3 scripts/build_superscalar_docs.py --check
+	bash scripts/check_hazards.sh
+	bash scripts/check_decode.sh
+	bash scripts/check_alu.sh
+	bash scripts/check_core.sh

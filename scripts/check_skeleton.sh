@@ -1,11 +1,5 @@
 #!/usr/bin/env bash
 set -euo pipefail
-# Interface checks ONLY. These exclusions are local to deliberately empty shells.
-# Strict functional lint for implemented modules remains in check_hazards.sh.
-# Decoder/ALU are checked strictly by check_decode.sh and check_alu.sh.
-modules=(fetch decode_stage regfile scoreboard register_stage dispatch execute memory_stage writeback commit memory_adapter recovery core)
-for module in "${modules[@]}"; do
-  verilator --lint-only -Wall -Wno-UNDRIVEN -Wno-UNUSEDSIGNAL -Wno-UNUSEDPARAM \
-    --top-module "$module" -f rtl/superscalar/skeleton.f
-done
-printf 'PASS: %s skeleton interfaces parsed/elaborated; NO behavior implemented or simulated\n' "${#modules[@]}"
+# Historical script name; the manifest now contains the functional processor.
+verilator --lint-only -Wall --top-module core -f rtl/superscalar/skeleton.f
+printf 'PASS: complete superscalar core strict lint (no warning suppressions)\n'

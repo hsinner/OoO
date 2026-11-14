@@ -1,10 +1,9 @@
 # Superscalar implementation backbone
 
-Start in [core.sv](../../rtl/superscalar/core.sv). **It is deliberately unfinished.**
-The new stage modules have real interface declarations and numbered TODOs, but
-no assignments, state transitions, functional tie-offs or instantiated CPU.
-Undriven outputs are intentional. Do not run these shells as a processor or
-interpret successful interface elaboration as functional verification.
+The original skeleton is now implemented. Start in [core.sv](../../rtl/superscalar/core.sv)
+and read [the current implementation walkthrough](implementation.md). The contracts
+below remain the design checklist; the completion column describes responsibilities
+now implemented in RTL, not missing module bodies.
 
 The [architecture tutorial](tutorial.md) remains the design explanation. This
 document is the implementation contract/checklist. Types and interfaces are a
@@ -18,22 +17,22 @@ discover a better contract while implementing.
 | `hazard_pkg.sv` | Implemented hazard types | Preserve compatibility or update its real tests |
 | `forwarding_unit.sv` | Implemented/tested resolver | Wire only older producers in prescribed age order |
 | `control_hazard_unit.sv` | Implemented/tested singleton/redirect controller | Integrate with commit/EEI and fetch transaction ownership |
-| `rv32_pkg.sv` | New shared type declarations only | Review field ownership and EEI/bus choices |
+| `rv32_pkg.sv` | Types and combinational helpers | Review field ownership and EEI/bus choices |
 | `rv32_decode.sv` | Implemented/tested combinational decoder | Integrate four instances; preserve earlier fetch faults in D |
 | `alu.sv` | Implemented/tested combinational ALU | Wire resolved register/immediate/PC operands from EX |
-| `fetch.sv` | Empty sequential shell | PC, requests, response buffering, stale response drain |
-| `decode_stage.sv` | Empty sequential shell | Four decoder instances and stable ordered packet |
-| `regfile.sv` | Empty sequential shell | Eight read ports, four commit writes, x0 semantics |
-| `scoreboard.sv` | Empty sequential shell | Writer allocation/release, x0 invariant and flush cleanup |
-| `register_stage.sv` | Empty sequential shell | Held control packet, live operand sideband, commit bypass |
-| `dispatch.sv` | Empty sequential shell | Forwarding hookup, oldest prefix, suffix retention, frozen offer |
-| `execute.sv` | Empty sequential shell | Four ALUs, singleton target/address, exceptions and producers |
-| `memory_stage.sv` | Empty sequential shell | Loads and data formatting; store descriptors only |
-| `writeback.sv` | Empty sequential shell | Result holding, no architectural writes |
-| `commit.sv` | Empty sequential shell | Ordered retirement, register writes, stores, traps and redirects |
-| `memory_adapter.sv` | Empty sequential shell | One outstanding data request, owner and response routing |
-| `recovery.sv` | Empty sequential shell | EEI trap/report/resume state around existing control unit |
-| `core.sv` | Empty integration shell | Instantiate, wire and verify all contracts below |
+| `fetch.sv` | Implemented stage/storage | PC, requests, response buffering, stale response drain |
+| `decode_stage.sv` | Implemented stage/storage | Four decoder instances and stable ordered packet |
+| `regfile.sv` | Implemented stage/storage | Eight read ports, four commit writes, x0 semantics |
+| `scoreboard.sv` | Implemented stage/storage | Writer allocation/release, x0 invariant and flush cleanup |
+| `register_stage.sv` | Implemented stage/storage | Held control packet, live operand sideband, commit bypass |
+| `dispatch.sv` | Implemented stage/storage | Forwarding hookup, oldest prefix, suffix retention, frozen offer |
+| `execute.sv` | Implemented stage/storage | Four ALUs, singleton target/address, exceptions and producers |
+| `memory_stage.sv` | Implemented stage/storage | Loads and data formatting; store descriptors only |
+| `writeback.sv` | Implemented stage/storage | Result holding, no architectural writes |
+| `commit.sv` | Implemented stage/storage | Ordered retirement, register writes, stores, traps and redirects |
+| `memory_adapter.sv` | Implemented stage/storage | One outstanding data request, owner and response routing |
+| `recovery.sv` | Implemented stage/storage | EEI trap/report/resume state around existing control unit |
+| `core.sv` | Implemented integration | Instantiate, wire and verify all contracts below |
 
 The old OoO `rtl/alu.sv` and new skeleton `rtl/superscalar/alu.sv` use the same
 module name intentionally in separate designs. **Never concatenate their file
@@ -44,7 +43,7 @@ combined build should rename or namespace the modules first.
 
 - `rtl/files.f`: historical OoO experiment only.
 - `rtl/superscalar/files.f`: existing implemented hazard modules only.
-- `rtl/superscalar/skeleton.f`: shared types, existing hazards and all new shells.
+- `rtl/superscalar/skeleton.f`: shared types, existing hazards and the complete pipeline.
 
 Run the following from the repository root:
 
@@ -54,15 +53,9 @@ wsl -d Ubuntu -- bash scripts/check_hazards.sh
 python scripts/build_superscalar_docs.py --check
 ```
 
-The first command only parses/elaborates each declared interface. It suppresses
-undriven/unused warnings **only for this intentionally empty skeleton build**.
-All other warnings remain fatal. The hazard test script still uses strict lint
-and actual simulation. No placeholder tests or fake passing CPU are supplied.
-
-As you implement each module, give it a strict lint target without those
-suppressions and real behavioral tests. Remove its UNIMPLEMENTED banner only
-when its documented responsibilities and relevant tests pass. An elaboration
-pass cannot establish reset behavior, handshake stability or ISA correctness.
+The first command runs strict full-core lint without empty-shell suppressions.
+Run `wsl -d Ubuntu -- bash scripts/check_core.sh` for architectural simulation.
+A lint pass alone cannot establish reset behavior, handshake stability or ISA correctness.
 
 ## 3. Stage ownership and record validity
 

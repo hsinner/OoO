@@ -13,6 +13,7 @@ ROOT = Path(__file__).resolve().parents[1]
 DOCS = ROOT / "docs/superscalar"
 TARGET = DOCS / "tutorial.html"
 CHAPTERS = [
+    ("implementation", "Implemented pipeline: every file and connection"),
     ("beginner", "Start here: first principles"),
     ("course", "Course: CPU architectures"),
     ("labs", "Labs: build and verify"),
@@ -211,7 +212,7 @@ def build():
                   else "Generic storage example" if path.stem == "pipe_reg"
                   else "Implemented RV32I decoder; see standalone validation report" if path.stem == "rv32_decode"
                   else "Implemented integer ALU; see standalone validation report" if path.stem == "alu"
-                  else "Implemented hazard unit; see standalone validation report")
+                  else "Implemented pipeline/hazard module; see implementation walkthrough")
         relative = path.relative_to(ROOT).as_posix()
         listings.append(f'<details id="{key}"><summary>{relative}</summary><p class="status">{status}</p>'
                         + '<pre><code>' + html.escape(text.rstrip()) + '</code></pre></details>')
@@ -220,8 +221,8 @@ def build():
                         + ''.join(links) + '</div>')
     sections.append('<section class="part" id="sources"><h2>Current source, not pseudocode</h2>'
                     '<p>Expand a file to inspect its exact declarations and comments. These listings are embedded '
-                    'at documentation build time and work offline. Thirteen processor modules remain unfinished. '
-                    'Successful interface checks are not CPU simulation results.</p>' + ''.join(listings) + '</section>')
+                    'at documentation build time and work offline. All eight stages are implemented. '
+                    'See validation.md for simulation scope and reproducible commands.</p>' + ''.join(listings) + '</section>')
     # Keep the hands-on build guide last, after even the source appendix.
     sections.append(renderer.markdown(*FINAL_GUIDE))
     stages = [('IF', 'Fetch words'), ('D', 'Decode meaning'), ('R', 'Read registers'),
@@ -234,15 +235,15 @@ def build():
              '<h1>Learn the architecture. Build the processor.</h1>'
              '<p>Start from clock edges and instructions, build a four-wide in-order pipeline, '
              'then study prediction, caches, renaming, out-of-order scheduling and recovery. '
-             'Thirty course lessons and seventeen labs connect the concepts to your module skeletons.</p>'
-             '<div class="note"><p><strong>This is a design and implementation guide, not a completed CPU.</strong></p>'
-             '<p>The decoder, ALU, forwarding and control-hazard blocks are implemented. The thirteen processor shells '
-             'remain yours to build. Advanced architectures are optional study and redesign paths, '
+             'Thirty course lessons and seventeen labs connect the concepts to the implemented RTL.</p>'
+             '<div class="note"><p><strong>The eight-stage baseline is implemented and has full-core simulation tests.</strong></p>'
+             '<p>Read the implementation chapter for every module, its signals and its connections. '
+             'Advanced architectures are optional study and redesign paths, '
              'not implemented features. Cycle tables are illustrations, not measured execution results.</p></div>'
              + diagram + '<div class="routes"><a href="#beginner">1 · Learn the basics</a>'
              '<a href="#course">2 · Follow the course</a><a href="#labs">3 · Work through the labs</a>'
              '<a href="#tutorial">Architecture reference</a><a href="#skeleton">Implementation contracts</a>'
-             '<a href="#modules">Every module explained</a></div></header>')
+             '<a href="#implementation">Current implementation explained</a><a href="#modules">Module design lessons</a></div></header>')
     document = ('<!doctype html><html lang="en"><head><meta charset="utf-8">'
                 '<meta name="viewport" content="width=device-width, initial-scale=1">'
                 '<title>Build a superscalar CPU — RV32I course, architectures and labs</title><style>'

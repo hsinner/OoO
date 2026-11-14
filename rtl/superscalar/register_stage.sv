@@ -1,11 +1,4 @@
-// UNIMPLEMENTED SKELETON: interface contract only; outputs intentionally undriven.
-// See docs/superscalar/skeleton.md. This file must not be used as working RTL.
-// No tie-offs, behavioral substitutes, or inferred test results are provided.
-// TODO R-01: Hold a stable index/control packet and continuously read its RF indices.
-// TODO R-02: live_operands is a separate changing sideband sampled only on R-to-DP acceptance.
-// TODO R-03: Bypass simultaneous accepted commit writes into live reads; x0 always zero.
-// TODO R-04: packet_o src1/src2 are not authoritative; dispatch samples live_operands instead.
-// TODO STATE: ordered control packet and valid; no early register writes.
+// Stable R control packet; live register values are sampled separately by DP.
 module register_stage (
   input logic clk_i, rst_i, flush_i,
   input logic packet_valid_i,
@@ -20,8 +13,42 @@ module register_stage (
   input logic packet_ready_i
 );
   import rv32_pkg::*;
-  // TODO Declare module-specific state_q/state_d, if this block owns state.
-  // TODO Implement next-state/defaults/reset/flush in always_comb.
-  // TODO Use always_ff only for nonblocking state assignments.
-  // TODO Add meaningful directed tests before declaring this block complete.
+  packet_t packet_q, packet_d;
+  logic valid_q, valid_d;
+  always_comb begin
+    packet_ready_o = (!valid_q || packet_ready_i) && !rst_i && !flush_i;
+  end
+  always_comb begin
+    packet_valid_o = valid_q && !rst_i && !flush_i;
+  end
+  always_comb begin
+    packet_o = packet_q;
+  end
+  always_comb begin
+    for (int i=0; i<4; i++) begin
+      read_indices_o[2*i] = packet_q[i].decoded.uses_rs1 ? packet_q[i].decoded.rs1 : 5'd0;
+      read_indices_o[2*i+1] = packet_q[i].decoded.uses_rs2 ? packet_q[i].decoded.rs2 : 5'd0;
+    end
+  end
+  always_comb begin
+    live_operands_o = read_values_i;
+    for (int s=0; s<8; s++) begin
+      for (int c=0; c<4; c++)
+        if (commit_writes_i[c].valid && commit_writes_i[c].rd == read_indices_o[s])
+          live_operands_o[s] = commit_writes_i[c].value;
+      if (read_indices_o[s] == 0) live_operands_o[s] = '0;
+    end
+
+    packet_d = packet_q;
+    valid_d = valid_q;
+    if (packet_ready_o) begin
+      valid_d = packet_valid_i;
+      if (packet_valid_i) packet_d = packet_i;
+    end
+    if (rst_i || flush_i) begin valid_d=0; packet_d='0; end
+  end
+  always_ff @(posedge clk_i) begin
+    packet_q <= packet_d;
+    valid_q <= valid_d;
+  end
 endmodule

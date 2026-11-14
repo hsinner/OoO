@@ -31,22 +31,47 @@ module control_hazard_unit (
   state_t state_q, state_d;
   logic start_fire, branch_fire, trap_fire;
   always_comb begin
-    state_d = state_q;
     trap_ready_o = !rst_i && !state_q.redirect_valid;
+  end
+  always_comb begin
     branch_ready_o = trap_ready_o && !trap_valid_i;
+  end
+  always_comb begin
     trap_fire = trap_valid_i && trap_ready_o;
+  end
+  always_comb begin
     branch_fire = branch_valid_i && branch_ready_o;
+  end
+  always_comb begin
     serial_ready_o = !rst_i && backend_empty_i && !state_q.serial_busy &&
                      !state_q.redirect_valid && !branch_valid_i && !trap_valid_i;
+  end
+  always_comb begin
     start_fire = serial_valid_i && serial_ready_o;
+  end
+  always_comb begin
     redirect_valid_o = state_q.redirect_valid && !rst_i;
+  end
+  always_comb begin
     redirect_pc_o = state_q.redirect_pc;
-    // These are same-cycle cancellation controls, sampled at the accepting edge.
+  end
+  always_comb begin
+    // Same-cycle cancellation, sampled at the accepting edge.
     flush_frontend_o = trap_fire || branch_fire;
-    flush_backend_o = trap_fire; // Commit already retired all older effects.
+  end
+  always_comb begin
+    flush_backend_o = trap_fire; // Older effects have already committed.
+  end
+  always_comb begin
     block_younger_o = rst_i || state_q.serial_busy || state_q.redirect_valid ||
                       start_fire || branch_valid_i || trap_valid_i;
+  end
+  always_comb begin
     stop_fetch_o = block_younger_o;
+  end
+  always_comb begin
+    state_d = state_q;
+
     if (serial_done_i) state_d.serial_busy = 1'b0;
     if (redirect_valid_o && redirect_ready_i) begin
       state_d.redirect_valid = 1'b0;

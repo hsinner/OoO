@@ -18,4 +18,5 @@ jobs:
       - run: bash scripts/check_decode.sh
       - run: bash scripts/check_alu.sh
       - run: bash scripts/check_skeleton.sh
+      - run: bash scripts/check_core.sh
       - run: git diff --exit-code -- docs/tutorial.html

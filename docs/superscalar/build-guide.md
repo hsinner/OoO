@@ -1,15 +1,20 @@
 # Start building: your step-by-step RTL implementation guide
 
+**Implementation update:** the eight-stage baseline is now implemented. Read
+[the actual RTL walkthrough](implementation.md) for current state/signals and
+connections. Instructions to build missing stages below can now be followed as
+reimplementation exercises. Advanced alternatives remain future extensions.
+
+
 Start with the decoder and ALU, then build one functioning lane through all eight
 stages before enabling four-lane dispatch. Keep the existing four-lane interfaces
 throughout; initially only lane 0 carries valid instructions. This final section
 is your practical route through the course, from the first edit to integration.
 
-Thirteen processor modules remain intentionally unfinished. The decoder, ALU,
-forwarding and control-hazard units now contain implementations. The decoder
-steps below remain useful as a guided reading/reimplementation exercise; you
-can inspect the completed rv32_decode.sv and run check_decode.sh. The code below illustrates
-structure and leaves the assignment logic for you; it does not complete the RTL.
+All pipeline modules now contain implementations. Follow these steps as a
+reading or reimplementation exercise, comparing your version with the completed
+RTL and its regression. Code fragments below deliberately leave decisions for
+you to work through; the actual sources are in the preceding source appendix.
 
 Your first milestone is: **decode ADDI, calculate its result, and verify both
 independently before introducing clocked pipeline behavior.**
@@ -136,13 +141,12 @@ consistently; downstream allocation and architectural writes must always exclude
 After implementing the module, run this focused lint command from the repo root:
 
 ```powershell
-wsl -d Ubuntu -- verilator --lint-only -Wall --top-module rv32_decode rtl/superscalar/rv32_pkg.sv rtl/superscalar/rv32_decode.sv
+wsl -d Ubuntu -- verilator --lint-only -Wall --top-module rv32_decode rtl/superscalar/hazard_pkg.sv rtl/superscalar/rv32_pkg.sv rtl/superscalar/rv32_decode.sv
 ```
 
 This is a validation command to run, not a recorded pass for your future RTL.
-Investigate diagnostics. The skeleton script suppresses expected undriven/unused
-warnings for shells; those suppressions are not the acceptance criteria for a
-completed module. Lint also does not replace behavioral simulation.
+Investigate diagnostics. The historical skeleton script now runs strict full-core
+lint without undriven/unused warning suppressions. Lint also does not replace behavioral simulation.
 
 ## B5. Implement the matching ALU behavior
 

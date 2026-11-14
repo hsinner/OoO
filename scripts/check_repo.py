@@ -16,6 +16,21 @@ for filename in files:
         assert re.fullmatch(r"\s*(?:\w+_q\s*<=\s*\w+_d\s*;\s*)+", block), filename
     assert len(re.findall(r"\balways_ff\b", source)) == len(re.findall(r"always_ff\s*@\(posedge clk_i\)\s*begin", source)), filename
 
+# Check the active superscalar design separately from the historical OoO target.
+super_files = (ROOT / "rtl/superscalar/skeleton.f").read_text().splitlines()
+assert set(super_files) == {p.relative_to(ROOT).as_posix() for p in (ROOT / "rtl/superscalar").glob("*.sv")}
+super_blocks = 0
+for filename in [*super_files, "examples/superscalar/pipe_reg.sv"]:
+    source = (ROOT / filename).read_text()
+    source = re.sub(r"//[^\n]*|/\*.*?\*/", "", source, flags=re.S)
+    assert not re.search(r"\b(initial|always_latch|assign)\b", source), filename
+    bodies = re.findall(r"always_ff\s*@\(posedge clk_i\)\s*begin(.*?)\bend\b", source, re.S)
+    assert len(bodies) == len(re.findall(r"\balways_ff\b", source)), filename
+    for body in bodies:
+        assert re.fullmatch(r"\s*(?:\w+\s*<=\s*\w+\s*;\s*)+", body), filename
+        super_blocks += 1
+print(f"PASS: {len(super_files)} superscalar RTL files plus pipe_reg, {super_blocks} assignment-only always_ff blocks")
+
 class TutorialParser(HTMLParser):
     def __init__(self):
         super().__init__(convert_charrefs=True)

@@ -1,5 +1,11 @@
 # Your first complete mental model of this processor
 
+**Implementation update:** the eight-stage baseline is now implemented. Read
+[the actual RTL walkthrough](implementation.md) for current state/signals and
+connections. Instructions to build missing stages below can now be followed as
+reimplementation exercises. Advanced alternatives remain future extensions.
+
+
 Read this guided introduction before the detailed design reference. You do
 not need to know what a scoreboard, retirement packet or handshake is yet.
 We will define each one, show why it exists, and connect it to the actual files.
